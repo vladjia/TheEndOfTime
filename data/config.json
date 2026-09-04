@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -29,6 +29,11 @@
     "english": "THE END OF TIME",
     "button": "START",
     "englishPlacement": "below-title-reflection",
-    "titleLetterSpacing": "0.16em"
+    "titleLetterSpacing": "0.16em",
+    "layout": "transformative",
+    "titleMode": "large-dual-glyph",
+    "conceptMode": "large-english-form",
+    "conceptText": "THE END OF TIME",
+    "flowMode": "sandfall"
   }
 }
