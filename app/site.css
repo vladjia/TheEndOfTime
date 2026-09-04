@@ -272,17 +272,73 @@ body::before{
 }
 
 .welcome-en{
-  margin-bottom:12px;
-  font-size:11px;
-  letter-spacing:.42em;
-  color:rgba(232,235,240,.42);
+  font-size:10px;
+  letter-spacing:.46em;
+  color:rgba(224,228,234,.18);
 }
 
+.welcome-reflection{
+  position:relative;
+  display:inline-block;
+  margin-top:24px;
+  padding-left:.46em;
+  transform:scaleY(.84);
+  transform-origin:center top;
+  filter:blur(1.35px);
+  opacity:.62;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.96) 0%,rgba(0,0,0,.56) 52%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.96) 0%,rgba(0,0,0,.56) 52%,transparent 100%);
+  animation:reflectionDrift 6.8s ease-in-out 1.8s infinite;
+}
+
+.welcome-reflection::before,
+.welcome-reflection::after{
+  content:"";
+  position:absolute;
+  left:4%;
+  right:4%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(172,55,72,.16),rgba(225,229,235,.08),transparent);
+  opacity:.5;
+  pointer-events:none;
+}
+
+.welcome-reflection::before{
+  top:48%;
+  transform:translateX(-2px);
+}
+
+.welcome-reflection::after{
+  top:72%;
+  transform:translateX(3px);
+  opacity:.28;
+}
+
+@keyframes reflectionDrift{
+  0%,100%{
+    transform:translateY(0) scaleY(.84) skewX(0deg);
+    filter:blur(1.35px);
+    opacity:.58;
+  }
+  45%{
+    transform:translateY(1px) scaleY(.82) skewX(-.35deg);
+    filter:blur(1.55px);
+    opacity:.66;
+  }
+  55%{
+    transform:translateY(1px) scaleY(.82) skewX(.3deg);
+    filter:blur(1.45px);
+    opacity:.63;
+  }
+}
+
+
 .welcome-title{
+  text-indent:.16em;
   font-family:var(--font-display);
   font-size:clamp(88px,16vw,190px);
   line-height:.92;
-  letter-spacing:.06em;
+  letter-spacing:.16em;
   color:rgba(241,243,246,.93);
   text-shadow:0 0 34px rgba(123,23,37,.10);
   opacity:0;
@@ -292,7 +348,7 @@ body::before{
 
 .welcome-start{
   position:relative;
-  margin-top:56px;
+  margin-top:50px;
   min-width:150px;
   padding:13px 28px 12px;
   border:1px solid rgba(225,229,235,.24);
@@ -383,15 +439,28 @@ body.pre-entry{
   overflow:hidden;
 }
 
+
 @media(max-width:640px){
-  .welcome-title{font-size:clamp(84px,29vw,132px)}
-  .welcome-start{margin-top:44px}
+  .welcome-title{
+    font-size:clamp(84px,29vw,132px);
+    letter-spacing:.10em;
+    text-indent:.10em;
+  }
+  .welcome-reflection{
+    margin-top:20px;
+    font-size:9px;
+    letter-spacing:.34em;
+    padding-left:.34em;
+  }
+  .welcome-start{margin-top:40px}
 }
+
 
 @media (prefers-reduced-motion: reduce){
   .welcome-title,
   .welcome-start,
-  .welcome-grain{
+  .welcome-grain,
+  .welcome-reflection{
     animation:none!important;
     opacity:1!important;
     filter:none!important;

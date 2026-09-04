@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -27,6 +27,8 @@
     "enabled": true,
     "title": "時盡",
     "english": "THE END OF TIME",
-    "button": "START"
+    "button": "START",
+    "englishPlacement": "below-title-reflection",
+    "titleLetterSpacing": "0.16em"
   }
 }
