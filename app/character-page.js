@@ -126,7 +126,6 @@ function bestWeaponImage(images, weaponName, keyword){
 
 function mountImage(target, item, alt){
   if(!target || !item?.url){
-    debugLine('mountImage skip', `${target?.id || 'no-target'} / ${item?.name || 'no-item'}`);
     return;
   }
 
@@ -141,8 +140,6 @@ function mountImage(target, item, alt){
   img.addEventListener('load', () => {
     const w = img.naturalWidth || 0;
     const h = img.naturalHeight || 0;
-
-    debugLine(`${target.id} load`, `${w}x${h}`);
 
     if(!w || !h) return;
 
@@ -165,11 +162,9 @@ function mountImage(target, item, alt){
   });
 
   img.addEventListener('error', () => {
-    debugLine(`${target.id} ERROR`, item.url);
   });
 
   target.appendChild(img);
-  debugLine('mountImage append', `${target.id} ← ${item.name}`);
 }
 
 function setText(selector,value){
@@ -303,7 +298,6 @@ function renderWeapon(char,id,weapons,images){
 
   if(!weapon){
     section.hidden = true;
-    debugLine('weapon lookup', `NOT FOUND for ${char.weaponId}`);
     return;
   }
 
@@ -335,10 +329,6 @@ function renderWeapon(char,id,weapons,images){
     if(!weaponOpen && !weaponClosed && slots){
       slots.hidden = true;
     }
-
-    setTimeout(()=>{
-      debugWeaponImages(char, weapon, images, weaponOpen, weaponClosed);
-    }, 500);
   }
 }
 
@@ -429,76 +419,6 @@ function renderCharacter(char,id,data){
   if(desc && char.publicIntro) desc.setAttribute('content',char.publicIntro);
 }
 
-
-function ensureDebugPanel(){
-  let panel = document.getElementById('weaponDebugPanel');
-  if(panel) return panel;
-
-  panel = document.createElement('section');
-  panel.id = 'weaponDebugPanel';
-  panel.style.cssText = [
-    'position:fixed',
-    'right:12px',
-    'bottom:12px',
-    'z-index:99999',
-    'width:min(520px,calc(100vw - 24px))',
-    'max-height:42vh',
-    'overflow:auto',
-    'background:rgba(0,0,0,.94)',
-    'border:1px solid #7f2633',
-    'padding:12px 14px',
-    'font:12px/1.55 Consolas,monospace',
-    'color:#e7e7e7',
-    'box-shadow:0 8px 30px rgba(0,0,0,.45)'
-  ].join(';');
-
-  panel.innerHTML = '<div style="color:#ff687b;font-weight:bold;margin-bottom:8px">WEAPON IMAGE DEBUG</div>';
-  document.body.appendChild(panel);
-  return panel;
-}
-
-function debugLine(label, value){
-  const panel = ensureDebugPanel();
-  const row = document.createElement('div');
-  row.style.cssText = 'padding:3px 0;border-top:1px solid rgba(255,255,255,.08);word-break:break-all';
-  row.innerHTML = `<strong style="color:#9da7b4">${label}</strong>：${String(value ?? '')}`;
-  panel.appendChild(row);
-}
-
-function debugWeaponImages(char, weapon, images, weaponOpen, weaponClosed){
-  debugLine('characterId', char?.id);
-  debugLine('weaponId', char?.weaponId);
-  debugLine('weapon.name', weapon?.name);
-  debugLine('images.length', (images || []).length);
-
-  const matched = (images || []).filter(img =>
-    norm(img.target) === norm(weapon?.name) ||
-    norm(img.name).includes(norm(weapon?.name)) ||
-    norm(img.path).includes(norm(weapon?.name))
-  );
-
-  debugLine('matched weapon rows', matched.length);
-
-  matched.forEach((img, i) => {
-    debugLine(`row ${i+1} name`, img.name);
-    debugLine(`row ${i+1} target`, img.target);
-    debugLine(`row ${i+1} group`, img.group);
-    debugLine(`row ${i+1} category`, img.category);
-    debugLine(`row ${i+1} url`, img.url);
-  });
-
-  debugLine('picked 展開', weaponOpen?.name || 'NONE');
-  debugLine('picked 收攏', weaponClosed?.name || 'NONE');
-
-  ['weaponOpen','weaponClosed'].forEach(id=>{
-    const slot = document.getElementById(id);
-    debugLine(`${id} exists`, !!slot);
-    debugLine(`${id} hidden`, slot?.hidden);
-    debugLine(`${id} clientHeight`, slot?.clientHeight);
-    debugLine(`${id} child img`, !!slot?.querySelector('img'));
-    debugLine(`${id} innerHTML`, slot?.innerHTML || '');
-  });
-}
 
 async function initCharacterPage(){
   const body = document.body;

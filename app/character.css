@@ -111,26 +111,6 @@
   margin:32px 0 0;padding:8px 0 8px 18px;border-left:1px solid #61222e;
   color:#d8dde3;font-family:var(--font-title);font-size:18px
 }
-.weapon-slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.weapon-slot{
-  min-height:340px;position:relative;overflow:hidden;
-  border:1px solid var(--line-soft);background:
-  radial-gradient(circle at 50% 34%,rgba(149,26,43,.08),transparent 28%),
-  linear-gradient(180deg,#11161d,#090c11)
-}
-.weapon-slot img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  object-position:center center;
-  padding:14px;
-}
-.weapon-slot span{
-  position:absolute;left:14px;bottom:12px;font-size:10px;letter-spacing:.14em;color:#9da6b1
-}
-
 .ability-list{
   display:grid;grid-template-columns:repeat(4,1fr);margin-top:30px;
   border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)
@@ -223,9 +203,7 @@
   .character-strip{grid-template-columns:1fr}
   .character-strip>div{border-right:0!important;border-bottom:1px solid var(--line-soft)}
   .character-strip>div:last-child{border-bottom:0}
-  .weapon-slots{grid-template-columns:1fr}
-  .weapon-slot{min-height:300px}
-  .ability-list{grid-template-columns:1fr}
+.ability-list{grid-template-columns:1fr}
   .ability-list article{border-right:0!important;border-bottom:1px solid var(--line-soft)}
   .ability-list article:last-child{border-bottom:0}
   .zero-visual{min-height:350px}
@@ -237,20 +215,8 @@
 /* v0.13.1 · 圖片自動縮放規則
    角色主視覺：維持滿版感（cover）
    武器 / 零式 / 細節圖：完整顯示（contain），避免裁切 */
-.weapon-slot,
-.zero-visual{
-  background-color:#0b0f15;
-}
-
-.weapon-slot img,
-.zero-visual img{
-  max-width:100%;
-  max-height:100%;
-}
-
 @media(max-width:620px){
-  .weapon-slot img{padding:8px}
-  .zero-visual img{padding:6px}
+.zero-visual img{padding:6px}
 }
 
 
@@ -277,35 +243,10 @@
   object-position:center center!important;
   padding:0!important;
 }
-
-.weapon-slot{
-  min-height:0!important;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  aspect-ratio:auto!important;
-}
-
-.weapon-slot img{
-  position:relative!important;
-  inset:auto!important;
-  display:block;
-  width:100%!important;
-  height:auto!important;
-  max-width:100%!important;
-  max-height:none!important;
-  object-fit:contain!important;
-  object-position:center center!important;
-  padding:0!important;
-}
-
 /* 圖片尚未載入時才保留骨架高度 */
 .zero-visual:not(:has(img)){min-height:420px!important}
-.weapon-slot:not(:has(img)){min-height:340px!important}
-
 @media(max-width:620px){
   .zero-visual:not(:has(img)){min-height:320px!important}
-  .weapon-slot:not(:has(img)){min-height:260px!important}
 }
 
 
@@ -401,42 +342,12 @@
 }
 
 .zero-visual.media-natural-fit,
-.weapon-slot.media-natural-fit{
-  min-height:0!important;
-  height:auto!important;
-  align-self:start!important;
-  overflow:hidden!important;
-  display:block!important;
-}
-
 .zero-visual.media-natural-fit img,
-.weapon-slot.media-natural-fit img{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  max-width:none!important;
-  max-height:none!important;
-  padding:0!important;
-  object-fit:contain!important;
-  object-position:center center!important;
-}
-
 /* 武器兩張各自依自己的原始比例，不強迫同高 */
-.weapon-slots{
-  align-items:start!important;
-}
-.weapon-slot.media-natural-fit{
-  align-self:start!important;
-}
-
 /* 若圖片尚未載入，才使用原本骨架高度 */
 .zero-visual:not(.media-natural-fit){min-height:420px}
-.weapon-slot:not(.media-natural-fit){min-height:340px}
-
 @media(max-width:620px){
   .zero-visual:not(.media-natural-fit){min-height:320px}
-  .weapon-slot:not(.media-natural-fit){min-height:260px}
 }
 
 
@@ -462,14 +373,6 @@
 .text-link,
 .character-meta strong,
 .character-strip strong,
-.weapon-slot span,
-.zero-note,
-.spoiler-gate p,
-.skill-list p,
-.skill-ultimate p{
-  font-size:13px!important;
-}
-
 .character-lead{
   font-size:18px!important;
   line-height:1.9;
@@ -594,36 +497,10 @@
 .zero-section{
   align-items:start!important;
 }
-
-.weapon-slots{
-  align-items:start!important;
-}
-
 .zero-visual.media-natural-fit,
-.weapon-slot.media-natural-fit{
-  min-height:0!important;
-  height:auto!important;
-  display:block!important;
-  align-self:start!important;
-  overflow:hidden!important;
-  aspect-ratio:var(--media-ratio);
-}
-
 .zero-visual.media-natural-fit img,
-.weapon-slot.media-natural-fit img{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  object-fit:contain!important;
-  object-position:center center!important;
-  padding:0!important;
-}
-
 /* 圖片未載入前才顯示骨架高度 */
 .zero-visual:not(.media-natural-fit){min-height:420px!important}
-.weapon-slot:not(.media-natural-fit){min-height:340px!important}
-
 /* 人物主視覺也避免太窄時被卡死 */
 @media(max-width:980px){
   .character-visual{
@@ -641,7 +518,6 @@
   }
 
   .zero-visual:not(.media-natural-fit){min-height:320px!important}
-  .weapon-slot:not(.media-natural-fit){min-height:260px!important}
 }
 
 /* ═══════════════════════════════════════════════
@@ -676,14 +552,6 @@
 
 .character-meta strong,
 .character-strip strong,
-.weapon-slot span,
-.zero-note,
-.spoiler-gate p,
-.skill-list p,
-.skill-ultimate p{
-  font-size:14px!important;
-}
-
 .character-lead{
   font-size:19px!important;
   line-height:1.9!important;
@@ -738,13 +606,7 @@
   .mode,
   .character-meta strong,
   .character-strip strong,
-  .weapon-slot span,
-  .skill-list p,
-  .skill-ultimate p{
-    font-size:13px!important;
-  }
-
-  .character-lead{
+.character-lead{
     font-size:17px!important;
   }
 
@@ -795,3 +657,70 @@
   line-height:1.7;
 }
 [hidden]{display:none!important}
+
+
+/* ============================================================
+   v0.14.5 · WEAPON MEDIA SINGLE SOURCE
+   武器圖片顯示規則只保留這一份，避免舊版互相覆蓋。
+   ============================================================ */
+
+.weapon-slots{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  align-items:start;
+}
+
+.weapon-slot{
+  position:relative;
+  display:block;
+  width:100%;
+  min-width:0;
+  overflow:hidden;
+  background:#090c11;
+  border:1px solid var(--line-soft);
+  aspect-ratio:var(--media-ratio,16 / 10);
+}
+
+.weapon-slot[hidden]{
+  display:none!important;
+}
+
+.weapon-slot img{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  object-position:center;
+  opacity:1;
+  visibility:visible;
+}
+
+.weapon-slot > span{
+  position:absolute;
+  left:12px;
+  bottom:10px;
+  z-index:2;
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:4px 8px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(5,7,10,.78);
+  color:#d8dde4;
+  font-size:11px;
+  letter-spacing:.16em;
+  line-height:1;
+  backdrop-filter:blur(4px);
+}
+
+@media (max-width:760px){
+  .weapon-slots{
+    grid-template-columns:1fr;
+  }
+}
