@@ -169,12 +169,15 @@ function initWelcomeSand(){
   if(!canvas) return;
 
   const ctx = canvas.getContext('2d');
+  if(!ctx) return;
+
   const reduceMotion = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let particles = [];
   let raf = null;
   let last = performance.now();
+  let spawnAcc = 0;
 
   function resize(){
     const rect = canvas.getBoundingClientRect();
@@ -186,31 +189,51 @@ function initWelcomeSand(){
 
   function spawnParticle(){
     const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
 
-    // Two source zones, corresponding visually to 「時」 and 「盡」
-    const leftCenter  = w * 0.38;
-    const rightCenter = w * 0.62;
-    const center = Math.random() < 0.5 ? leftCenter : rightCenter;
-
-    // Some grains fall near each glyph's lower edge, not from one single center line.
-    const x = center + (Math.random() - 0.5) * w * 0.18;
-    const y = 1 + Math.random() * 10;
+    // 不是從中央一點掉，而是從「時」「盡」兩字底部寬區域漏下。
+    const left = Math.random() < .5;
+    const base = left ? w * .34 : w * .66;
+    const spread = w * .18;
 
     particles.push({
-      x, y,
-      vx:(Math.random() - 0.5) * 0.22,
-      vy:0.22 + Math.random() * 0.40,
-      g:0.010 + Math.random() * 0.012,
-      r:0.45 + Math.random() * 1.0,
-      life:0,
-      max:120 + Math.random() * 85,
-      red:Math.random() < 0.16
+      x: base + (Math.random() - .5) * spread,
+      y: -2 + Math.random() * 12,
+      vx: (Math.random() - .5) * .018,
+      vy: .026 + Math.random() * .025,
+      ay: .00022 + Math.random() * .00016,
+      r: .7 + Math.random() * 1.5,
+      a: .46 + Math.random() * .34,
+      warm: Math.random() < .11,
+      trail: Math.random() < .28
     });
   }
 
+  function drawParticle(p){
+    const h = canvas.clientHeight;
+    const fade = p.y < h * .72 ? 1 : Math.max(0, 1 - (p.y - h*.72)/(h*.28));
+    const alpha = p.a * fade;
+
+    if(p.trail){
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - Math.max(2, p.vy * 36));
+      ctx.lineTo(p.x, p.y + 1);
+      ctx.strokeStyle = p.warm
+        ? `rgba(151,38,54,${alpha*.38})`
+        : `rgba(225,229,235,${alpha*.30})`;
+      ctx.lineWidth = Math.max(.45, p.r*.42);
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle = p.warm
+      ? `rgba(156,41,58,${alpha})`
+      : `rgba(231,234,239,${alpha})`;
+    ctx.fill();
+  }
+
   function draw(now){
-    const dt = Math.min(32, now - last);
+    const dt = Math.min(34, now-last);
     last = now;
 
     const w = canvas.clientWidth;
@@ -218,62 +241,59 @@ function initWelcomeSand(){
     ctx.clearRect(0,0,w,h);
 
     if(!reduceMotion){
-      const count = Math.max(2, Math.floor(w / 140));
-      for(let i=0;i<count;i++){
-        if(particles.length < 180) spawnParticle();
+      // 約每幀 3~5 粒，畫面能真的看出「流」。
+      spawnAcc += dt * .22;
+      while(spawnAcc >= 1 && particles.length < 260){
+        spawnParticle();
+        spawnAcc -= 1;
       }
-    } else if(particles.length === 0){
-      for(let i=0;i<42;i++) spawnParticle();
+    }else if(particles.length === 0){
+      for(let i=0;i<70;i++){
+        spawnParticle();
+        particles[i].y = Math.random()*h*.82;
+      }
     }
 
     for(let i=particles.length-1;i>=0;i--){
       const p = particles[i];
-      p.life += dt;
-      p.vy += p.g * dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
 
-      // Slight sideways spread toward the English layer.
-      if(p.y > h * .52){
-        p.vx += (Math.random() - .5) * 0.002 * dt;
+      if(!reduceMotion){
+        p.vy += p.ay * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
       }
 
-      const fadeStart = h * .68;
-      let alpha = .52;
-      if(p.y > fadeStart){
-        alpha *= Math.max(0, 1 - (p.y - fadeStart) / (h - fadeStart));
-      }
+      drawParticle(p);
 
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.red
-        ? `rgba(155,40,57,${alpha * .9})`
-        : `rgba(228,231,236,${alpha})`;
-      ctx.fill();
-
-      if(p.y > h + 4 || p.life > p.max*16){
+      if(p.y > h + 6){
         particles.splice(i,1);
       }
     }
 
-    // A very faint mist where sand approaches THE END OF TIME.
-    const grad = ctx.createLinearGradient(0,h*.62,0,h);
-    grad.addColorStop(0,'rgba(118,23,37,0)');
-    grad.addColorStop(.72,'rgba(118,23,37,.025)');
-    grad.addColorStop(1,'rgba(118,23,37,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,h*.58,w,h*.42);
+    // 英文上方非常淡的積沙霧帶
+    const g = ctx.createLinearGradient(0,h*.72,0,h);
+    g.addColorStop(0,'rgba(130,28,44,0)');
+    g.addColorStop(.65,'rgba(130,28,44,.018)');
+    g.addColorStop(1,'rgba(225,229,235,.012)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,h*.68,w,h*.32);
 
-    if(!reduceMotion) raf = requestAnimationFrame(draw);
+    if(!reduceMotion) raf=requestAnimationFrame(draw);
   }
 
   resize();
   window.addEventListener('resize', resize, {passive:true});
 
+  // 先預填一批粒子，避免使用者第一眼看到空白。
+  for(let i=0;i<95;i++){
+    spawnParticle();
+    particles[i].y = Math.random()*canvas.clientHeight*.82;
+  }
+
   if(reduceMotion){
     draw(performance.now());
   }else{
-    raf = requestAnimationFrame(draw);
+    raf=requestAnimationFrame(draw);
   }
 }
 

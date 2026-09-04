@@ -795,3 +795,20 @@ body.pre-entry{
     margin-top:-6px;
   }
 }
+
+
+/* v0.9.4：流沙可視性修正 */
+.welcome-sand{
+  position:relative;
+  z-index:2;
+  width:min(66vw,560px);
+  height:132px;
+  margin-top:-10px;
+  margin-bottom:-2px;
+  opacity:1;
+  filter:drop-shadow(0 0 8px rgba(144,35,51,.05));
+}
+.welcome-en.welcome-concept{
+  position:relative;
+  z-index:1;
+}
