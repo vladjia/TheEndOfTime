@@ -758,3 +758,40 @@ body.pre-entry{
     filter:none!important;
   }
 }
+
+
+/* ═══════════════════════════════════════════════
+   WELCOME SAND · v0.9.3
+   真粒子流沙：移除 v0.9.2 中央直線與假顆粒背景
+   ═══════════════════════════════════════════════ */
+
+.welcome-flow,
+.welcome-flow::before,
+.welcome-flow::after{
+  display:none!important;
+}
+
+.welcome-sand{
+  display:block;
+  width:min(62vw,520px);
+  height:118px;
+  margin-top:-8px;
+  margin-bottom:2px;
+  pointer-events:none;
+  opacity:.92;
+}
+
+.welcome-en.welcome-concept{
+  margin-top:-2px;
+  margin-bottom:42px;
+  color:rgba(230,234,239,.36);
+  filter:blur(1.15px);
+}
+
+@media(max-width:640px){
+  .welcome-sand{
+    width:min(78vw,330px);
+    height:92px;
+    margin-top:-6px;
+  }
+}

@@ -162,3 +162,123 @@ if(document.readyState === 'loading'){
 }else{
   initWelcomeGate();
 }
+
+
+function initWelcomeSand(){
+  const canvas = document.getElementById('welcomeSand');
+  if(!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let particles = [];
+  let raf = null;
+  let last = performance.now();
+
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function spawnParticle(){
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+
+    // Two source zones, corresponding visually to 「時」 and 「盡」
+    const leftCenter  = w * 0.38;
+    const rightCenter = w * 0.62;
+    const center = Math.random() < 0.5 ? leftCenter : rightCenter;
+
+    // Some grains fall near each glyph's lower edge, not from one single center line.
+    const x = center + (Math.random() - 0.5) * w * 0.18;
+    const y = 1 + Math.random() * 10;
+
+    particles.push({
+      x, y,
+      vx:(Math.random() - 0.5) * 0.22,
+      vy:0.22 + Math.random() * 0.40,
+      g:0.010 + Math.random() * 0.012,
+      r:0.45 + Math.random() * 1.0,
+      life:0,
+      max:120 + Math.random() * 85,
+      red:Math.random() < 0.16
+    });
+  }
+
+  function draw(now){
+    const dt = Math.min(32, now - last);
+    last = now;
+
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+
+    if(!reduceMotion){
+      const count = Math.max(2, Math.floor(w / 140));
+      for(let i=0;i<count;i++){
+        if(particles.length < 180) spawnParticle();
+      }
+    } else if(particles.length === 0){
+      for(let i=0;i<42;i++) spawnParticle();
+    }
+
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.life += dt;
+      p.vy += p.g * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      // Slight sideways spread toward the English layer.
+      if(p.y > h * .52){
+        p.vx += (Math.random() - .5) * 0.002 * dt;
+      }
+
+      const fadeStart = h * .68;
+      let alpha = .52;
+      if(p.y > fadeStart){
+        alpha *= Math.max(0, 1 - (p.y - fadeStart) / (h - fadeStart));
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.red
+        ? `rgba(155,40,57,${alpha * .9})`
+        : `rgba(228,231,236,${alpha})`;
+      ctx.fill();
+
+      if(p.y > h + 4 || p.life > p.max*16){
+        particles.splice(i,1);
+      }
+    }
+
+    // A very faint mist where sand approaches THE END OF TIME.
+    const grad = ctx.createLinearGradient(0,h*.62,0,h);
+    grad.addColorStop(0,'rgba(118,23,37,0)');
+    grad.addColorStop(.72,'rgba(118,23,37,.025)');
+    grad.addColorStop(1,'rgba(118,23,37,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,h*.58,w,h*.42);
+
+    if(!reduceMotion) raf = requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize, {passive:true});
+
+  if(reduceMotion){
+    draw(performance.now());
+  }else{
+    raf = requestAnimationFrame(draw);
+  }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initWelcomeSand);
+}else{
+  initWelcomeSand();
+}
