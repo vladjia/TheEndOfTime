@@ -18,7 +18,38 @@ async function getLocalConfig(){
   return getJSON(LOCAL_FALLBACK.config);
 }
 
-function renderCharacters(chars){
+function copyText(copy,key,fallback=''){
+  const item = copy?.[key];
+  if(item == null) return fallback;
+  if(typeof item === 'string') return item || fallback;
+  return item.text || fallback;
+}
+
+function applyCopy(copy){
+  document.querySelectorAll('[data-copy]').forEach(el=>{
+    const key = el.dataset.copy;
+    const value = copyText(copy,key,el.textContent);
+    if(value) el.textContent = value;
+  });
+}
+
+function applyMetaFromCopy(copy,site){
+  const title = copyText(copy,'site.home.meta.title','');
+  const desc = copyText(copy,'site.home.meta.description','');
+
+  if(title) document.title = title;
+  else if(site?.site_title) document.title = `${site.site_title}｜世界觀・角色資料站`;
+
+  if(desc){
+    const meta = document.querySelector('meta[name="description"]');
+    if(meta) meta.setAttribute('content',desc);
+  }
+
+  const brandTitle = document.getElementById('brandTitle');
+  if(brandTitle && site?.site_title) brandTitle.textContent = site.site_title;
+}
+
+function renderCharacters(chars,copy){
   const box = $('#characterCards');
   box.innerHTML = '';
 
@@ -51,7 +82,7 @@ function renderCharacters(chars){
         <div class="role">${c.role || ''}</div>
         <h3>${c.fullName || `${c.title || ''}・${c.name || ''}`}</h3>
         <p>${c.publicIntro || ''}</p>
-        ${pageMap[c.id] ? '<div class="card-enter">VIEW FILE →</div>' : ''}
+        ${pageMap[c.id] ? `<div class="card-enter">${copyText(copy,'site.home.characters.enter','VIEW FILE →')}</div>` : ''}
         <div class="sig ${seal.cls}" data-sig="${seal.text}" aria-hidden="true">${seal.text}</div>`;
       box.appendChild(el);
     });
@@ -65,8 +96,9 @@ function renderWorld(items){
   }
 }
 
-function renderHero(site){
-  if(site?.site_title) document.title = `${site.site_title}｜世界觀・角色資料站`;
+function renderHero(site,copy){
+  applyMetaFromCopy(copy,site);
+  applyCopy(copy);
 }
 
 function renderImages(images){
@@ -113,7 +145,10 @@ async function loadFallback(){
       order:1
     }],
     story:[],
-    images:[]
+    images:[],
+    skills:[],
+    relations:[],
+    copy:{}
   };
 }
 
@@ -129,8 +164,8 @@ async function init(){
     data = await loadFallback();
   }
 
-  renderHero(data.site);
-  renderCharacters(data.characters);
+  renderHero(data.site,data.copy || {});
+  renderCharacters(data.characters,data.copy || {});
   renderWorld(data.world);
   renderImages(data.images);
 

@@ -755,3 +755,43 @@
     font-size:15px!important;
   }
 }
+
+
+/* v0.14.0 · Data-driven character page */
+.skill-effect{
+  margin-top:10px;
+  font-size:12px;
+  line-height:1.7;
+  color:#737e8b;
+  letter-spacing:.02em;
+}
+.relation-list{
+  display:grid;
+  gap:28px;
+}
+.relation-item{
+  padding-bottom:26px;
+  border-bottom:1px solid var(--line-soft);
+}
+.relation-item:last-child{
+  border-bottom:0;
+}
+.relation-item h3{
+  margin:0 0 10px;
+  font-family:var(--font-title);
+  font-size:22px;
+  font-weight:600;
+}
+.relation-item p{
+  margin:0;
+}
+.relation-item blockquote{
+  margin:18px 0 0;
+  padding:6px 0 6px 18px;
+  border-left:1px solid #542630;
+  color:#d6dbe1;
+  font-family:var(--font-title);
+  font-size:18px;
+  line-height:1.7;
+}
+[hidden]{display:none!important}

@@ -32,7 +32,7 @@
 
 <link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="app/site.css?v=0.13.6">
+<link rel="stylesheet" href="app/site.css?v=0.14.0">
 </head>
 <body class="pre-entry">
 
@@ -42,8 +42,8 @@
         <canvas id="welcomeTitleCanvas" class="welcome-title-canvas" aria-hidden="true"></canvas>
       </button>
 
-      <div id="welcomeEnglish" class="welcome-v2-english" aria-hidden="true">THE END OF TIME</div>
-      <div class="welcome-v2-hint" aria-hidden="true">輕觸時盡</div>
+      <div id="welcomeEnglish" class="welcome-v2-english" aria-hidden="true" data-copy="site.welcome.english">THE END OF TIME</div>
+      <div class="welcome-v2-hint" aria-hidden="true" data-copy="site.welcome.hint">輕觸時盡</div>
     </div>
   </div>
 
@@ -52,41 +52,41 @@
 <header class="topbar">
   <a class="brand" href="#">
     <div class="brand-mark">時</div>
-    <div><strong>時盡</strong><small>WORLD / CHARACTER ARCHIVE</small></div>
+    <div><strong id="brandTitle">時盡</strong><small data-copy="site.brand.subtitle">WORLD / CHARACTER ARCHIVE</small></div>
   </a>
-  <div class="mode">PUBLIC · 無雷</div>
+  <div class="mode" data-copy="site.mode.public">PUBLIC · 無雷</div>
 </header>
 
 <main>
   <section class="hero">
     <div>
-      <div class="eyebrow hero-reveal hero-reveal-1">THE END OF TIME</div>
+      <div class="eyebrow hero-reveal hero-reveal-1" data-copy="site.home.eyebrow">THE END OF TIME</div>
       <h1 class="hero-reveal hero-reveal-2">時盡</h1>
-      <p class="lead hero-reveal hero-reveal-3" id="tagline">他活過世界的終點，卻沒能逃過那些早已注定的結局。</p>
-      <div class="quote hero-reveal hero-reveal-4">「過程可以改變，結果不能。」</div>
+      <p class="lead hero-reveal hero-reveal-3" id="tagline" data-copy="site.home.tagline">他活過世界的終點，卻沒能逃過那些早已注定的結局。</p>
+      <div class="quote hero-reveal hero-reveal-4" data-copy="site.home.law">「過程可以改變，結果不能。」</div>
       <div class="actions hero-reveal hero-reveal-5">
-        <a class="btn primary" href="#characters">角色介紹</a>
-        <a class="btn" href="#gallery">角色圖庫</a>
-        <a class="btn" href="#world">世界觀</a>
+        <a class="btn primary" href="#characters" data-copy="site.home.btn.characters">角色介紹</a>
+        <a class="btn" href="#gallery" data-copy="site.home.btn.gallery">角色圖庫</a>
+        <a class="btn" href="#world" data-copy="site.home.btn.world">世界觀</a>
       </div>
     </div>
     <div class="hero-art hero-art-reveal" id="hero">
-      <div class="note">IMAGE SLOT · 家式主視覺</div>
+      <div class="note" data-copy="site.home.hero.image_note">IMAGE SLOT · 家式主視覺</div>
     </div>
   </section>
 
   <section class="section" id="characters">
     <div class="section-head">
-      <div><small>01 / CHARACTERS</small><h2>角色介紹</h2></div>
-      <p>公開區只放無雷設定。完整身世、人物死亡與世界核心真相，之後會從受保護的資料來源載入。</p>
+      <div><small data-copy="site.home.characters.kicker">01 / CHARACTERS</small><h2 data-copy="site.home.characters.title">角色介紹</h2></div>
+      <p data-copy="site.home.characters.desc">公開區只放無雷設定。完整身世、人物死亡與世界核心真相，之後會從受保護的資料來源載入。</p>
     </div>
     <div class="cards" id="characterCards"></div>
   </section>
 
   <section class="section" id="gallery">
     <div class="section-head">
-      <div><small>02 / GALLERY</small><h2>角色圖庫</h2></div>
-      <p>圖片位置已預留，之後直接接你建立好的 Google Drive 資料夾與 GAS。</p>
+      <div><small data-copy="site.home.gallery.kicker">02 / GALLERY</small><h2 data-copy="site.home.gallery.title">角色圖庫</h2></div>
+      <p data-copy="site.home.gallery.desc">圖片由 Google Drive 與 GAS 自動載入。</p>
     </div>
     <div class="gallery">
       <div class="slot main" id="gallery-jiashi" data-label="家式・主視覺"></div>
@@ -99,8 +99,8 @@
 
   <section class="section" id="world">
     <div class="section-head">
-      <div><small>03 / WORLD</small><h2>世界觀</h2></div>
-      <p>這裡只顯示無雷的世界輪廓；真正的沙漏法則與劇情核心會留給防雷模式。</p>
+      <div><small data-copy="site.home.world.kicker">03 / WORLD</small><h2 data-copy="site.home.world.title">世界觀</h2></div>
+      <p data-copy="site.home.world.desc">這裡只顯示無雷的世界輪廓；真正的沙漏法則與劇情核心會留給防雷模式。</p>
     </div>
     <div class="world">
       <h3 id="worldName">時之沙漏</h3>
@@ -109,7 +109,7 @@
   </section>
 </main>
 
-<footer class="footer">《時盡》WORLD / CHARACTER ARCHIVE · Core v0.13.6</footer>
-<script src="app/site.js?v=0.13.6" defer></script>
+<footer class="footer">《時盡》WORLD / CHARACTER ARCHIVE · Core v0.14.0</footer>
+<script src="app/site.js?v=0.14.0" defer></script>
 </body>
 </html>
