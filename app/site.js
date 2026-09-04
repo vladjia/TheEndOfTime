@@ -33,19 +33,25 @@ function renderCharacters(chars){
     .sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999))
     .forEach(c=>{
       const seal = seals[c.id] || { text:(c.name || '').slice(-1), cls:'' };
-      const el = document.createElement(c.id === 'jiashi' ? 'a' : 'article');
+      const pageMap = {
+        jiashi:'characters/jiashi.html',
+        baiji:'characters/baiji.html',
+        yeshenxing:'characters/yeshenxing.html',
+        anyanxiu:'characters/anyanxiu.html'
+      };
+      const el = document.createElement(pageMap[c.id] ? 'a' : 'article');
       el.className='card';
       el.dataset.character = c.id || '';
-      if(c.id === 'jiashi'){
-        el.href = 'characters/jiashi.html';
+      if(pageMap[c.id]){
+        el.href = pageMap[c.id];
         el.classList.add('card-link');
-        el.setAttribute('aria-label','開啟時盡・家式角色頁');
+        el.setAttribute('aria-label',`開啟${c.fullName || c.name || '角色'}角色頁`);
       }
       el.innerHTML = `
         <div class="role">${c.role || ''}</div>
         <h3>${c.fullName || `${c.title || ''}・${c.name || ''}`}</h3>
         <p>${c.publicIntro || ''}</p>
-        ${c.id === 'jiashi' ? '<div class="card-enter">VIEW FILE →</div>' : ''}
+        ${pageMap[c.id] ? '<div class="card-enter">VIEW FILE →</div>' : ''}
         <div class="sig ${seal.cls}" data-sig="${seal.text}" aria-hidden="true">${seal.text}</div>`;
       box.appendChild(el);
     });
@@ -140,7 +146,21 @@ init();
 
 
 function initWelcomeExperienceV2(){
+  const params = new URLSearchParams(window.location.search);
+  const skipWelcome = params.get('skipWelcome') === '1';
+
   const gate = document.getElementById('welcomeGate');
+
+  if(skipWelcome){
+    if(gate) gate.remove();
+    document.body.classList.remove('pre-entry');
+    document.body.classList.add('site-entered');
+
+    // 清掉網址上的暫時參數，保留 hash，例如 #characters
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', cleanUrl);
+    return;
+  }
   const button = document.getElementById('welcomeCanvasButton');
   const canvas = document.getElementById('welcomeTitleCanvas');
   if(!gate || !button || !canvas) return;

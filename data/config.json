@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.12.0",
+  "version": "0.13.2",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -37,6 +37,17 @@
     "englishFinalClarity": "85%"
   },
   "characterPages": {
-    "jiashi": "characters/jiashi.html"
+    "jiashi": "characters/jiashi.html",
+    "baiji": "characters/baiji.html",
+    "yeshenxing": "characters/yeshenxing.html",
+    "anyanxiu": "characters/anyanxiu.html"
+  },
+  "imageFitRules": {
+    "characterHero": "cover-top",
+    "weapon": "natural-ratio-contain",
+    "zeroVisual": "natural-ratio-contain"
+  },
+  "navigation": {
+    "characterToHome": "skip-welcome"
   }
 }

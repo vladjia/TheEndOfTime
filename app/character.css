@@ -29,7 +29,12 @@
   clip-path:polygon(0 0,calc(100% - 34px) 0,100% 34px,100% 100%,34px 100%,0 calc(100% - 34px));
 }
 .character-visual img{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
 }
 .character-image-placeholder{
   position:absolute;inset:0;display:grid;place-items:center;
@@ -113,7 +118,15 @@
   radial-gradient(circle at 50% 34%,rgba(149,26,43,.08),transparent 28%),
   linear-gradient(180deg,#11161d,#090c11)
 }
-.weapon-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.weapon-slot img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center center;
+  padding:14px;
+}
 .weapon-slot span{
   position:absolute;left:14px;bottom:12px;font-size:10px;letter-spacing:.14em;color:#9da6b1
 }
@@ -148,7 +161,15 @@
   min-height:420px;position:relative;overflow:hidden;border:1px solid var(--line-soft);
   background:linear-gradient(145deg,#12151a,#090a0d 58%,#0b0d11);
 }
-.zero-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.zero-visual img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center center;
+  padding:10px;
+}
 .zero-label{
   position:absolute;left:16px;bottom:14px;z-index:2;
   color:#929ca8;font-size:9px;letter-spacing:.16em
@@ -210,4 +231,79 @@
   .zero-visual{min-height:350px}
   .poem{font-size:27px;padding-left:20px}
   .spoiler-gate{align-items:flex-start;flex-direction:column}
+}
+
+
+/* v0.13.1 · 圖片自動縮放規則
+   角色主視覺：維持滿版感（cover）
+   武器 / 零式 / 細節圖：完整顯示（contain），避免裁切 */
+.weapon-slot,
+.zero-visual{
+  background-color:#0b0f15;
+}
+
+.weapon-slot img,
+.zero-visual img{
+  max-width:100%;
+  max-height:100%;
+}
+
+@media(max-width:620px){
+  .weapon-slot img{padding:8px}
+  .zero-visual img{padding:6px}
+}
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.2 · 圖片完整顯示
+   零式 / 武器圖以原始比例完整呈現，不再固定高度裁切。
+   ═══════════════════════════════════════════════ */
+
+.zero-visual{
+  min-height:0!important;
+  height:auto!important;
+  display:block;
+}
+
+.zero-visual img{
+  position:relative!important;
+  inset:auto!important;
+  display:block;
+  width:100%!important;
+  height:auto!important;
+  max-width:100%!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  padding:0!important;
+}
+
+.weapon-slot{
+  min-height:0!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  aspect-ratio:auto!important;
+}
+
+.weapon-slot img{
+  position:relative!important;
+  inset:auto!important;
+  display:block;
+  width:100%!important;
+  height:auto!important;
+  max-width:100%!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  padding:0!important;
+}
+
+/* 圖片尚未載入時才保留骨架高度 */
+.zero-visual:not(:has(img)){min-height:420px!important}
+.weapon-slot:not(:has(img)){min-height:340px!important}
+
+@media(max-width:620px){
+  .zero-visual:not(:has(img)){min-height:320px!important}
+  .weapon-slot:not(:has(img)){min-height:260px!important}
 }
