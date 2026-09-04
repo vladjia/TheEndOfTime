@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -22,5 +22,11 @@
   },
   "characterSealPlacement": "inside-card-bottom-right",
   "homepageTagline": "他活過世界的終點，卻沒能逃過那些早已注定的結局。",
-  "homepageLaw": "過程可以改變，結果不能。"
+  "homepageLaw": "過程可以改變，結果不能。",
+  "welcomeGate": {
+    "enabled": true,
+    "title": "時盡",
+    "english": "THE END OF TIME",
+    "button": "START"
+  }
 }

@@ -131,3 +131,34 @@ async function init(){
 }
 
 init();
+
+
+function initWelcomeGate(){
+  const gate = document.getElementById('welcomeGate');
+  const start = document.getElementById('welcomeStart');
+  if(!gate || !start) return;
+
+  const enter = () => {
+    gate.classList.add('is-leaving');
+    document.body.classList.remove('pre-entry');
+    document.body.classList.add('site-entered');
+
+    window.setTimeout(() => {
+      gate.remove();
+    }, 900);
+  };
+
+  start.addEventListener('click', enter);
+  start.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      enter();
+    }
+  });
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initWelcomeGate);
+}else{
+  initWelcomeGate();
+}

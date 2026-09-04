@@ -235,6 +235,171 @@ body::before{
 .footer{padding:56px 24px 72px;text-align:center;color:#5e6875;font-size:11px}
 
 
+
+
+/* ═══════════════════════════════════════════════
+   WELCOME GATE · v0.9
+   獨立迎賓頁：先看見《時盡》，按 START 後才進入網站。
+   ═══════════════════════════════════════════════ */
+
+.welcome-gate{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(118,20,34,.07), transparent 34%),
+    #050506;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .85s ease, visibility .85s ease;
+}
+
+.welcome-gate.is-leaving{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.welcome-inner{
+  position:relative;
+  z-index:2;
+  width:min(92vw,760px);
+  text-align:center;
+  transform:translateY(-2vh);
+}
+
+.welcome-en{
+  margin-bottom:12px;
+  font-size:11px;
+  letter-spacing:.42em;
+  color:rgba(232,235,240,.42);
+}
+
+.welcome-title{
+  font-family:var(--font-display);
+  font-size:clamp(88px,16vw,190px);
+  line-height:.92;
+  letter-spacing:.06em;
+  color:rgba(241,243,246,.93);
+  text-shadow:0 0 34px rgba(123,23,37,.10);
+  opacity:0;
+  filter:blur(8px);
+  animation:welcomeTitle 1.5s cubic-bezier(.22,.7,.28,1) .18s forwards;
+}
+
+.welcome-start{
+  position:relative;
+  margin-top:56px;
+  min-width:150px;
+  padding:13px 28px 12px;
+  border:1px solid rgba(225,229,235,.24);
+  background:rgba(255,255,255,.015);
+  color:rgba(239,241,244,.78);
+  font:500 11px/1 var(--font-body);
+  letter-spacing:.34em;
+  cursor:pointer;
+  clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
+  opacity:0;
+  transform:translateY(8px);
+  animation:welcomeButton .7s ease 1.15s forwards;
+  transition:border-color .25s ease,background .25s ease,color .25s ease,box-shadow .25s ease;
+}
+
+.welcome-start::before{
+  content:"";
+  position:absolute;
+  left:20%;
+  right:20%;
+  bottom:-1px;
+  height:1px;
+  background:rgba(154,31,48,.82);
+  transform:scaleX(.28);
+  opacity:.45;
+  transition:transform .28s ease,opacity .28s ease;
+}
+
+.welcome-start:hover{
+  border-color:rgba(185,49,67,.48);
+  background:rgba(120,18,33,.055);
+  color:#fff;
+  box-shadow:0 0 24px rgba(126,20,34,.08);
+}
+
+.welcome-start:hover::before{
+  transform:scaleX(1);
+  opacity:.9;
+}
+
+.welcome-start:focus-visible{
+  outline:1px solid rgba(212,66,84,.8);
+  outline-offset:5px;
+}
+
+.welcome-grain{
+  position:absolute;
+  left:50%;
+  top:-18vh;
+  width:1px;
+  height:34vh;
+  opacity:0;
+  background:linear-gradient(to bottom,transparent,rgba(211,214,219,.14),rgba(150,36,53,.38),transparent);
+  animation:welcomeGrain 2.65s cubic-bezier(.22,.72,.27,1) .12s forwards;
+}
+
+@keyframes welcomeTitle{
+  0%{opacity:0;filter:blur(8px);transform:translateY(5px)}
+  72%{opacity:.88;filter:blur(.8px)}
+  100%{opacity:1;filter:blur(0);transform:translateY(0)}
+}
+
+@keyframes welcomeButton{
+  to{opacity:1;transform:translateY(0)}
+}
+
+@keyframes welcomeGrain{
+  0%{opacity:0;transform:translateY(0)}
+  16%{opacity:.20}
+  66%{opacity:.22;transform:translateY(68vh)}
+  67%,86%{opacity:.22;transform:translateY(68vh)}
+  100%{opacity:.06;transform:translateY(68vh)}
+}
+
+/* START 前，真正首頁保持靜止。
+   點擊後加上 .site-entered，才播放 v0.8 的首頁敘事動畫。 */
+body.pre-entry .hero-reveal,
+body.pre-entry .hero-art-reveal{
+  animation-play-state:paused;
+}
+
+body.site-entered .hero-reveal,
+body.site-entered .hero-art-reveal{
+  animation-play-state:running;
+}
+
+body.pre-entry{
+  overflow:hidden;
+}
+
+@media(max-width:640px){
+  .welcome-title{font-size:clamp(84px,29vw,132px)}
+  .welcome-start{margin-top:44px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .welcome-title,
+  .welcome-start,
+  .welcome-grain{
+    animation:none!important;
+    opacity:1!important;
+    filter:none!important;
+    transform:none!important;
+  }
+  .welcome-gate{transition:none!important}
+}
+
 /* ─────────────────────────────────────────────
    HERO INTRO · v0.8
    敘事節奏：沙落 → 停止 → THE END OF TIME → 時盡
