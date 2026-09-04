@@ -1333,3 +1333,13 @@ body.pre-entry{
     text-shadow:0 0 10px rgba(120,22,36,.035);
   }
 }
+
+
+/* v0.12.0 · 家式角色頁入口 */
+.card-link{display:block;color:inherit;text-decoration:none}
+.card-link .card-enter{
+  position:absolute;left:19px;bottom:16px;z-index:2;
+  font-size:8px;letter-spacing:.18em;color:#7e8792;
+  transition:color .2s ease,transform .2s ease
+}
+.card-link:hover .card-enter{color:#d6dbe1;transform:translateX(3px)}

@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -35,5 +35,8 @@
     "startButton": false,
     "cacheBust": "0.11.1",
     "englishFinalClarity": "85%"
+  },
+  "characterPages": {
+    "jiashi": "characters/jiashi.html"
   }
 }

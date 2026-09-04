@@ -33,13 +33,19 @@ function renderCharacters(chars){
     .sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999))
     .forEach(c=>{
       const seal = seals[c.id] || { text:(c.name || '').slice(-1), cls:'' };
-      const el = document.createElement('article');
+      const el = document.createElement(c.id === 'jiashi' ? 'a' : 'article');
       el.className='card';
       el.dataset.character = c.id || '';
+      if(c.id === 'jiashi'){
+        el.href = 'characters/jiashi.html';
+        el.classList.add('card-link');
+        el.setAttribute('aria-label','開啟時盡・家式角色頁');
+      }
       el.innerHTML = `
         <div class="role">${c.role || ''}</div>
         <h3>${c.fullName || `${c.title || ''}・${c.name || ''}`}</h3>
         <p>${c.publicIntro || ''}</p>
+        ${c.id === 'jiashi' ? '<div class="card-enter">VIEW FILE →</div>' : ''}
         <div class="sig ${seal.cls}" data-sig="${seal.text}" aria-hidden="true">${seal.text}</div>`;
       box.appendChild(el);
     });
