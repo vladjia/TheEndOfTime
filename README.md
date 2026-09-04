@@ -60,3 +60,21 @@ https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47
 ### 重要安全規則
 公開 Web App 不應輸出 `authorNotes`。
 作者模式日後會改成獨立、需要授權的 GAS / Google 登入流程。
+
+
+## v0.6：特殊展示字型
+
+新增：
+- `assets/fonts/TheEndOfTimeDisplay.ttf`
+- CSS `@font-face`
+- `--font-display`
+
+特殊展示字型只套用：
+- 首頁「時盡」
+- 章節大標
+- 角色正式稱號
+- 世界觀標題
+- 關鍵引言
+- 品牌「時」字
+
+正文仍使用清楚的系統黑體，避免長時間閱讀造成視覺疲勞。
