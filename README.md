@@ -93,3 +93,9 @@ https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47
 - 安言修 → 蝶：偶爾出現黑蝶殘影
 
 動畫皆支援 `prefers-reduced-motion`。
+
+
+## v0.7.1：角色印記位置修正
+- 四張角色卡右下角印記整體上提
+- 不再讓字被卡片底邊裁切
+- 「月半」使用獨立位置，確保雙字完整顯示

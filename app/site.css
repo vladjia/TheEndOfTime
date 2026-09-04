@@ -85,8 +85,8 @@ body::before{
 .card p{font-size:13px;color:#aeb6c0}
 .card .sig{
   position:absolute;
-  right:12px;
-  bottom:-12px;
+  right:14px;
+  bottom:10px;
   z-index:0;
   font-family:var(--font-display);
   font-size:78px;
@@ -144,8 +144,8 @@ body::before{
 
 /* 葉慎行｜「月半」：穩、重，幾乎不動；hover 才出現一道刀痕 */
 .card .sig-yeshenxing{
-  right:8px;
-  bottom:-8px;
+  right:10px;
+  bottom:12px;
   font-size:57px;
   letter-spacing:-.10em;
   color:rgba(200,205,212,.047);
