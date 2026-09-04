@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.10.0
+# 《時盡》網站核心 v0.10.1
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -237,3 +237,18 @@ START 正式移除。
 - 少量極淡血紅粒子保留《時盡》配色
 - 手機與 reduced-motion 均有相容處理
 - CSS / JS cache-bust 更新至 v0.10.0
+
+
+## v0.10.1：JavaScript 語法修正
+
+修正 v0.10.0 `site.js` 第 136 行的：
+`Uncaught SyntaxError: Unexpected token 'else'`
+
+原因：
+- 移除舊迎賓函式時，殘留了兩個孤立的 `else` 區塊。
+
+本版：
+- 完整移除殘留 `else`
+- 清除舊的 `initWelcomeGate()` / `initWelcomeSand()` 呼叫
+- 保留 v0.10.0 的「點擊時盡 → 沙化 → 進場」設計
+- CSS / JS cache-bust 更新為 v0.10.1

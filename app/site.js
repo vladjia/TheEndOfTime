@@ -133,15 +133,6 @@ async function init(){
 init();
 
 
-else{
-  initWelcomeGate();
-}
-
-
-else{
-  initWelcomeSand();
-}
-
 
 function initWelcomeExperience(){
   const gate = document.getElementById('welcomeGate');
