@@ -21,16 +21,28 @@ async function getLocalConfig(){
 function renderCharacters(chars){
   const box = $('#characterCards');
   box.innerHTML = '';
-  (chars || []).sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999)).forEach(c=>{
-    const el = document.createElement('article');
-    el.className='card';
-    el.innerHTML = `
-      <div class="role">${c.role || ''}</div>
-      <h3>${c.fullName || `${c.title || ''}・${c.name || ''}`}</h3>
-      <p>${c.publicIntro || ''}</p>
-      <div class="sig">${(c.signature || c.name || '').slice(-1)}</div>`;
-    box.appendChild(el);
-  });
+
+  const seals = {
+    jiashi: { text:'家', cls:'sig-jiashi' },
+    baiji: { text:'白', cls:'sig-baiji' },
+    yeshenxing: { text:'月半', cls:'sig-yeshenxing' },
+    anyanxiu: { text:'蝶', cls:'sig-anyanxiu' }
+  };
+
+  (chars || [])
+    .sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999))
+    .forEach(c=>{
+      const seal = seals[c.id] || { text:(c.name || '').slice(-1), cls:'' };
+      const el = document.createElement('article');
+      el.className='card';
+      el.dataset.character = c.id || '';
+      el.innerHTML = `
+        <div class="role">${c.role || ''}</div>
+        <h3>${c.fullName || `${c.title || ''}・${c.name || ''}`}</h3>
+        <p>${c.publicIntro || ''}</p>
+        <div class="sig ${seal.cls}" data-sig="${seal.text}" aria-hidden="true">${seal.text}</div>`;
+      box.appendChild(el);
+    });
 }
 
 function renderWorld(items){

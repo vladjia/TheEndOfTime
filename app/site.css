@@ -21,7 +21,7 @@
   --blood:#951a2b;
   --blood-hi:#c13a4d;
   --shadow:0 26px 90px rgba(0,0,0,.42);
-  --font-title:"TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif;
+  --font-title:"Noto Serif TC","DFKai-SB","KaiTi",serif;
   --font-body:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
   --font-display:"TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif;
 }
@@ -56,7 +56,7 @@ body::before{
 .eyebrow{font-size:11px;letter-spacing:.34em;color:var(--blood-hi);font-weight:800}
 .hero h1{font-family:var(--font-display);font-size:clamp(64px,9vw,122px);letter-spacing:.08em;line-height:.95;margin:16px 0 22px}
 .lead{font-size:16px;color:var(--silver);max-width:650px}
-.quote{margin-top:30px;padding-left:18px;border-left:2px solid var(--blood);font-family:var(--font-display);font-size:21px;color:#e2e5e9}
+.quote{margin-top:30px;padding-left:18px;border-left:2px solid var(--blood);font-family:var(--font-title);font-size:21px;color:#e2e5e9}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
 .btn{display:inline-block;color:#fff;text-decoration:none;border:1px solid var(--line);padding:10px 14px;background:#0e1218}
 .btn.primary{border-color:#63232e;background:rgba(149,26,43,.12);color:#ffd6dc}
@@ -70,7 +70,7 @@ body::before{
 .hero-art .note{position:absolute;left:16px;bottom:16px;padding:7px 9px;background:rgba(6,8,11,.76);border:1px solid #303743;color:#aab2bd;font-size:11px}
 .section{max-width:1240px;margin:auto;padding:70px 36px}
 .section-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:24px;border-bottom:1px solid var(--line-soft);padding-bottom:15px}
-.section-head h2{font-family:var(--font-display);font-size:30px;margin:0}
+.section-head h2{font-family:var(--font-title);font-size:30px;margin:0}
 .section-head small{color:var(--muted);letter-spacing:.16em}
 .section-head p{margin:0;color:var(--muted);max-width:520px;font-size:13px}
 .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -81,11 +81,135 @@ body::before{
 }
 .card:hover{transform:translateY(-3px);border-color:#4c3138}
 .card .role{font-size:10px;color:#747f8d;letter-spacing:.18em}
-.card h3{font-family:var(--font-display);font-size:22px;margin:10px 0 6px}
+.card h3{font-family:var(--font-title);font-size:22px;margin:10px 0 6px}
 .card p{font-size:13px;color:#aeb6c0}
-.card .sig{position:absolute;right:10px;bottom:-8px;font-family:var(--font-title);font-size:72px;color:rgba(255,255,255,.025)}
+.card .sig{
+  position:absolute;
+  right:12px;
+  bottom:-12px;
+  z-index:0;
+  font-family:var(--font-display);
+  font-size:78px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:.02em;
+  color:rgba(238,241,245,.052);
+  user-select:none;
+  pointer-events:none;
+  transform-origin:70% 70%;
+  filter:blur(.05px);
+  will-change:transform,opacity,filter;
+}
+.card > *:not(.sig){position:relative;z-index:1}
+
+/* 家式｜「家」：大部分時間靜止，偶爾像時間短暫卡格 */
+.card .sig-jiashi{
+  color:rgba(198,48,66,.075);
+  animation:sealJiashi 7.6s steps(1,end) infinite;
+}
+.card .sig-jiashi::after{
+  content:attr(data-sig);
+  position:absolute;
+  inset:0;
+  color:rgba(235,70,88,.11);
+  clip-path:inset(47% 0 43% 0);
+  transform:translateX(-1px);
+  opacity:0;
+  animation:sealJiashiSlice 7.6s steps(1,end) infinite;
+}
+@keyframes sealJiashi{
+  0%,86%,100%{opacity:.62;transform:translate(0,0) scale(1)}
+  87%{opacity:.95;transform:translate(-1px,0) scale(1.012)}
+  88%{opacity:.45;transform:translate(1px,0) scale(.995)}
+  89%{opacity:.68;transform:translate(0,0) scale(1)}
+}
+@keyframes sealJiashiSlice{
+  0%,86%,90%,100%{opacity:0}
+  87%,88%{opacity:1}
+}
+
+/* 白霽｜「白」：極慢、極輕，像無害的呼吸 */
+.card .sig-baiji{
+  color:rgba(235,237,241,.052);
+  animation:sealBaiji 8.8s ease-in-out infinite;
+}
+@keyframes sealBaiji{
+  0%,100%{transform:translateY(0) scale(1);opacity:.56}
+  50%{transform:translateY(-3px) scale(.985);opacity:.72}
+}
+.card:hover .sig-baiji{
+  filter:blur(.25px);
+  transform:translateY(-2px) scale(.965);
+}
+
+/* 葉慎行｜「月半」：穩、重，幾乎不動；hover 才出現一道刀痕 */
+.card .sig-yeshenxing{
+  right:8px;
+  bottom:-8px;
+  font-size:57px;
+  letter-spacing:-.10em;
+  color:rgba(200,205,212,.047);
+  animation:sealYe 10s ease-in-out infinite;
+}
+.card .sig-yeshenxing::after{
+  content:"";
+  position:absolute;
+  width:92px;height:1px;
+  right:-3px;top:48%;
+  background:linear-gradient(90deg,transparent,rgba(210,214,220,.28),transparent);
+  transform:rotate(-17deg) scaleX(0);
+  transform-origin:right center;
+  opacity:0;
+  transition:transform .28s ease,opacity .18s ease;
+}
+.card:hover .sig-yeshenxing::after{transform:rotate(-17deg) scaleX(1);opacity:1}
+@keyframes sealYe{
+  0%,100%{transform:translateY(0);opacity:.58}
+  50%{transform:translateY(1.5px);opacity:.66}
+}
+
+/* 安言修｜「蝶」：字本身安靜，只偶爾掠過兩枚黑蝶影 */
+.card .sig-anyanxiu{
+  color:rgba(218,222,228,.052);
+  animation:sealXiu 9.4s ease-in-out infinite;
+}
+.card .sig-anyanxiu::before,
+.card .sig-anyanxiu::after{
+  content:"";
+  position:absolute;
+  width:10px;height:7px;
+  border-radius:70% 30% 65% 35%;
+  background:rgba(0,0,0,.62);
+  opacity:0;
+  filter:blur(.15px);
+}
+.card .sig-anyanxiu::before{right:13px;top:8px;animation:butterflyOne 9.4s ease-in-out infinite}
+.card .sig-anyanxiu::after{right:-2px;top:28px;animation:butterflyTwo 9.4s ease-in-out infinite}
+@keyframes sealXiu{
+  0%,100%{transform:rotate(0deg);opacity:.58}
+  50%{transform:rotate(-1deg);opacity:.68}
+}
+@keyframes butterflyOne{
+  0%,70%,100%{opacity:0;transform:translate(0,0) rotate(0) scale(.7)}
+  74%{opacity:.52}
+  82%{opacity:.12;transform:translate(-28px,-18px) rotate(-34deg) scale(1)}
+  84%{opacity:0}
+}
+@keyframes butterflyTwo{
+  0%,76%,100%{opacity:0;transform:translate(0,0) rotate(0) scale(.65)}
+  80%{opacity:.42}
+  87%{opacity:.08;transform:translate(-21px,-31px) rotate(28deg) scale(.9)}
+  89%{opacity:0}
+}
+
+/* 動畫對暈動使用者友善 */
+@media (prefers-reduced-motion: reduce){
+  .card .sig,
+  .card .sig::before,
+  .card .sig::after{animation:none!important;transition:none!important}
+}
 .world{border:1px solid var(--line);padding:26px;background:linear-gradient(180deg,#0e1218,#0b0e13);clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px)}
-.world h3{font-family:var(--font-display);font-size:24px;margin-top:0}
+.world h3{font-family:var(--font-title);font-size:24px;margin-top:0}
 .gallery{display:grid;grid-template-columns:2fr 1fr 1fr;grid-auto-rows:215px;gap:10px}
 .slot{position:relative;border:1px solid var(--line-soft);background:#0c1016;overflow:hidden;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
 .slot.main{grid-row:span 2}

@@ -78,3 +78,18 @@ https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47
 - 品牌「時」字
 
 正文仍使用清楚的系統黑體，避免長時間閱讀造成視覺疲勞。
+
+
+## v0.7：角色印記 / Living Seals
+
+古風展示字體大幅收斂：
+- 保留：首頁「時盡」、左上「時」、角色印記
+- 恢復原字體：角色名稱、章節標題、世界觀標題、引言、正文
+
+角色卡右下角識別印記：
+- 家式 → 家：停時 / 短暫切片感
+- 白霽 → 白：極輕微呼吸漂移
+- 葉慎行 → 月半：沉穩，hover 出現刀痕
+- 安言修 → 蝶：偶爾出現黑蝶殘影
+
+動畫皆支援 `prefers-reduced-motion`。

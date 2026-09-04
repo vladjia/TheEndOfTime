@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -13,5 +13,11 @@
   },
   "repoUrl": "https://github.com/vladjia/TheEndOfTime",
   "gasApiEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
-  "displayFontPath": "assets/fonts/TheEndOfTimeDisplay.ttf"
+  "displayFontPath": "assets/fonts/TheEndOfTimeDisplay.ttf",
+  "characterSeals": {
+    "jiashi": "家",
+    "baiji": "白",
+    "yeshenxing": "月半",
+    "anyanxiu": "蝶"
+  }
 }
