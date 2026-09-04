@@ -812,3 +812,38 @@ body.pre-entry{
   position:relative;
   z-index:1;
 }
+
+
+/* ═══════════════════════════════════════════════
+   v0.9.5 · 細緻流沙重製
+   目標：不是白色大顆粒，而是字體下緣自然風化成細沙。
+   ═══════════════════════════════════════════════ */
+
+.welcome-sand{
+  width:min(70vw,620px);
+  height:142px;
+  margin-top:-14px;
+  margin-bottom:-12px;
+  opacity:.82;
+  filter:none;
+}
+
+.welcome-en.welcome-concept{
+  margin-top:0;
+  margin-bottom:44px;
+  color:rgba(229,233,238,.28);
+  filter:blur(.72px);
+  text-shadow:0 0 12px rgba(115,20,34,.035);
+}
+
+@media(max-width:640px){
+  .welcome-sand{
+    width:min(82vw,360px);
+    height:104px;
+    margin-top:-10px;
+    margin-bottom:-8px;
+  }
+  .welcome-en.welcome-concept{
+    filter:blur(.55px);
+  }
+}

@@ -166,7 +166,8 @@ if(document.readyState === 'loading'){
 
 function initWelcomeSand(){
   const canvas = document.getElementById('welcomeSand');
-  if(!canvas) return;
+  const title = document.querySelector('.welcome-title');
+  if(!canvas || !title) return;
 
   const ctx = canvas.getContext('2d');
   if(!ctx) return;
@@ -175,65 +176,112 @@ function initWelcomeSand(){
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let particles = [];
-  let raf = null;
+  let edgePoints = [];
+  let spawnAccumulator = 0;
   let last = performance.now();
-  let spawnAcc = 0;
 
-  function resize(){
+  function setupCanvas(){
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.max(1, Math.floor(rect.width * dpr));
     canvas.height = Math.max(1, Math.floor(rect.height * dpr));
     ctx.setTransform(dpr,0,0,dpr,0,0);
+    buildGlyphEdgeMap();
   }
 
-  function spawnParticle(){
-    const w = canvas.clientWidth;
+  function buildGlyphEdgeMap(){
+    const w = Math.max(1, Math.floor(canvas.clientWidth));
+    const h = Math.max(1, Math.floor(canvas.clientHeight));
+    const off = document.createElement('canvas');
+    const scale = 2;
+    off.width = w * scale;
+    off.height = Math.max(140, Math.floor(h * .8)) * scale;
 
-    // 不是從中央一點掉，而是從「時」「盡」兩字底部寬區域漏下。
-    const left = Math.random() < .5;
-    const base = left ? w * .34 : w * .66;
-    const spread = w * .18;
+    const o = off.getContext('2d');
+    if(!o) return;
 
+    const fontSize = Math.min(220, Math.max(100, canvas.clientWidth * .31));
+    const family = getComputedStyle(title).fontFamily || 'serif';
+
+    o.scale(scale,scale);
+    o.clearRect(0,0,off.width/scale,off.height/scale);
+    o.font = `${fontSize}px ${family}`;
+    o.textAlign = 'center';
+    o.textBaseline = 'alphabetic';
+    o.fillStyle = '#fff';
+
+    // 使用跟迎賓標題一致的「時」「盡」間距感，而不是中央單點漏沙
+    const cx = w/2;
+    const gap = fontSize * .18;
+    const y = Math.min(h*.52, fontSize*.78);
+    o.fillText('時', cx - fontSize*.42 - gap/2, y);
+    o.fillText('盡', cx + fontSize*.42 + gap/2, y);
+
+    const img = o.getImageData(0,0,w,h);
+    const data = img.data;
+    const candidates = [];
+
+    // 只找字體下緣的像素，讓沙從真正的筆畫底部脫落。
+    for(let x=2;x<w-2;x+=2){
+      let lowest = -1;
+      for(let y0=2;y0<Math.min(h-3, Math.floor(h*.66));y0++){
+        const a = data[(y0*w + x)*4 + 3];
+        if(a > 80) lowest = y0;
+      }
+      if(lowest > 0){
+        candidates.push({x, y:Math.max(0, lowest-1)});
+      }
+    }
+
+    // 降採樣，避免形成一道連續白牆
+    edgePoints = candidates.filter((_,i)=>i%2===0);
+  }
+
+  function spawn(){
+    if(!edgePoints.length) return;
+    const p0 = edgePoints[Math.floor(Math.random()*edgePoints.length)];
+
+    // 95% 超細沙，5% 稍大的碎屑；不再出現雪粒感
+    const large = Math.random() < .05;
     particles.push({
-      x: base + (Math.random() - .5) * spread,
-      y: -2 + Math.random() * 12,
-      vx: (Math.random() - .5) * .018,
-      vy: .026 + Math.random() * .025,
-      ay: .00022 + Math.random() * .00016,
-      r: .7 + Math.random() * 1.5,
-      a: .46 + Math.random() * .34,
-      warm: Math.random() < .11,
-      trail: Math.random() < .28
+      x:p0.x + (Math.random()-.5)*1.8,
+      y:Math.max(0, p0.y - 2 + Math.random()*4),
+      vx:(Math.random()-.5)*.010,
+      vy:.020 + Math.random()*.020,
+      ay:.00017 + Math.random()*.00011,
+      r:large ? (.72 + Math.random()*.42) : (.22 + Math.random()*.46),
+      alpha:large ? (.30 + Math.random()*.16) : (.18 + Math.random()*.26),
+      red:Math.random() < .035,
+      twinkle:Math.random() < .08
     });
   }
 
-  function drawParticle(p){
-    const h = canvas.clientHeight;
-    const fade = p.y < h * .72 ? 1 : Math.max(0, 1 - (p.y - h*.72)/(h*.28));
-    const alpha = p.a * fade;
+  function drawParticle(p, h){
+    const fadeStart = h*.68;
+    const fade = p.y < fadeStart ? 1 : Math.max(0,1-(p.y-fadeStart)/(h-fadeStart));
+    const a = p.alpha * fade;
 
-    if(p.trail){
+    if(p.r > .7){
       ctx.beginPath();
-      ctx.moveTo(p.x, p.y - Math.max(2, p.vy * 36));
-      ctx.lineTo(p.x, p.y + 1);
-      ctx.strokeStyle = p.warm
-        ? `rgba(151,38,54,${alpha*.38})`
-        : `rgba(225,229,235,${alpha*.30})`;
-      ctx.lineWidth = Math.max(.45, p.r*.42);
+      ctx.moveTo(p.x, p.y-1.5);
+      ctx.lineTo(p.x, p.y+1.5);
+      ctx.strokeStyle = p.red
+        ? `rgba(126,28,42,${a*.38})`
+        : `rgba(224,228,234,${a*.30})`;
+      ctx.lineWidth=.35;
       ctx.stroke();
     }
 
     ctx.beginPath();
     ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle = p.warm
-      ? `rgba(156,41,58,${alpha})`
-      : `rgba(231,234,239,${alpha})`;
+    ctx.fillStyle = p.red
+      ? `rgba(132,31,45,${a*.72})`
+      : `rgba(225,229,235,${a})`;
     ctx.fill();
   }
 
   function draw(now){
-    const dt = Math.min(34, now-last);
+    const dt = Math.min(32, now-last);
     last = now;
 
     const w = canvas.clientWidth;
@@ -241,60 +289,64 @@ function initWelcomeSand(){
     ctx.clearRect(0,0,w,h);
 
     if(!reduceMotion){
-      // 約每幀 3~5 粒，畫面能真的看出「流」。
-      spawnAcc += dt * .22;
-      while(spawnAcc >= 1 && particles.length < 260){
-        spawnParticle();
-        spawnAcc -= 1;
+      // 密而細，不追求「看見顆粒」，追求整體像風化落沙
+      spawnAccumulator += dt * .40;
+      while(spawnAccumulator >= 1 && particles.length < 520){
+        spawn();
+        spawnAccumulator -= 1;
       }
-    }else if(particles.length === 0){
-      for(let i=0;i<70;i++){
-        spawnParticle();
-        particles[i].y = Math.random()*h*.82;
+    }else if(particles.length===0){
+      for(let i=0;i<120;i++){
+        spawn();
+        if(particles[i]) particles[i].y += Math.random()*h*.55;
       }
     }
 
     for(let i=particles.length-1;i>=0;i--){
-      const p = particles[i];
+      const p=particles[i];
 
       if(!reduceMotion){
-        p.vy += p.ay * dt;
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
+        p.vy += p.ay*dt;
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+
+        // 非常輕的空氣偏移，不讓沙筆直掉成雨
+        p.vx += Math.sin((p.y+i)*.045)*.000025*dt;
       }
 
-      drawParticle(p);
+      drawParticle(p,h);
 
-      if(p.y > h + 6){
-        particles.splice(i,1);
-      }
+      if(p.y>h+3) particles.splice(i,1);
     }
 
-    // 英文上方非常淡的積沙霧帶
-    const g = ctx.createLinearGradient(0,h*.72,0,h);
-    g.addColorStop(0,'rgba(130,28,44,0)');
-    g.addColorStop(.65,'rgba(130,28,44,.018)');
-    g.addColorStop(1,'rgba(225,229,235,.012)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0,h*.68,w,h*.32);
+    // 極淡的細霧，不做任何中央束口或明顯光柱
+    const g = ctx.createLinearGradient(0,h*.60,0,h);
+    g.addColorStop(0,'rgba(95,18,30,0)');
+    g.addColorStop(.7,'rgba(95,18,30,.010)');
+    g.addColorStop(1,'rgba(220,224,230,.006)');
+    ctx.fillStyle=g;
+    ctx.fillRect(0,h*.58,w,h*.42);
 
-    if(!reduceMotion) raf=requestAnimationFrame(draw);
+    if(!reduceMotion) requestAnimationFrame(draw);
   }
 
-  resize();
-  window.addEventListener('resize', resize, {passive:true});
+  Promise.resolve(document.fonts ? document.fonts.ready : null).then(()=>{
+    setupCanvas();
 
-  // 先預填一批粒子，避免使用者第一眼看到空白。
-  for(let i=0;i<95;i++){
-    spawnParticle();
-    particles[i].y = Math.random()*canvas.clientHeight*.82;
-  }
+    // 預填少量，而且全都很細，第一眼就有「正在流」而不是突然噴砂。
+    for(let i=0;i<160;i++){
+      spawn();
+      if(particles[i]) particles[i].y += Math.random()*canvas.clientHeight*.54;
+    }
 
-  if(reduceMotion){
-    draw(performance.now());
-  }else{
-    raf=requestAnimationFrame(draw);
-  }
+    if(reduceMotion){
+      draw(performance.now());
+    }else{
+      requestAnimationFrame(draw);
+    }
+  });
+
+  window.addEventListener('resize', setupCanvas, {passive:true});
 }
 
 if(document.readyState === 'loading'){
