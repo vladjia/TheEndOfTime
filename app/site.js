@@ -133,207 +133,329 @@ async function init(){
 init();
 
 
-
-function initWelcomeExperience(){
+function initWelcomeExperienceV2(){
   const gate = document.getElementById('welcomeGate');
-  const titleButton = document.getElementById('welcomeTitle');
-  const canvas = document.getElementById('welcomeDissolve');
-  const title = document.querySelector('.welcome-title-button');
-  if(!gate || !titleButton || !canvas || !title) return;
+  const button = document.getElementById('welcomeCanvasButton');
+  const canvas = document.getElementById('welcomeTitleCanvas');
+  if(!gate || !button || !canvas) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha:true });
   if(!ctx) return;
 
   const reduceMotion = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* 核心原則：
+     標題與沙粒都在同一張 Canvas。
+     粒子來源直接採樣「同一張 Canvas 裡的字」，
+     因此不存在 DOM / Canvas 錯位問題。 */
+
+  let dpr = 1;
+  let sourceCanvas;
+  let workCanvas;
+  let sourceCtx;
+  let workCtx;
+  let points = [];
+  let pointIndex = 0;
   let particles = [];
-  let sourcePoints = [];
-  let dusting = false;
+  let titleBounds = null;
   let clicked = false;
+  let hovering = false;
   let last = performance.now();
-  let hoverTimer = 0;
+  let dissolveStart = 0;
+  let hoverAcc = 0;
+  let intro = 0;
 
-  function fitCanvas(){
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+  function setup(){
     const rect = canvas.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    buildSourceMap();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.max(2, Math.floor(rect.width*dpr));
+    canvas.height = Math.max(2, Math.floor(rect.height*dpr));
+
+    sourceCanvas = document.createElement('canvas');
+    workCanvas = document.createElement('canvas');
+    sourceCanvas.width = workCanvas.width = canvas.width;
+    sourceCanvas.height = workCanvas.height = canvas.height;
+
+    sourceCtx = sourceCanvas.getContext('2d');
+    workCtx = workCanvas.getContext('2d');
+
+    renderTitle();
+    buildDissolvePoints();
+
+    workCtx.clearRect(0,0,workCanvas.width,workCanvas.height);
+    workCtx.drawImage(sourceCanvas,0,0);
+
+    particles = [];
+    pointIndex = 0;
+    intro = 0;
   }
 
-  function buildSourceMap(){
-    const w = Math.max(1, Math.floor(canvas.clientWidth));
-    const h = Math.max(1, Math.floor(canvas.clientHeight));
-    const off = document.createElement('canvas');
-    const scale = 2;
-    off.width = w * scale;
-    off.height = h * scale;
-    const o = off.getContext('2d');
-    if(!o) return;
+  function renderTitle(){
+    const w = canvas.width/dpr;
+    const h = canvas.height/dpr;
 
-    const titleStyle = getComputedStyle(title);
-    const titleRect = title.getBoundingClientRect();
-    const canvasRect = canvas.getBoundingClientRect();
-    const spans = [...title.querySelectorAll('span')];
+    sourceCtx.setTransform(dpr,0,0,dpr,0,0);
+    sourceCtx.clearRect(0,0,w,h);
 
-    o.scale(scale,scale);
-    o.clearRect(0,0,w,h);
-    o.fillStyle='#fff';
-    o.textAlign='center';
-    o.textBaseline='alphabetic';
+    const fontSize = clamp(w*.245, 108, 218);
+    const gap = fontSize*.20;
 
-    sourcePoints = [];
+    sourceCtx.font = `700 ${fontSize}px "TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif`;
+    sourceCtx.textAlign = 'center';
+    sourceCtx.textBaseline = 'middle';
 
-    spans.forEach(span=>{
-      const r=span.getBoundingClientRect();
-      const cs=getComputedStyle(span);
-      const fs=parseFloat(cs.fontSize)||parseFloat(titleStyle.fontSize)||180;
-      const fam=cs.fontFamily||titleStyle.fontFamily||'serif';
+    const y = h*.43;
+    const m1 = sourceCtx.measureText('時');
+    const m2 = sourceCtx.measureText('盡');
+    const total = m1.width + m2.width + gap;
+    const leftX = w/2 - total/2 + m1.width/2;
+    const rightX = w/2 + total/2 - m2.width/2;
 
-      // 將 DOM 上實際字的中心映射到 particle canvas
-      const cx=(r.left+r.right)/2-canvasRect.left;
-      const baseline=Math.min(h*.42, fs*.78);
-      o.font=`${fs}px ${fam}`;
-      o.fillText(span.textContent.trim(),cx,baseline);
-    });
+    /* 很輕的暗紅背光，只提供深度，不做發光字 */
+    sourceCtx.save();
+    sourceCtx.shadowColor='rgba(116,20,34,.12)';
+    sourceCtx.shadowBlur=18;
+    sourceCtx.fillStyle='rgba(241,243,246,.95)';
+    sourceCtx.fillText('時',leftX,y);
+    sourceCtx.fillText('盡',rightX,y);
+    sourceCtx.restore();
 
-    const img=o.getImageData(0,0,w,h);
-    const data=img.data;
+    const ascent = Math.max(
+      m1.actualBoundingBoxAscent || fontSize*.78,
+      m2.actualBoundingBoxAscent || fontSize*.78
+    );
+    const descent = Math.max(
+      m1.actualBoundingBoxDescent || fontSize*.16,
+      m2.actualBoundingBoxDescent || fontSize*.16
+    );
 
-    // 只採樣每個筆畫「下緣」及其附近，避免像整個字爆炸。
-    for(let x=1;x<w-1;x+=2){
-      let bottom=-1;
-      for(let y=1;y<Math.floor(h*.50);y++){
-        if(data[(y*w+x)*4+3] > 90) bottom=y;
-      }
-      if(bottom>0){
-        for(let d=0;d<Math.min(12,bottom);d+=3){
-          const yy=bottom-d;
-          if(data[(yy*w+x)*4+3] > 90 && Math.random()>.35){
-            sourcePoints.push({x,y:yy});
-          }
-        }
-      }
-    }
-  }
-
-  function makeParticle(pt, strength=1){
-    const isShard=Math.random()<.025;
-    const warm=Math.random()<.035;
-    return {
-      x:pt.x+(Math.random()-.5)*1.4,
-      y:pt.y+(Math.random()-.5)*1.4,
-      vx:(Math.random()-.5)*.010*strength,
-      vy:(.018+Math.random()*.020)*strength,
-      ay:.00016+Math.random()*.00010,
-      r:isShard ? (.62+Math.random()*.34) : (.16+Math.random()*.34),
-      a:isShard ? (.27+Math.random()*.11) : (.11+Math.random()*.18),
-      warm,
-      age:0,
-      max:1500+Math.random()*900
+    titleBounds = {
+      left:leftX-m1.width*.58,
+      right:rightX+m2.width*.58,
+      top:y-ascent,
+      bottom:y+descent,
+      height:ascent+descent
     };
   }
 
-  function emit(count, strength=1){
-    if(!sourcePoints.length) return;
-    for(let i=0;i<count;i++){
-      const pt=sourcePoints[(Math.random()*sourcePoints.length)|0];
-      particles.push(makeParticle(pt,strength));
+  function buildDissolvePoints(){
+    const w = sourceCanvas.width;
+    const h = sourceCanvas.height;
+    const img = sourceCtx.getImageData(0,0,w,h);
+    const data = img.data;
+    const result = [];
+
+    /* 每 3 device px 採樣一次。
+       每個點的 threshold 依「由下往上」排序，再加入連續隨機擾動。
+       所以消失邊界是不規則細砂，而不是橫向方塊。 */
+    const step = Math.max(3, Math.round(dpr*2.2));
+
+    const top = Math.max(0, Math.floor(titleBounds.top*dpr));
+    const bottom = Math.min(h-1, Math.ceil(titleBounds.bottom*dpr));
+    const left = Math.max(0, Math.floor(titleBounds.left*dpr));
+    const right = Math.min(w-1, Math.ceil(titleBounds.right*dpr));
+    const height = Math.max(1,bottom-top);
+
+    for(let y=top;y<=bottom;y+=step){
+      for(let x=left;x<=right;x+=step){
+        const a = data[(y*w+x)*4+3];
+        if(a < 70) continue;
+
+        const upward = (bottom-y)/height;
+        const noise = (Math.random()-.5)*.18;
+        const threshold = clamp(upward + noise, 0, 1);
+
+        result.push({
+          x:x/dpr,
+          y:y/dpr,
+          threshold,
+          radius:.75 + Math.random()*1.5,
+          emit:Math.random()<.42
+        });
+      }
+    }
+
+    result.sort((a,b)=>a.threshold-b.threshold);
+    points=result;
+  }
+
+  function erasePoint(p){
+    workCtx.save();
+    workCtx.setTransform(dpr,0,0,dpr,0,0);
+    workCtx.globalCompositeOperation='destination-out';
+
+    /* 圓形軟擦除，不會出現馬賽克格 */
+    const r=p.radius*(1.2+Math.random()*.8);
+    const g=workCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*2.15);
+    g.addColorStop(0,'rgba(0,0,0,.98)');
+    g.addColorStop(.58,'rgba(0,0,0,.78)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    workCtx.fillStyle=g;
+    workCtx.beginPath();
+    workCtx.arc(p.x,p.y,r*2.2,0,Math.PI*2);
+    workCtx.fill();
+    workCtx.restore();
+
+    if(p.emit){
+      const count=Math.random()<.15 ? 2 : 1;
+      for(let i=0;i<count;i++) spawnParticle(p.x,p.y);
     }
   }
 
-  function draw(now){
-    const dt=Math.min(32,now-last);
-    last=now;
-    const w=canvas.clientWidth;
-    const h=canvas.clientHeight;
-    ctx.clearRect(0,0,w,h);
+  function spawnParticle(x,y,subtle=false){
+    const shard=Math.random()<.018;
+    const warm=Math.random()<.025;
 
-    // hover 時只掉極少量，暗示可以點
-    if(dusting && !clicked && !reduceMotion){
-      hoverTimer += dt;
-      if(hoverTimer > 55){
-        emit(1,.72);
-        hoverTimer=0;
+    particles.push({
+      x:x+(Math.random()-.5)*2,
+      y:y+(Math.random()-.5)*2,
+      vx:(Math.random()-.5)*(subtle?.010:.018),
+      vy:(subtle?.018:.026)+Math.random()*(subtle?.012:.022),
+      ay:.00018+Math.random()*.00010,
+      r:shard ? (.62+Math.random()*.34) : (.16+Math.random()*.34),
+      a:subtle ? (.06+Math.random()*.08) :
+         (shard ? .23+Math.random()*.09 : .10+Math.random()*.16),
+      warm,
+      life:0,
+      max:1300+Math.random()*1000
+    });
+  }
+
+  function renderCanvas(now){
+    const dt=Math.min(34,now-last);
+    last=now;
+    const w=canvas.width/dpr;
+    const h=canvas.height/dpr;
+
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    /* 初次顯影：不是跳出來，從暗處慢慢成形 */
+    if(!clicked){
+      intro=Math.min(1,intro+dt/850);
+      ctx.globalAlpha=.25+.75*(1-Math.pow(1-intro,3));
+    }else{
+      ctx.globalAlpha=1;
+    }
+
+    ctx.drawImage(workCanvas,0,0);
+
+    /* hover 只從真正字底掉極少量細砂，提示「這裡可以碰」 */
+    if(hovering && !clicked && !reduceMotion){
+      hoverAcc+=dt;
+      if(hoverAcc>85){
+        hoverAcc=0;
+        const lower=points.filter(p=>p.threshold<.10);
+        if(lower.length){
+          const p=lower[(Math.random()*lower.length)|0];
+          spawnParticle(p.x,p.y,true);
+        }
       }
     }
 
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
-      p.age+=dt;
+      p.life+=dt;
+
       if(!reduceMotion){
         p.vy+=p.ay*dt;
         p.x+=p.vx*dt;
         p.y+=p.vy*dt;
-        p.vx+=Math.sin((p.y+i)*.036)*.000018*dt;
+        p.vx+=Math.sin((p.y+i)*.037)*.000012*dt;
       }
 
-      const fade=Math.max(0,1-p.age/p.max);
-      const verticalFade=p.y<h*.79 ? 1 : Math.max(0,1-(p.y-h*.79)/(h*.21));
-      const a=p.a*fade*verticalFade;
+      const lifeFade=Math.max(0,1-p.life/p.max);
+      const bottomFade=p.y<h*.91 ? 1 : Math.max(0,1-(p.y-h*.91)/(h*.09));
+      const a=p.a*lifeFade*bottomFade;
 
+      ctx.save();
+      ctx.setTransform(dpr,0,0,dpr,0,0);
       ctx.beginPath();
       ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
       ctx.fillStyle=p.warm
-        ? `rgba(132,30,44,${a*.78})`
-        : `rgba(229,232,237,${a})`;
+        ? `rgba(127,29,43,${a*.72})`
+        : `rgba(230,233,238,${a})`;
       ctx.fill();
+      ctx.restore();
 
-      if(p.age>p.max || p.y>h+4) particles.splice(i,1);
+      if(p.life>p.max || p.y>h+5) particles.splice(i,1);
     }
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(renderCanvas);
   }
 
-  function enter(){
+  function dissolve(){
     if(clicked) return;
     clicked=true;
-    dusting=false;
+    hovering=false;
 
     if(reduceMotion){
-      gate.classList.add('is-entering');
+      gate.classList.add('is-leaving');
       document.body.classList.remove('pre-entry');
       document.body.classList.add('site-entered');
       setTimeout(()=>gate.remove(),120);
       return;
     }
 
+    dissolveStart=performance.now();
     gate.classList.add('is-dissolving');
 
-    // 分三波沙化：先細粉、再中量、最後把殘餘筆畫帶走。
-    emit(150,1.0);
-    setTimeout(()=>emit(230,1.14),180);
-    setTimeout(()=>emit(310,1.26),420);
-    setTimeout(()=>emit(220,1.38),720);
+    const tick=()=>{
+      const elapsed=performance.now()-dissolveStart;
+      const progress=clamp(elapsed/1500,0,1);
 
-    // 英文聚合完成後，世界打開。
+      while(pointIndex<points.length && points[pointIndex].threshold<=progress){
+        erasePoint(points[pointIndex]);
+        pointIndex++;
+      }
+
+      if(progress<1){
+        requestAnimationFrame(tick);
+      }else{
+        /* 最後剩下的極少數像素再柔和帶走 */
+        workCtx.save();
+        workCtx.globalCompositeOperation='destination-out';
+        workCtx.fillStyle='rgba(0,0,0,.12)';
+        workCtx.fillRect(0,0,workCanvas.width,workCanvas.height);
+        workCtx.restore();
+      }
+    };
+    requestAnimationFrame(tick);
+
     setTimeout(()=>{
-      gate.classList.add('is-entering');
+      gate.classList.add('is-leaving');
       document.body.classList.remove('pre-entry');
       document.body.classList.add('site-entered');
-    },1550);
+    },1760);
 
-    setTimeout(()=>gate.remove(),2350);
+    setTimeout(()=>gate.remove(),2580);
   }
 
-  titleButton.addEventListener('mouseenter',()=>{ dusting=true; });
-  titleButton.addEventListener('mouseleave',()=>{ dusting=false; });
-  titleButton.addEventListener('focus',()=>{ dusting=true; });
-  titleButton.addEventListener('blur',()=>{ dusting=false; });
-  titleButton.addEventListener('click',enter);
+  button.addEventListener('mouseenter',()=>hovering=true);
+  button.addEventListener('mouseleave',()=>hovering=false);
+  button.addEventListener('focus',()=>hovering=true);
+  button.addEventListener('blur',()=>hovering=false);
+  button.addEventListener('click',dissolve);
 
-  Promise.resolve(document.fonts ? document.fonts.ready : null).then(()=>{
-    fitCanvas();
-    requestAnimationFrame(draw);
-  });
+  Promise.resolve(document.fonts ? document.fonts.load('700 180px "TheEndOfTimeDisplay"') : null)
+    .catch(()=>null)
+    .then(()=>{
+      setup();
+      requestAnimationFrame(renderCanvas);
+    });
 
-  window.addEventListener('resize',fitCanvas,{passive:true});
+  window.addEventListener('resize',()=>{
+    if(clicked) return;
+    setup();
+  },{passive:true});
 }
 
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',initWelcomeExperience);
+  document.addEventListener('DOMContentLoaded',initWelcomeExperienceV2);
 }else{
-  initWelcomeExperience();
+  initWelcomeExperienceV2();
 }

@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -25,27 +25,14 @@
   "homepageLaw": "過程可以改變，結果不能。",
   "welcomeGate": {
     "enabled": true,
-    "title": "時盡",
+    "version": "2.0",
+    "interaction": "click-canvas-title",
+    "visualTitle": "canvas-rendered",
+    "dissolve": "same-canvas-pixel-sampling",
+    "direction": "bottom-to-top",
     "english": "THE END OF TIME",
-    "button": "START",
-    "englishPlacement": "below-title-reflection",
-    "titleLetterSpacing": "0.16em",
-    "layout": "transformative",
-    "titleMode": "large-dual-glyph",
-    "conceptMode": "large-english-form",
-    "conceptText": "THE END OF TIME",
-    "flowMode": "sandfall",
-    "sandEffect": "glyph-edge-fine-particles",
-    "sandSource": "dual-glyph-bottom",
-    "fakeCenterLineRemoved": true,
-    "cacheBust": "0.10.1",
-    "particleStyle": "fine-dust",
-    "sandDensity": "high-fine",
-    "sandAlignment": "dom-glyph-bounds",
-    "interaction": "click-title-to-enter",
-    "titleAction": "dissolve-to-sand",
-    "englishAction": "condense-from-shadow",
+    "hint": "輕觸時盡",
     "startButton": false,
-    "hint": "輕觸時盡"
+    "cacheBust": "0.11.0"
   }
 }

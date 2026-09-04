@@ -1055,3 +1055,252 @@ body.pre-entry{
     animation:none!important;
   }
 }
+
+
+/* ═══════════════════════════════════════════════
+   v0.10.2 · 沙化效果重構
+   取消方塊 mask；Canvas 與「時盡」共用同一座標系。
+   ═══════════════════════════════════════════════ */
+
+.welcome-title-stage{
+  position:relative;
+  z-index:4;
+  width:min(82vw,820px);
+  height:clamp(190px,24vw,300px);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  margin-bottom:-58px;
+}
+
+.welcome-title-stage .welcome-title-button{
+  position:relative;
+  z-index:2;
+}
+
+.welcome-title-stage .welcome-dissolve{
+  display:block!important;
+  position:absolute;
+  inset:0;
+  z-index:3;
+  width:100%;
+  height:100%;
+  margin:0!important;
+  pointer-events:none;
+}
+
+/* 完全取消上一版的 mask 侵蝕 */
+.welcome-gate.is-dissolving .welcome-title-button{
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
+  animation:titleDissolveSmooth 1.42s cubic-bezier(.38,0,.24,1) forwards!important;
+}
+
+@keyframes titleDissolveSmooth{
+  0%{opacity:1;filter:blur(0) brightness(1);transform:translateY(0) scale(1)}
+  42%{opacity:.96;filter:blur(.18px) brightness(1.02);transform:translateY(0) scale(1)}
+  74%{opacity:.62;filter:blur(.8px) brightness(.94);transform:translateY(-1px) scale(.998)}
+  100%{opacity:0;filter:blur(3px) brightness(.76);transform:translateY(-2px) scale(.995)}
+}
+
+.welcome-gate.is-dissolving .welcome-en.welcome-concept{
+  animation:englishCondenseSmooth 1.42s cubic-bezier(.22,.72,.24,1) .30s forwards!important;
+}
+
+@keyframes englishCondenseSmooth{
+  0%{opacity:.24;color:rgba(232,235,240,.08);filter:blur(2.7px);transform:translateY(8px) scaleY(.95)}
+  62%{opacity:.70;color:rgba(232,235,240,.23);filter:blur(.9px);transform:translateY(2px) scaleY(.98)}
+  100%{opacity:1;color:rgba(236,239,243,.39);filter:blur(.38px);transform:translateY(0) scaleY(1)}
+}
+
+@media(max-width:640px){
+  .welcome-title-stage{
+    width:min(94vw,480px);
+    height:clamp(150px,40vw,210px);
+    margin-bottom:-42px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   WELCOME 2.0 · v0.11.0
+   完全重製：
+   「時盡」與沙化粒子全部由同一張 Canvas 繪製。
+   不再用 DOM 字框猜位置、不再用 CSS mask 吃字。
+   ═══════════════════════════════════════════════════════ */
+
+.welcome-gate.welcome-v2{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(116,20,34,.055), transparent 30%),
+    radial-gradient(circle at 50% 64%, rgba(255,255,255,.012), transparent 28%),
+    #050506;
+  opacity:1;
+  visibility:visible;
+}
+
+.welcome-v2-inner{
+  width:min(94vw,980px);
+  min-height:min(82vh,720px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  transform:translateY(-1.5vh);
+}
+
+.welcome-canvas-button{
+  position:relative;
+  display:block;
+  width:min(88vw,860px);
+  height:clamp(245px,30vw,350px);
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  appearance:none;
+  -webkit-appearance:none;
+  background:transparent;
+  cursor:pointer;
+  overflow:visible;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.welcome-title-canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+.welcome-canvas-button:focus-visible{
+  outline:1px solid rgba(174,43,61,.34);
+  outline-offset:8px;
+}
+
+/* 英文不是副標，是「時盡」沙化後逐漸凝聚出的第二層概念 */
+.welcome-v2-english{
+  width:min(82vw,800px);
+  margin-top:-48px;
+  padding-left:.32em;
+  text-align:center;
+  white-space:nowrap;
+  font:500 clamp(24px,3.1vw,44px)/1 var(--font-body);
+  letter-spacing:.32em;
+  color:rgba(235,238,242,.10);
+  opacity:.30;
+  filter:blur(2.2px);
+  transform:translateY(10px) scaleY(.96);
+  transition:none;
+}
+
+.welcome-v2-hint{
+  margin-top:52px;
+  font:500 10px/1 var(--font-body);
+  letter-spacing:.30em;
+  color:rgba(226,230,235,.18);
+  opacity:0;
+  animation:welcomeV2HintIn .65s ease 1.2s forwards;
+}
+
+@keyframes welcomeV2HintIn{
+  to{opacity:1}
+}
+
+/* hover 只讓整體稍微亮，不另外做會誤導人的特效 */
+.welcome-canvas-button:hover + .welcome-v2-english{
+  color:rgba(235,238,242,.13);
+}
+
+.welcome-v2.is-dissolving .welcome-v2-hint{
+  opacity:0!important;
+}
+
+.welcome-v2.is-dissolving .welcome-v2-english{
+  animation:welcomeV2EnglishCondense 1.55s cubic-bezier(.22,.72,.24,1) .22s forwards;
+}
+
+@keyframes welcomeV2EnglishCondense{
+  0%{
+    opacity:.30;
+    color:rgba(235,238,242,.10);
+    filter:blur(2.2px);
+    transform:translateY(10px) scaleY(.96);
+    letter-spacing:.35em;
+  }
+  58%{
+    opacity:.76;
+    color:rgba(235,238,242,.26);
+    filter:blur(.82px);
+    transform:translateY(2px) scaleY(.985);
+  }
+  100%{
+    opacity:1;
+    color:rgba(239,241,244,.40);
+    filter:blur(.38px);
+    transform:translateY(0) scaleY(1);
+    letter-spacing:.32em;
+  }
+}
+
+.welcome-v2.is-leaving{
+  animation:welcomeV2Leave .82s cubic-bezier(.4,0,.26,1) forwards;
+  pointer-events:none;
+}
+
+@keyframes welcomeV2Leave{
+  0%{opacity:1;filter:blur(0);transform:scale(1)}
+  48%{opacity:.92;filter:blur(.5px);transform:scale(1.002)}
+  100%{opacity:0;filter:blur(4px);transform:scale(1.008)}
+}
+
+/* 舊迎賓實驗全部禁用，避免樣式串進來 */
+.welcome-v2 .welcome-title,
+.welcome-v2 .welcome-start,
+.welcome-v2 .welcome-sand,
+.welcome-v2 .welcome-flow,
+.welcome-v2 .welcome-grain,
+.welcome-v2 .welcome-dissolve{
+  display:none!important;
+}
+
+@media(max-width:640px){
+  .welcome-v2-inner{
+    min-height:72vh;
+    transform:translateY(-1vh);
+  }
+
+  .welcome-canvas-button{
+    width:min(96vw,520px);
+    height:clamp(205px,55vw,280px);
+  }
+
+  .welcome-v2-english{
+    width:min(92vw,460px);
+    margin-top:-34px;
+    padding-left:.22em;
+    font-size:clamp(15px,4.2vw,21px);
+    letter-spacing:.22em;
+  }
+
+  .welcome-v2-hint{
+    margin-top:42px;
+    font-size:9px;
+    letter-spacing:.24em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .welcome-v2-english,
+  .welcome-v2-hint,
+  .welcome-v2.is-leaving{
+    animation:none!important;
+    transition:none!important;
+  }
+  .welcome-v2-hint{opacity:1}
+}
