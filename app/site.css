@@ -1343,3 +1343,94 @@ body.pre-entry{
   transition:color .2s ease,transform .2s ease
 }
 .card-link:hover .card-enter{color:#d6dbe1;transform:translateX(3px)}
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.5 · 全站可讀性調整
+   原則：小字仍可當輔助資訊，但最低不能小到需要瞇眼。
+   ═══════════════════════════════════════════════ */
+
+:root{
+  --text-xs:11px;
+  --text-sm:13px;
+  --text-base:15px;
+  --text-md:17px;
+}
+
+/* 頂部導覽、按鈕、模式文字 */
+.topbar,
+.topbar a,
+.mode,
+.btn,
+button{
+  font-size:max(var(--text-xs),1em);
+}
+
+/* 首頁角色卡與世界觀 */
+.card .role,
+.world .tag,
+.eyebrow{
+  font-size:11px!important;
+}
+
+.card p,
+.world p,
+.lead{
+  font-size:15px;
+}
+
+.card h3,
+.world h3{
+  line-height:1.35;
+}
+
+/* footer / 次要標籤不可低於 11px */
+.footer,
+small{
+  font-size:11px;
+}
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.6 · 首頁可讀性第二輪
+   ═══════════════════════════════════════════════ */
+
+.topbar .brand strong{font-size:16px!important}
+.topbar .brand small{font-size:11px!important}
+.nav a,.mode{font-size:12px!important}
+
+.hero .lead{
+  font-size:17px!important;
+  line-height:1.9!important;
+}
+
+.hero .quote{
+  font-size:18px!important;
+  line-height:1.8!important;
+}
+
+.card .role,
+.world .tag,
+.eyebrow{
+  font-size:12px!important;
+}
+
+.card p,
+.world p{
+  font-size:16px!important;
+  line-height:1.85!important;
+}
+
+.card .card-enter{
+  font-size:10px!important;
+}
+
+.footer{
+  font-size:11px!important;
+}
+
+@media(max-width:620px){
+  .hero .lead{font-size:16px!important}
+  .hero .quote{font-size:17px!important}
+  .card p,.world p{font-size:15px!important}
+}

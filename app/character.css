@@ -307,3 +307,451 @@
   .zero-visual:not(:has(img)){min-height:320px!important}
   .weapon-slot:not(:has(img)){min-height:260px!important}
 }
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.3 · 角色技能區
+   不做一堆圓角卡；以細線、編號、字訣識別呈現。
+   ═══════════════════════════════════════════════ */
+
+.skill-intro{
+  max-width:800px;
+  margin:18px 0 28px;
+  color:#9aa4af;
+  line-height:1.9;
+}
+
+.skill-list{
+  margin-top:28px;
+  border-top:1px solid var(--line-soft);
+}
+
+.skill-list article{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+  min-height:142px;
+  padding:24px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+
+.skill-code{
+  font-family:var(--font-display);
+  font-size:54px;
+  line-height:1;
+  text-align:center;
+  color:rgba(235,238,242,.12);
+}
+
+.skill-list small,
+.skill-ultimate small{
+  display:block;
+  font-size:8px;
+  letter-spacing:.18em;
+  color:#7a8491;
+  margin-bottom:5px;
+}
+
+.skill-list h3,
+.skill-ultimate h3{
+  margin:0 0 8px;
+  font-family:var(--font-title);
+  font-size:22px;
+  font-weight:600;
+}
+
+.skill-list p,
+.skill-ultimate p{
+  margin:0;
+  color:#969faa;
+  line-height:1.8;
+  font-size:12px;
+}
+
+.skill-ultimate{
+  margin-top:34px;
+  padding:26px 28px;
+  border-left:2px solid var(--blood);
+  background:linear-gradient(90deg,rgba(149,26,43,.06),transparent 72%);
+}
+
+.character-baiji .skill-code{color:rgba(232,236,241,.10)}
+.character-yeshenxing .skill-code{color:rgba(188,194,201,.09)}
+.character-anyanxiu .skill-code{color:rgba(160,167,176,.10)}
+
+@media(max-width:620px){
+  .skill-list article{
+    grid-template-columns:64px minmax(0,1fr);
+    gap:14px;
+  }
+  .skill-code{font-size:42px}
+  .skill-ultimate{padding:22px 18px}
+}
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.4 · 圖片比例自動偵測
+   JS 讀取圖片 naturalWidth / naturalHeight，
+   零式與斷刻容器直接跟隨原圖比例。
+   ═══════════════════════════════════════════════ */
+
+.zero-section{
+  align-items:start!important;
+}
+
+.zero-visual.media-natural-fit,
+.weapon-slot.media-natural-fit{
+  min-height:0!important;
+  height:auto!important;
+  align-self:start!important;
+  overflow:hidden!important;
+  display:block!important;
+}
+
+.zero-visual.media-natural-fit img,
+.weapon-slot.media-natural-fit img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  padding:0!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+}
+
+/* 武器兩張各自依自己的原始比例，不強迫同高 */
+.weapon-slots{
+  align-items:start!important;
+}
+.weapon-slot.media-natural-fit{
+  align-self:start!important;
+}
+
+/* 若圖片尚未載入，才使用原本骨架高度 */
+.zero-visual:not(.media-natural-fit){min-height:420px}
+.weapon-slot:not(.media-natural-fit){min-height:340px}
+
+@media(max-width:620px){
+  .zero-visual:not(.media-natural-fit){min-height:320px}
+  .weapon-slot:not(.media-natural-fit){min-height:260px}
+}
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.5 · 角色頁字級全面可讀性修正
+   不再要求使用者逐項指出哪些字太小。
+   ═══════════════════════════════════════════════ */
+
+/* 角色頁所有 8~10px 的功能標籤統一上調 */
+.character-kicker,
+.character-section-title small,
+.character-meta small,
+.character-strip span,
+.weapon-tag,
+.zero-label,
+.spoiler-gate small,
+.skill-list small,
+.skill-ultimate small{
+  font-size:11px!important;
+  line-height:1.45;
+}
+
+.text-link,
+.character-meta strong,
+.character-strip strong,
+.weapon-slot span,
+.zero-note,
+.spoiler-gate p,
+.skill-list p,
+.skill-ultimate p{
+  font-size:13px!important;
+}
+
+.character-lead{
+  font-size:18px!important;
+  line-height:1.9;
+}
+
+.character-copy p,
+.weapon-copy p,
+.zero-copy p{
+  font-size:15px!important;
+  line-height:2;
+}
+
+.ability-list p{
+  font-size:14px!important;
+  line-height:1.85;
+}
+
+.character-rule span{
+  font-size:11px!important;
+}
+
+.character-rule strong{
+  font-size:24px!important;
+  line-height:1.5;
+}
+
+.character-meta>div{
+  padding:18px 19px;
+}
+
+.character-meta strong{
+  margin-top:7px;
+}
+
+.character-strip>div{
+  padding:19px 20px;
+}
+
+.weapon-copy blockquote{
+  font-size:20px!important;
+  line-height:1.75;
+}
+
+.zero-steps{
+  font-size:13px!important;
+}
+
+.spoiler-gate button{
+  font-size:12px!important;
+}
+
+@media(max-width:620px){
+  .character-lead{font-size:16px!important}
+  .character-copy p,
+  .weapon-copy p,
+  .zero-copy p{font-size:15px!important}
+
+  .character-kicker,
+  .character-section-title small,
+  .character-meta small,
+  .character-strip span,
+  .skill-list small,
+  .skill-ultimate small{
+    font-size:11px!important;
+  }
+
+  .text-link,
+  .character-meta strong,
+  .character-strip strong,
+  .skill-list p,
+  .skill-ultimate p{
+    font-size:13px!important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════
+   v0.13.6 · 圖片裁切策略正式統一
+   原則：完整角色 > 塞滿容器
+   ═══════════════════════════════════════════════ */
+
+/* 主視覺容器本身不要強迫圖片被切 */
+.character-visual{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 48% 28%,rgba(149,26,43,.13),transparent 27%),
+    linear-gradient(180deg,#11161e 0%,#090c11 100%);
+}
+
+.character-visual img{
+  z-index:1;
+  display:block;
+  max-width:100%;
+  max-height:100%;
+}
+
+/* 直圖 / 方圖：完整顯示人物，不裁頭、不裁衣服、不裁武器 */
+.character-visual.media-contain img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  padding:12px!important;
+}
+
+/* 很寬的橫圖：維持滿版感，但以人物上半部為優先 */
+.character-visual.media-cover img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center top!important;
+  padding:0!important;
+}
+
+/* 零式 / 武器：依原始比例完整顯示 */
+.zero-section{
+  align-items:start!important;
+}
+
+.weapon-slots{
+  align-items:start!important;
+}
+
+.zero-visual.media-natural-fit,
+.weapon-slot.media-natural-fit{
+  min-height:0!important;
+  height:auto!important;
+  display:block!important;
+  align-self:start!important;
+  overflow:hidden!important;
+  aspect-ratio:var(--media-ratio);
+}
+
+.zero-visual.media-natural-fit img,
+.weapon-slot.media-natural-fit img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  padding:0!important;
+}
+
+/* 圖片未載入前才顯示骨架高度 */
+.zero-visual:not(.media-natural-fit){min-height:420px!important}
+.weapon-slot:not(.media-natural-fit){min-height:340px!important}
+
+/* 人物主視覺也避免太窄時被卡死 */
+@media(max-width:980px){
+  .character-visual{
+    min-height:min(72vh,720px);
+  }
+}
+
+@media(max-width:620px){
+  .character-visual{
+    min-height:min(68vh,560px);
+  }
+
+  .character-visual.media-contain img{
+    padding:6px!important;
+  }
+
+  .zero-visual:not(.media-natural-fit){min-height:320px!important}
+  .weapon-slot:not(.media-natural-fit){min-height:260px!important}
+}
+
+/* ═══════════════════════════════════════════════
+   v0.13.6 · 角色頁可讀性第二輪
+   ═══════════════════════════════════════════════ */
+
+.character-topbar .brand strong{
+  font-size:16px!important;
+}
+
+.character-topbar .brand small{
+  font-size:11px!important;
+}
+
+.text-link,
+.mode{
+  font-size:12px!important;
+}
+
+.character-kicker,
+.character-section-title small,
+.character-meta small,
+.character-strip span,
+.weapon-tag,
+.zero-label,
+.spoiler-gate small,
+.skill-list small,
+.skill-ultimate small{
+  font-size:12px!important;
+  line-height:1.5!important;
+}
+
+.character-meta strong,
+.character-strip strong,
+.weapon-slot span,
+.zero-note,
+.spoiler-gate p,
+.skill-list p,
+.skill-ultimate p{
+  font-size:14px!important;
+}
+
+.character-lead{
+  font-size:19px!important;
+  line-height:1.9!important;
+}
+
+.character-copy p,
+.weapon-copy p,
+.zero-copy p{
+  font-size:16px!important;
+  line-height:2!important;
+}
+
+.ability-list p{
+  font-size:15px!important;
+  line-height:1.9!important;
+}
+
+.character-rule span{
+  font-size:12px!important;
+}
+
+.character-rule strong{
+  font-size:25px!important;
+}
+
+.weapon-copy blockquote{
+  font-size:21px!important;
+  line-height:1.8!important;
+}
+
+.zero-steps{
+  font-size:14px!important;
+}
+
+.spoiler-gate button{
+  font-size:13px!important;
+}
+
+@media(max-width:620px){
+  .character-kicker,
+  .character-section-title small,
+  .character-meta small,
+  .character-strip span,
+  .weapon-tag,
+  .zero-label,
+  .skill-list small,
+  .skill-ultimate small{
+    font-size:11px!important;
+  }
+
+  .text-link,
+  .mode,
+  .character-meta strong,
+  .character-strip strong,
+  .weapon-slot span,
+  .skill-list p,
+  .skill-ultimate p{
+    font-size:13px!important;
+  }
+
+  .character-lead{
+    font-size:17px!important;
+  }
+
+  .character-copy p,
+  .weapon-copy p,
+  .zero-copy p,
+  .ability-list p{
+    font-size:15px!important;
+  }
+}

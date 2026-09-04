@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.13.2",
+  "version": "0.13.6",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -43,11 +43,35 @@
     "anyanxiu": "characters/anyanxiu.html"
   },
   "imageFitRules": {
-    "characterHero": "cover-top",
-    "weapon": "natural-ratio-contain",
-    "zeroVisual": "natural-ratio-contain"
+    "characterHeroPortraitOrSquare": "contain-center",
+    "characterHeroWide": "cover-top",
+    "weapon": "natural-aspect-ratio-contain",
+    "zeroVisual": "natural-aspect-ratio-contain"
   },
   "navigation": {
     "characterToHome": "skip-welcome"
-  }
+  },
+  "characterSkillSections": {
+    "jiashi": [
+      "時字訣・止刻",
+      "空字訣・斷界移影",
+      "血字訣・血迴",
+      "弒字訣・絕脈",
+      "家皇歿式・零"
+    ],
+    "baiji": [
+      "血憶",
+      "古血之軀"
+    ],
+    "yeshenxing": [
+      "基本功",
+      "血身控制"
+    ],
+    "anyanxiu": [
+      "黑蝶戰鬥識別",
+      "正道武學"
+    ]
+  },
+  "imageMatching": "relaxed-alias-and-path",
+  "typography": "readability-pass-2"
 }
