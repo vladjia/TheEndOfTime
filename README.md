@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.4
+# 《時盡》網站核心 v0.5
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -17,8 +17,8 @@
 
 ## GitHub / Pages
 
-- Repository: https://github.com/vladjia/shijin
-- GitHub Pages: https://vladjia.github.io/shijin/
+- Repository: https://github.com/vladjia/TheEndOfTime
+- GitHub Pages: https://vladjia.github.io/TheEndOfTime/
 
 OG 分享爬蟲通常不執行 JavaScript，所以 `og:url` 與 `og:image` 必須直接寫在 index.html 裡，不能只放 config.json。
 
@@ -46,7 +46,7 @@ OG 分享爬蟲通常不執行 JavaScript，所以 `og:url` 與 `og:image` 必�
 角色內容與圖片來源會逐步移到資料層 / Google Drive + GAS，避免改版時重做。
 
 
-## v0.4：Google Sheet / GAS 已接線
+## v0.5：Google Sheet / GAS 已接線
 
 公開 API：
 https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec
