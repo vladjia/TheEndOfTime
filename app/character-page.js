@@ -77,15 +77,26 @@ function bestWeaponImage(images, keyword){
     .map(img => {
       const text = haystack(img);
       let score = 0;
-      if(hasAny(text,['斷刻','断刻'])) score += 20;
-      if(hasAny(text,['武器'])) score += 5;
-      if(hasAny(text,[keyword])) score += 14;
+
+      if(hasAny(text,['斷刻','断刻'])) score += 24;
+      if(hasAny(text,['武器'])) score += 8;
+      if(hasAny(text,[keyword])) score += 18;
+      if(hasAny(text,['主視覺','主视觉','細節','细节'])) score += 3;
+
       return {img,score};
     })
-    .filter(x=>x.score>0)
+    .filter(x=>x.score >= 32)
     .sort((a,b)=>b.score-a.score);
 
-  return ranked[0]?.img || null;
+  const picked = ranked[0]?.img || null;
+
+  if(picked){
+    console.info(`[武器圖片配對] ${keyword} →`, picked.name || picked.url);
+  }else{
+    console.warn(`[武器圖片配對失敗] ${keyword}`);
+  }
+
+  return picked;
 }
 
 function mountImage(target, item, alt){
@@ -150,7 +161,6 @@ function renderMeta(char){
   if(!box) return;
 
   const rows = [
-    ['武器',char.weapon],
     ['戰鬥識別',char.signature],
     ['狀態',char.state]
   ].filter(([,value])=>value);
@@ -166,7 +176,6 @@ function renderStrip(char){
 
   const rows = [
     ['IDENTITY',char.role],
-    ['WEAPON',char.weapon],
     ['SIGNATURE',char.signature],
     ['CORE',char.coreLine]
   ].filter(([,value])=>value);
@@ -250,30 +259,41 @@ function renderPoem(char){
   box.innerHTML = lines.map(line=>`<p>${line}</p>`).join('');
 }
 
-function renderWeapon(char,id,images){
+function renderWeapon(char,id,weapons,images){
   const section = $('#weaponSection');
   if(!section) return;
 
-  if(!char.weapon && !char.weaponDescription){
+  const weapon = (weapons || []).find(w => w.id === char.weaponId);
+
+  if(!weapon){
     section.hidden = true;
     return;
   }
 
   section.hidden = false;
-  setText('#weaponTitle',char.weapon || '武器');
-  setText('#weaponTag',char.signature || '');
-  setText('#weaponDescription',char.weaponDescription || '');
-  setText('#weaponSignatureLine',char.weaponSignatureLine || '');
 
-  if(id === 'jiashi'){
+  setText('#weaponTitle',weapon.name || '武器');
+  setText('#weaponTag',weapon.combatSignature || '');
+  setText('#weaponDescription',weapon.publicDescription || '');
+  setText('#weaponSignatureLine',weapon.signatureLine || '');
+
+  if(id === 'jiashi' && weapon.id === 'duanke'){
     const slots = $('#weaponSlots');
     if(slots) slots.hidden = false;
 
     const weaponOpen = bestWeaponImage(images,'展開');
     const weaponClosed = bestWeaponImage(images,'收攏');
 
-    mountImage($('#weaponOpen'), weaponOpen, `${char.weapon || '武器'} 展開`);
-    mountImage($('#weaponClosed'), weaponClosed, `${char.weapon || '武器'} 收攏`);
+    mountImage($('#weaponOpen'), weaponOpen, `${weapon.name || '武器'} 展開`);
+    mountImage($('#weaponClosed'), weaponClosed, `${weapon.name || '武器'} 收攏`);
+
+    // 找不到圖片就把對應空槽隱藏
+    if(!weaponOpen) $('#weaponOpen')?.setAttribute('hidden','');
+    if(!weaponClosed) $('#weaponClosed')?.setAttribute('hidden','');
+
+    if(!weaponOpen && !weaponClosed && slots){
+      slots.hidden = true;
+    }
   }
 }
 
@@ -346,7 +366,7 @@ function renderCharacter(char,id,data){
   renderMeta(char);
   renderStrip(char);
   renderParagraphs($('#profileContent'),char.publicDetail || char.publicIntro);
-  renderWeapon(char,id,data.images || []);
+  renderWeapon(char,id,data.weapons || [],data.images || []);
   renderSkills(data.skills || [],id);
   renderSpecialVisual(char,id,data.skills || [],data.images || []);
   renderRelations(data.relations || [],id);

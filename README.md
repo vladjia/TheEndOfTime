@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.14.0
+# 《時盡》網站核心 v0.14.1
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -512,3 +512,23 @@ HTML 仍保留 SEO / 最低限度 fallback，
 注意：
 - 本版需要已完成 Data 1.0 migration
 - 並使用已整合 `skills / relations / copy` 的永久 GAS CORE
+
+
+## v0.14.1：武器資料正式接管
+
+角色頁不再依賴 `char.weapon` / `weaponDescription` 等相容欄位。
+正式改用：
+
+`character.weaponId → GAS.weapons → weapon`
+
+武器區顯示來源：
+- 名稱 → `weapon.name`
+- 公開介紹 → `weapon.publicDescription`
+- 代表句 → `weapon.signatureLine`
+- 戰鬥識別 → `weapon.combatSignature`
+
+斷刻圖片仍由圖片 API 配對：
+- 武器 / 斷刻 / 展開
+- 武器 / 斷刻 / 收攏
+
+若圖片找不到，對應空槽直接隱藏，不再留下空線。
