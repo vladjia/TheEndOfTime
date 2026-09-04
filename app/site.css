@@ -847,3 +847,211 @@ body.pre-entry{
     filter:blur(.55px);
   }
 }
+
+
+/* v0.9.6：流沙對位修正 */
+.welcome-sand{
+  width:min(72vw,640px);
+  height:136px;
+  margin-top:-12px;
+  margin-bottom:-10px;
+}
+
+
+/* ═══════════════════════════════════════════════
+   v0.10.0 · 「時盡」沙化進場
+   點擊「時盡」本身，字由下而上被時間侵蝕成細沙。
+   ═══════════════════════════════════════════════ */
+
+.welcome-start,
+.welcome-sand,
+.welcome-flow{
+  display:none!important;
+}
+
+.welcome-inner{
+  width:min(94vw,980px);
+  min-height:560px;
+  justify-content:center;
+}
+
+.welcome-title-button{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  background:none;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  outline:none;
+  position:relative;
+  z-index:4;
+  overflow:visible;
+  transition:filter .35s ease, transform .35s ease, text-shadow .35s ease;
+}
+
+/* 平常幾乎不動，只在 hover 時給一點「可碰」的暗示 */
+.welcome-title-button:hover{
+  filter:brightness(1.035);
+  text-shadow:
+    0 0 34px rgba(123,23,37,.12),
+    0 8px 28px rgba(0,0,0,.28);
+}
+.welcome-title-button:hover span:first-child{ transform:translateY(-1px) rotate(-.15deg); }
+.welcome-title-button:hover span:last-child{ transform:translateY(1px) rotate(.12deg); }
+
+.welcome-title-button:focus-visible{
+  outline:1px solid rgba(179,46,63,.44);
+  outline-offset:14px;
+}
+
+.welcome-title-button span{
+  transition:transform .35s ease, opacity .35s ease, filter .35s ease;
+}
+
+/* 點下後：實字由下往上逐漸被吃掉 */
+.welcome-gate.is-dissolving .welcome-title-button{
+  pointer-events:none;
+  animation:titleErode 1.45s cubic-bezier(.42,0,.28,1) forwards;
+}
+
+@keyframes titleErode{
+  0%{
+    opacity:1;
+    filter:blur(0);
+    -webkit-mask-image:linear-gradient(to top,#000 0%,#000 100%);
+    mask-image:linear-gradient(to top,#000 0%,#000 100%);
+  }
+  35%{
+    opacity:1;
+    filter:blur(.15px);
+    -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 17%,#000 100%);
+    mask-image:linear-gradient(to top,transparent 0%,#000 17%,#000 100%);
+  }
+  72%{
+    opacity:.82;
+    filter:blur(.35px);
+    -webkit-mask-image:linear-gradient(to top,transparent 0%,transparent 52%,#000 70%,#000 100%);
+    mask-image:linear-gradient(to top,transparent 0%,transparent 52%,#000 70%,#000 100%);
+  }
+  100%{
+    opacity:0;
+    filter:blur(1.4px);
+    -webkit-mask-image:linear-gradient(to top,transparent 0%,transparent 88%,#000 100%);
+    mask-image:linear-gradient(to top,transparent 0%,transparent 88%,#000 100%);
+  }
+}
+
+.welcome-dissolve{
+  display:block;
+  width:min(78vw,760px);
+  height:205px;
+  margin-top:-44px;
+  margin-bottom:-76px;
+  position:relative;
+  z-index:3;
+  pointer-events:none;
+}
+
+/* 英文初始只是影子；點擊後被「沙」聚出來 */
+.welcome-en.welcome-concept{
+  width:min(80vw,780px);
+  margin:0 0 34px;
+  padding-left:.34em;
+  font-size:clamp(25px,3.05vw,45px);
+  letter-spacing:.34em;
+  color:rgba(232,235,240,.10);
+  opacity:.38;
+  filter:blur(2.4px);
+  transform:translateY(8px) scaleY(.96);
+  mask-image:none;
+  -webkit-mask-image:none;
+  animation:none;
+  transition:none;
+}
+
+.welcome-gate.is-dissolving .welcome-en.welcome-concept{
+  animation:englishCondense 1.35s cubic-bezier(.22,.74,.25,1) .38s forwards;
+}
+
+@keyframes englishCondense{
+  0%{
+    opacity:.25;
+    color:rgba(232,235,240,.08);
+    filter:blur(3px);
+    transform:translateY(9px) scaleY(.94);
+    letter-spacing:.39em;
+  }
+  62%{
+    opacity:.76;
+    color:rgba(232,235,240,.24);
+    filter:blur(.85px);
+    transform:translateY(1px) scaleY(.975);
+  }
+  100%{
+    opacity:1;
+    color:rgba(236,239,243,.39);
+    filter:blur(.42px);
+    transform:translateY(0) scaleY(1);
+    letter-spacing:.34em;
+  }
+}
+
+.welcome-hint{
+  font:500 10px/1 var(--font-body);
+  letter-spacing:.32em;
+  color:rgba(225,229,235,.20);
+  margin-top:10px;
+  opacity:0;
+  animation:hintIn .6s ease 1.25s forwards;
+  transition:opacity .25s ease;
+}
+.welcome-title-button:hover ~ .welcome-hint{
+  color:rgba(225,229,235,.34);
+}
+.welcome-gate.is-dissolving .welcome-hint{
+  opacity:0!important;
+}
+
+@keyframes hintIn{
+  to{opacity:1}
+}
+
+/* 整個迎賓畫面最後不直接「消失」，先像被抽走一層時間 */
+.welcome-gate.is-entering{
+  animation:gateTimeSlip .78s cubic-bezier(.45,0,.3,1) forwards;
+}
+@keyframes gateTimeSlip{
+  0%{opacity:1;filter:blur(0);transform:scale(1)}
+  46%{opacity:.92;filter:blur(.6px);transform:scale(1.003)}
+  100%{opacity:0;filter:blur(4px);transform:scale(1.008)}
+}
+
+@media(max-width:640px){
+  .welcome-inner{min-height:500px}
+  .welcome-dissolve{
+    width:min(90vw,430px);
+    height:150px;
+    margin-top:-30px;
+    margin-bottom:-54px;
+  }
+  .welcome-en.welcome-concept{
+    width:min(90vw,430px);
+    font-size:clamp(16px,4.4vw,22px);
+    letter-spacing:.24em;
+    padding-left:.24em;
+    margin-bottom:28px;
+  }
+  .welcome-hint{
+    font-size:9px;
+    letter-spacing:.24em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .welcome-gate.is-dissolving .welcome-title-button,
+  .welcome-gate.is-dissolving .welcome-en.welcome-concept,
+  .welcome-gate.is-entering{
+    animation:none!important;
+  }
+}

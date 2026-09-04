@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.9.5",
+  "version": "0.10.0",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -38,8 +38,14 @@
     "sandEffect": "glyph-edge-fine-particles",
     "sandSource": "dual-glyph-bottom",
     "fakeCenterLineRemoved": true,
-    "cacheBust": "0.9.5",
+    "cacheBust": "0.10.0",
     "particleStyle": "fine-dust",
-    "sandDensity": "high-fine"
+    "sandDensity": "high-fine",
+    "sandAlignment": "dom-glyph-bounds",
+    "interaction": "click-title-to-enter",
+    "titleAction": "dissolve-to-sand",
+    "englishAction": "condense-from-shadow",
+    "startButton": false,
+    "hint": "輕觸時盡"
   }
 }
