@@ -72,28 +72,53 @@ function bestCharacterImage(images,id,opts={}){
   return picked;
 }
 
-function bestWeaponImage(images, keyword){
-  const ranked = (images || [])
-    .map(img => {
-      const text = haystack(img);
-      let score = 0;
+function bestWeaponImage(images, weaponName, keyword){
+  const rows = (images || []).filter(img => {
+    const target = norm(img.target);
+    const group = norm(img.group);
+    const name = norm(img.name);
+    const category = norm(img.category);
+    const path = norm(img.path);
 
-      if(hasAny(text,['斷刻','断刻'])) score += 24;
-      if(hasAny(text,['武器'])) score += 8;
-      if(hasAny(text,[keyword])) score += 18;
-      if(hasAny(text,['主視覺','主视觉','細節','细节'])) score += 3;
+    const sameWeapon =
+      target === norm(weaponName) ||
+      name.includes(norm(weaponName)) ||
+      path.includes(norm(weaponName));
 
-      return {img,score};
-    })
-    .filter(x=>x.score >= 32)
-    .sort((a,b)=>b.score-a.score);
+    const isWeapon =
+      group === norm('武器') ||
+      path.includes(norm('武器'));
 
-  const picked = ranked[0]?.img || null;
+    const matchesState =
+      name.includes(norm(keyword)) ||
+      category.includes(norm(keyword)) ||
+      path.includes(norm(keyword));
+
+    return sameWeapon && isWeapon && matchesState;
+  });
+
+  // 優先檔名直接含「展開 / 收攏」，其次才是路徑 / 分類。
+  rows.sort((a,b) => {
+    const aName = norm(a.name).includes(norm(keyword)) ? 1 : 0;
+    const bName = norm(b.name).includes(norm(keyword)) ? 1 : 0;
+    return bName - aName;
+  });
+
+  const picked = rows[0] || null;
 
   if(picked){
-    console.info(`[武器圖片配對] ${keyword} →`, picked.name || picked.url);
+    console.info(
+      `[武器圖片配對] ${weaponName} / ${keyword} →`,
+      picked.name || picked.url
+    );
   }else{
-    console.warn(`[武器圖片配對失敗] ${keyword}`);
+    console.warn(
+      `[武器圖片配對失敗] ${weaponName} / ${keyword}`,
+      (images || []).filter(img =>
+        norm(img.target) === norm(weaponName) ||
+        norm(img.name).includes(norm(weaponName))
+      )
+    );
   }
 
   return picked;
@@ -279,17 +304,21 @@ function renderWeapon(char,id,weapons,images){
 
   if(id === 'jiashi' && weapon.id === 'duanke'){
     const slots = $('#weaponSlots');
+    const openSlot = $('#weaponOpen');
+    const closedSlot = $('#weaponClosed');
+
     if(slots) slots.hidden = false;
+    if(openSlot) openSlot.hidden = false;
+    if(closedSlot) closedSlot.hidden = false;
 
-    const weaponOpen = bestWeaponImage(images,'展開');
-    const weaponClosed = bestWeaponImage(images,'收攏');
+    const weaponOpen = bestWeaponImage(images,weapon.name,'展開');
+    const weaponClosed = bestWeaponImage(images,weapon.name,'收攏');
 
-    mountImage($('#weaponOpen'), weaponOpen, `${weapon.name || '武器'} 展開`);
-    mountImage($('#weaponClosed'), weaponClosed, `${weapon.name || '武器'} 收攏`);
+    mountImage(openSlot, weaponOpen, `${weapon.name || '武器'} 展開`);
+    mountImage(closedSlot, weaponClosed, `${weapon.name || '武器'} 收攏`);
 
-    // 找不到圖片就把對應空槽隱藏
-    if(!weaponOpen) $('#weaponOpen')?.setAttribute('hidden','');
-    if(!weaponClosed) $('#weaponClosed')?.setAttribute('hidden','');
+    if(!weaponOpen && openSlot) openSlot.hidden = true;
+    if(!weaponClosed && closedSlot) closedSlot.hidden = true;
 
     if(!weaponOpen && !weaponClosed && slots){
       slots.hidden = true;
