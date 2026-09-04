@@ -1304,3 +1304,32 @@ body.pre-entry{
   }
   .welcome-v2-hint{opacity:1}
 }
+
+
+/* v0.11.1 · THE END OF TIME 凝聚收尾 */
+.welcome-v2.is-dissolving .welcome-v2-english{
+  animation:welcomeV2EnglishCondenseFinal 1.55s cubic-bezier(.22,.72,.24,1) .22s forwards!important;
+}
+@keyframes welcomeV2EnglishCondenseFinal{
+  0%{
+    opacity:.30;
+    color:rgba(235,238,242,.10);
+    filter:blur(2.2px);
+    transform:translateY(10px) scaleY(.96);
+    letter-spacing:.35em;
+  }
+  58%{
+    opacity:.82;
+    color:rgba(238,240,244,.44);
+    filter:blur(.62px);
+    transform:translateY(2px) scaleY(.988);
+  }
+  100%{
+    opacity:1;
+    color:rgba(241,243,246,.72);
+    filter:blur(.18px);
+    transform:translateY(0) scaleY(1);
+    letter-spacing:.32em;
+    text-shadow:0 0 10px rgba(120,22,36,.035);
+  }
+}
