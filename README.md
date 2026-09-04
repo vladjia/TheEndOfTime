@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.14.3
+# 《時盡》網站核心 v0.14.4 DEBUG
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -567,3 +567,21 @@ HTML 仍保留 SEO / 最低限度 fallback，
 - `target.appendChild(img)`
 
 本版不修改 GAS、不修改試算表、不修改 Drive。
+
+
+## v0.14.4 DEBUG
+
+暫時版，只用來查斷刻圖片不顯示的真正原因。
+
+角色頁右下角會直接顯示：
+- characterId / weaponId
+- 找到的武器資料
+- images 數量
+- 與斷刻匹配的圖片列
+- 展開 / 收攏實際挑到哪張
+- weaponOpen / weaponClosed 是否存在、是否 hidden
+- 是否 append `<img>`
+- 圖片 load 成功尺寸
+- 圖片 load error URL
+
+查完後不要長期保留這版。
