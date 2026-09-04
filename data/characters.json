@@ -1,0 +1,36 @@
+{
+  "characters": [
+    {
+      "id": "jiashi",
+      "title": "時盡",
+      "name": "家式",
+      "role": "主角",
+      "publicIntro": "亦正亦邪，以扇為兵，擁有與生俱來的時間能力。知道結果，卻不能任意改寫結果。",
+      "signature": "式"
+    },
+    {
+      "id": "baiji",
+      "title": "無晝",
+      "name": "白霽",
+      "role": "宿敵",
+      "publicIntro": "清秀、安靜、總帶彎彎笑眼。她看起來像不會傷人的人，但她真的會。",
+      "signature": "霽"
+    },
+    {
+      "id": "yeshenxing",
+      "title": "月半刀",
+      "name": "葉慎行",
+      "role": "師父",
+      "publicIntro": "家式之師。真正教會他的，不只是武，而是理解力量、控制自己，以及如何做人。",
+      "signature": "刀"
+    },
+    {
+      "id": "anyanxiu",
+      "title": "蝶君",
+      "name": "安言修",
+      "role": "摯友",
+      "publicIntro": "博學、聰明、武學極高，嘴巴也極賤；戰鬥識別為黑色蝴蝶。",
+      "signature": "蝶"
+    }
+  ]
+}

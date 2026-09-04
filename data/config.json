@@ -1,0 +1,15 @@
+{
+  "siteTitle": "時盡",
+  "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
+  "version": "0.3.0",
+  "defaultMode": "public",
+  "publicBaseUrl": "https://vladjia.github.io/shijin/",
+  "driveGalleryEndpoint": "",
+  "fonts": {
+    "title": "",
+    "body": "",
+    "poem": "",
+    "special": ""
+  },
+  "repoUrl": "https://github.com/vladjia/shijin"
+}
