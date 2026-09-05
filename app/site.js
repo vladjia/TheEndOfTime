@@ -83,7 +83,7 @@ function renderCharacters(chars,copy){
         <h3>${c.fullName || `${c.title || ''}・${c.name || ''}`}</h3>
         <p>${c.publicIntro || ''}</p>
         ${pageMap[c.id] ? `<div class="card-enter">${copyText(copy,'site.home.characters.enter','VIEW FILE →')}</div>` : ''}
-        <div class="sig ${seal.cls}" data-sig="${seal.text}" aria-hidden="true">${seal.text}</div>`;
+        <div class="sig ${seal.cls}" data-sig="${seal.text}" aria-hidden="true">${seal.text}${c.id === 'anyanxiu' ? '<span class="butterfly-third"></span>' : ''}</div>`;
       box.appendChild(el);
     });
 }
@@ -102,23 +102,47 @@ function renderHero(site,copy){
 }
 
 function renderImages(images){
-  // 先用規則挑主視覺。之後會再做完整圖庫頁。
-  const normal = (images || []).find(x =>
-    x.group === '人物' &&
-    x.target === '家式' &&
-    x.category === '主視覺' &&
-    /常體/.test(x.name || '')
-  ) || (images || []).find(x =>
-    x.group === '人物' && x.target === '家式' && x.category === '主視覺'
-  );
+  const list = images || [];
 
-  if(normal){
-    const hero = $('#hero');
-    const img = document.createElement('img');
-    img.src = normal.url;
-    img.alt = '時盡・家式';
-    hero.appendChild(img);
-  }
+  const homepageCover =
+    list.find(x =>
+      x.group === '網站素材' &&
+      /首頁/.test(x.name || '') &&
+      /封面|主視覺/.test(x.name || '')
+    ) ||
+    list.find(x =>
+      x.group === '網站素材' &&
+      /hero|cover/i.test(x.name || '')
+    ) ||
+    list.find(x =>
+      x.group === '網站素材' &&
+      /首頁|hero/i.test(x.target || '') &&
+      /封面|主視覺|hero/i.test(x.category || '')
+    );
+
+  const fallback =
+    list.find(x =>
+      x.group === '人物' &&
+      x.target === '家式' &&
+      x.category === '主視覺' &&
+      /常體/.test(x.name || '')
+    ) ||
+    list.find(x =>
+      x.group === '人物' && x.target === '家式' && x.category === '主視覺'
+    );
+
+  const source = homepageCover || fallback;
+  if(!source) return;
+
+  const hero = $('#hero');
+  if(!hero) return;
+
+  hero.querySelectorAll('img').forEach(el=>el.remove());
+
+  const img = document.createElement('img');
+  img.src = source.url;
+  img.alt = homepageCover ? '時盡｜首頁封面主視覺' : '時盡・家式';
+  hero.appendChild(img);
 }
 
 async function loadFromGas(endpoint){

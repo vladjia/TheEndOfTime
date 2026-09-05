@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.14.8",
+  "version": "0.14.9",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -83,6 +83,7 @@
     "images": "GAS.images",
     "weapons": "GAS.weapons",
     "weaponImages": "GAS.images.targetId → GAS.weapons.id",
-    "characterIntroFields": "GAS.characters.introFields"
+    "characterIntroFields": "GAS.characters.introFields",
+    "homeCover": "GAS.images[group=網站素材,name contains 首頁+封面]"
   }
 }
