@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>時印幻境｜時盡</title>
+<meta name="description" content="查看屬於你的時印石片與時印共鳴。">
+<meta name="theme-color" content="#07090d">
+<link rel="stylesheet" href="../app/site.css?v=0.18.0">
+<link rel="stylesheet" href="../app/adventure.css?v=0.18.0">
+<link rel="stylesheet" href="../app/timemark.css?v=0.18.0">
+<link rel="icon" type="image/png" href="../assets/images/favicon.png?v=0.18.0">
+</head>
+<body class="timemark-page">
+<div class="site-loading" id="siteLoading" aria-live="polite" aria-busy="true">
+  <div class="site-loading-inner">
+    <div class="loading-hourglass loading-frame-sequence" aria-hidden="true">
+      <img class="loading-frame-image" src="../assets/images/loading/loading-01.png" data-loading-base="../assets/images/loading/" alt="">
+    </div>
+    <div class="site-loading-title">時盡</div>
+    <div class="site-loading-text">正在進入時印幻境……</div>
+  </div>
+</div>
+<header class="topbar topbar-v3">
+  <a class="brand brand-v3" href="../index.html?skipWelcome=1">
+    <img class="brand-logo" src="../assets/images/the-end-of-time-logo.png" alt="時盡 Logo"><strong>時盡</strong>
+  </a>
+  <nav class="main-nav"><a href="../story/index.html">故事</a><a href="../characters/index.html">角色</a><a href="../world/index.html">世界觀</a></nav>
+  <button class="nav-status time-mark-toggle" type="button" data-time-mark>時印</button>
+</header>
+
+<main class="timemark-shell">
+  <header class="timemark-head">
+    <small>TIME MARK REALM</small>
+    <h1>時印幻境</h1>
+    <p>你的石片會記住你走過的時間。故事越深，留下的時痕也會越深。</p>
+  </header>
+
+  <section class="timemark-stage" id="timemarkStage">
+    <div class="timemark-shard-host" id="timemarkShardHost"></div>
+    <div class="timemark-profile">
+      <small>時印序</small>
+      <strong id="timemarkSerial">讀取中……</strong>
+      <div class="timemark-resonance">
+        <span>時印共鳴</span>
+        <b id="timemarkResonance">—</b>
+      </div>
+      <p id="timemarkLast">正在尋回你的時間痕跡。</p>
+    </div>
+  </section>
+
+  <section class="timemark-records">
+    <article><small>STORY</small><strong id="tmStory">0</strong><p>已走過的故事</p></article>
+    <article><small>CHARACTER</small><strong id="tmCharacter">0</strong><p>已真正認識的人</p></article>
+    <article><small>WORLD</small><strong id="tmWorld">0</strong><p>已理解的世界碎片</p></article>
+  </section>
+
+  <div class="timemark-actions-main">
+    <a class="time-mark-btn primary" href="../journey/index.html">查看目前旅程</a>
+    <button class="time-mark-btn" type="button" data-time-mark>查看我的時印</button>
+  </div>
+  <p class="timemark-error" id="timemarkError"></p>
+</main>
+
+<footer class="footer">《時盡》時印幻境 · v0.18.0</footer>
+<script src="../app/loading.js?v=0.18.0" defer></script>
+<script src="../app/scrollbar.js?v=0.18.0" defer></script>
+<script src="../app/adventure.js?v=0.18.0" defer></script>
+<script src="../app/timemark.js?v=0.18.0" defer></script>
+</body>
+</html>

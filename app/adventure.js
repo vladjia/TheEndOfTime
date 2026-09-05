@@ -2,6 +2,7 @@
 window.EndOfTimeAdventure = (() => {
   const STORAGE_KEY = 'theEndOfTime.timeMark';
   const SESSION_PROMPT_KEY = 'theEndOfTime.timeMark.prompted';
+  const SAVED_CARD_KEY = 'theEndOfTime.timeMark.savedCardToken';
   let configCache = null;
   let progressCache = null;
   let ensurePromise = null;
@@ -10,7 +11,7 @@ window.EndOfTimeAdventure = (() => {
   let criticalTimer = null;
 
   function rootPrefix(){
-    return location.pathname.includes('/story/') || location.pathname.includes('/characters/') || location.pathname.includes('/world/') || location.pathname.includes('/journey/') ? '../' : '';
+    return location.pathname.includes('/story/') || location.pathname.includes('/characters/') || location.pathname.includes('/world/') || location.pathname.includes('/journey/') || location.pathname.includes('/timemark/') ? '../' : '';
   }
 
   async function getConfig(){
@@ -30,8 +31,71 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function token(){ return localStorage.getItem(STORAGE_KEY) || ''; }
+  function savedCardToken(){ return localStorage.getItem(SAVED_CARD_KEY) || ''; }
+  function hasSavedCurrentCard(){ const t=token(); return !!t && savedCardToken()===t; }
+  function markCurrentCardSaved(){ const t=token(); if(t) localStorage.setItem(SAVED_CARD_KEY,t); }
   function setToken(value){ localStorage.setItem(STORAGE_KEY, String(value || '').trim().toUpperCase()); }
   function clearToken(){ localStorage.removeItem(STORAGE_KEY); progressCache = null; }
+
+  function normalizeHexColor(value){
+    const v=String(value||'').trim();
+    return /^#[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : '#7F1521';
+  }
+
+  function hexToRgb(hex){
+    const n=parseInt(normalizeHexColor(hex).slice(1),16);
+    return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+  }
+
+  function rgbToHsl({r,g,b}){
+    r/=255;g/=255;b/=255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b);
+    let h=0,s=0,l=(max+min)/2;
+    if(max!==min){
+      const d=max-min;
+      s=l>.5?d/(2-max-min):d/(max+min);
+      switch(max){
+        case r:h=(g-b)/d+(g<b?6:0);break;
+        case g:h=(b-r)/d+2;break;
+        default:h=(r-g)/d+4;
+      }
+      h*=60;
+    }
+    return {h,s:s*100,l:l*100};
+  }
+
+  function shardPalette(hex){
+    const base=rgbToHsl(hexToRgb(hex));
+    const clamp=(n,a,b)=>Math.min(Math.max(n,a),b);
+    const h=(x)=>((x%360)+360)%360;
+    const css=(o,a=1)=>`hsla(${Math.round(o.h)},${Math.round(o.s)}%,${Math.round(o.l)}%,${a})`;
+    return {
+      base:normalizeHexColor(hex),
+      dark:css({h:base.h,s:clamp(base.s+8,24,100),l:clamp(base.l-27,8,40)}),
+      deep:css({h:h(base.h-7),s:clamp(base.s+14,30,100),l:clamp(base.l-38,5,24)}),
+      light:css({h:h(base.h+4),s:clamp(base.s-8,18,92),l:clamp(base.l+19,45,82)}),
+      edge:css({h:h(base.h+11),s:clamp(base.s+5,22,100),l:clamp(base.l+8,35,70)}),
+      glow:css({h:h(base.h+8),s:clamp(base.s-24,12,70),l:clamp(base.l+34,66,92)},.56),
+      mist:css({h:h(base.h-4),s:clamp(base.s-30,10,65),l:clamp(base.l+22,55,86)},.20)
+    };
+  }
+
+  function applyShardPalette(el,hex){
+    if(!el) return;
+    const p=shardPalette(hex);
+    el.style.setProperty('--shard-main',p.base);
+    el.style.setProperty('--shard-dark',p.dark);
+    el.style.setProperty('--shard-deep',p.deep);
+    el.style.setProperty('--shard-light',p.light);
+    el.style.setProperty('--shard-edge',p.edge);
+    el.style.setProperty('--shard-glow',p.glow);
+    el.style.setProperty('--shard-mist',p.mist);
+  }
+
+  function serialLabel(value){
+    const n=Number(value||0);
+    return n>0 ? `No.${String(n).padStart(6,'0')}` : '';
+  }
 
   function beginCritical(name, timeout=12000){
     if(criticalAction) return false;
@@ -116,6 +180,13 @@ window.EndOfTimeAdventure = (() => {
     return data;
   }
 
+  async function forgeShard(color){
+    const t=token() || (await ensure()).token;
+    const data=await api('adventureForge',{token:t,color:normalizeHexColor(color)});
+    progressCache=null;
+    return data;
+  }
+
   async function completeStory(storyId, extra={}){
     const t = token() || (await ensure()).token;
     const params = {
@@ -161,22 +232,7 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function downloadTimeMarkCard(){
-    const t = token();
-    if(!t) return;
-    const canvas=document.createElement('canvas');
-    canvas.width=1200;canvas.height=630;
-    const ctx=canvas.getContext('2d');
-    const g=ctx.createLinearGradient(0,0,1200,630);
-    g.addColorStop(0,'#090b0f');g.addColorStop(1,'#18080c');
-    ctx.fillStyle=g;ctx.fillRect(0,0,1200,630);
-    ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=2;ctx.strokeRect(52,52,1096,526);
-    ctx.fillStyle='rgba(255,255,255,.62)';ctx.font='28px sans-serif';ctx.fillText('THE END OF TIME',86,120);
-    ctx.fillStyle='#f1f2f4';ctx.font='64px serif';ctx.fillText('時印',86,218);
-    ctx.fillStyle='rgba(255,255,255,.58)';ctx.font='28px sans-serif';ctx.fillText('你的旅程已被記錄。',86,284);
-    ctx.fillStyle='#ffffff';ctx.font='bold 38px monospace';ctx.fillText(t,86,390);
-    ctx.fillStyle='rgba(255,255,255,.42)';ctx.font='22px sans-serif';ctx.fillText('在其他裝置選擇「取回時印」，即可回到你的旅程。',86,470);
-    const a=document.createElement('a');a.download=`時盡_時印_${t}.png`;a.href=canvas.toDataURL('image/png');a.click();
-    toast('時印卡已儲存。');
+    openForge();
   }
 
   function closeOverlay(force=false){
@@ -224,93 +280,207 @@ window.EndOfTimeAdventure = (() => {
     `,{lockClose:true});
   }
 
+  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0}={}){
+    const levelClass=`resonance-${Math.max(0,Math.min(5,Number(level||0)))}`;
+    return `
+      <div class="time-shard ${levelClass}" data-shard-preview>
+        <span class="time-shard-reflection"></span>
+        <span class="time-shard-mist"></span>
+        <span class="time-shard-crack crack-a"></span>
+        <span class="time-shard-crack crack-b"></span>
+        <span class="time-shard-sigil" aria-hidden="true">⌛</span>
+        <div class="time-shard-inscription">
+          ${serial ? `<small>時印序 ${serial}</small>` : '<small>等待鑄印</small>'}
+          ${relay ? `<span>${relay}</span>` : ''}
+        </div>
+      </div>`;
+  }
+
+  async function openForge(){
+    if(isCritical()) return;
+    const data=await load(true);
+    const existing=data?.stone||{};
+    const initial=normalizeHexColor(existing.color||'#7F1521');
+    const isForged=!!existing.forged;
+    const o=overlay(`
+      <div class="time-mark-kicker">TIME FORGING</div>
+      <h2>${isForged ? '調整你的時印石片' : '時空鑄印專屬石片'}</h2>
+      <p>只要選擇一個你喜歡的顏色。其餘漸層、折光與琉璃層次，交給時印自行生成。</p>
+      <div class="time-forge-layout">
+        <div class="time-forge-preview">
+          ${shardPreviewMarkup({
+            color:initial,
+            serial:existing.serial ? serialLabel(existing.serial) : '',
+            relay:existing.relayCode||'',
+            level:existing.resonanceLevel||0
+          })}
+        </div>
+        <div class="time-forge-controls">
+          <label class="time-color-label" for="timeShardColor">選擇你的時印主色</label>
+          <input id="timeShardColor" class="time-color-picker" type="color" value="${initial}">
+          <div class="time-color-value" data-color-value>${initial}</div>
+          <p class="time-mark-note">你只需要決定一個顏色。系統會依它自動生成完整漸層。</p>
+        </div>
+      </div>
+      <div class="time-mark-actions">
+        <button class="time-mark-btn primary" type="button" data-forge-confirm>${isForged ? '重新鑄印石片色彩' : '時空鑄印專屬石片'}</button>
+        <button class="time-mark-btn" type="button" data-time-close>稍後再決定</button>
+      </div>
+      <p class="time-mark-status" data-forge-status></p>
+    `);
+    const picker=o.querySelector('#timeShardColor');
+    const shard=o.querySelector('[data-shard-preview]');
+    const colorText=o.querySelector('[data-color-value]');
+    const status=o.querySelector('[data-forge-status]');
+    const confirmBtn=o.querySelector('[data-forge-confirm]');
+    applyShardPalette(shard,initial);
+    picker.addEventListener('input',()=>{
+      const c=normalizeHexColor(picker.value);
+      colorText.textContent=c;
+      applyShardPalette(shard,c);
+    });
+    confirmBtn.onclick=async()=>{
+      if(confirmBtn.disabled || isCritical()) return;
+      if(!beginCritical('time-shard-forge',15000)) return;
+      confirmBtn.disabled=true;
+      confirmBtn.setAttribute('aria-busy','true');
+      confirmBtn.textContent='鑄印中……';
+      status.textContent='正在讓這枚石片記住你的時間。';
+      try{
+        const result=await forgeShard(picker.value);
+        endCritical();
+        closeOverlay(true);
+        toast('時空鑄印完成。');
+        openManager();
+      }catch(err){
+        endCritical();
+        confirmBtn.disabled=false;
+        confirmBtn.removeAttribute('aria-busy');
+        confirmBtn.textContent=isForged?'重新鑄印石片色彩':'時空鑄印專屬石片';
+        status.textContent=err?.message||'鑄印暫時失敗，請稍後再試。';
+      }
+    };
+  }
+
+  function openRestoreDialog(){
+    if(isCritical()) return;
+    const o=overlay(`
+      <div class="time-mark-kicker">RESTORE TIME MARK</div>
+      <h2>取回其他時印</h2>
+      <p>只有需要切換另一段旅程時，才需要在這裡輸入時印。</p>
+      <div class="time-mark-field">
+        <label for="restoreTimeMark">輸入另一枚時印</label>
+        <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
+      </div>
+      <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
+      <div class="time-mark-actions">
+        <button class="time-mark-btn primary" type="button" data-restore-time>取回時印</button>
+        <button class="time-mark-btn" type="button" data-time-close>返回</button>
+      </div>
+    `);
+    const field=o.querySelector('#restoreTimeMark');
+    const status=o.querySelector('#restoreTimeMarkStatus');
+    const restoreBtn=o.querySelector('[data-restore-time]');
+    restoreBtn.onclick=async()=>{
+      if(restoreBtn.disabled || isCritical()) return;
+      const wanted=String(field.value||'').trim().toUpperCase();
+      if(wanted && wanted===token()){
+        status.textContent='這枚時印已經在這台裝置上使用中。';
+        field.select();return;
+      }
+      if(!/^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/.test(wanted)){
+        status.textContent='這枚時印的格式不正確。';
+        field.focus();return;
+      }
+      const current=token();
+      if(current && current!==wanted){
+        const ok=confirm('取回另一枚時印後，這台裝置會切換到另一段旅程。\\n\\n目前的時印不會被刪除。\\n\\n確定要取回嗎？');
+        if(!ok) return;
+      }
+      if(!beginCritical('time-mark-restore',15000)) return;
+      restoreBtn.disabled=true;
+      restoreBtn.setAttribute('aria-busy','true');
+      restoreBtn.textContent='確認中……';
+      field.disabled=true;
+      status.textContent='確認時印中……';
+      try{
+        const data=await restore(wanted);
+        closeOverlay(true);
+        endCritical();
+        showRestoreSuccess(data);
+      }catch(err){
+        endCritical();
+        status.textContent=err.message||'時印確認失敗。';
+        restoreBtn.disabled=false;
+        restoreBtn.removeAttribute('aria-busy');
+        restoreBtn.textContent='取回時印';
+        field.disabled=false;field.focus();
+      }
+    };
+  }
+
   async function openManager(){
     if(timeMarkBusy || isCritical()) return;
-    timeMarkBusy = true;
+    timeMarkBusy=true;
     beginCritical('time-mark-open',10000);
     setTimeMarkButtonsBusy(true);
     showTimeMarkLoading('正在讀取時印……');
 
     try{
-      const {token:t}=await ensure();
+      await ensure();
+      const data=await load(true);
+      const stone=data?.stone||{};
+      const forged=!!stone.forged;
+      endCritical();
+      const serial=stone.serial?serialLabel(stone.serial):'';
+      const relay=stone.relayCode||'';
+      const color=normalizeHexColor(stone.color||'#7F1521');
       const o=overlay(`
         <div class="time-mark-kicker">TIME MARK</div>
         <h2>你的時印</h2>
-        <p>你的旅程會自動保存在這台裝置。若要換手機或電腦，請先保存這枚時印。</p>
-        <div class="time-mark-code">${t}</div>
-        <p class="time-mark-note">不需要背下來。保存一份即可。</p>
-        <div class="time-mark-device-state">
-          <span class="time-mark-device-dot" aria-hidden="true"></span>
-          <div>
-            <strong>此裝置已記住這枚時印</strong>
-            <span>你的旅程會在這台裝置上自動延續。</span>
+        <p>${forged ? '此裝置已記住你的旅程。你的時印石片也會隨著故事產生新的共鳴。' : '此裝置已記住你的旅程。現在，你可以為它鑄造一枚真正屬於自己的時印石片。'}</p>
+
+        ${forged ? `
+          <div class="time-mark-mini-shard">
+            ${shardPreviewMarkup({color,serial,relay,level:stone.resonanceLevel||0})}
+            <div class="time-mark-mini-copy">
+              <small>時印序</small>
+              <strong>${serial}</strong>
+              <span>共鳴 ${Number(stone.resonanceLevel||0)}</span>
+            </div>
           </div>
-        </div>
+        ` : ''}
+
+        <div class="time-mark-code">${token()}</div>
+        <p class="time-mark-note">時印是你的旅程憑證，不需要背下來；有需要時再複製保存即可。</p>
+
         <div class="time-mark-actions">
-          <button class="time-mark-btn primary" type="button" data-copy-time>複製時印</button>
+          ${forged
+            ? `<a class="time-mark-btn primary" href="${rootPrefix()}timemark/index.html?r=${encodeURIComponent(relay)}">進入時印幻境</a>
+               <button class="time-mark-btn" type="button" data-forge-open>調整石片色彩</button>`
+            : `<button class="time-mark-btn primary" type="button" data-forge-open>時空鑄印專屬石片</button>`}
+          <button class="time-mark-btn" type="button" data-copy-time>複製時印</button>
           <a class="time-mark-btn" href="${rootPrefix()}journey/index.html">查看目前旅程</a>
         </div>
-        <div class="time-mark-field">
-          <label for="restoreTimeMark">切換到另一枚時印</label>
-          <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
+
+        <div class="time-mark-secondary">
+          <button class="time-mark-link-btn" type="button" data-restore-open>取回其他時印</button>
         </div>
-        <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
-        <div class="time-mark-actions"><button class="time-mark-btn" type="button" data-restore-time>取回時印</button><button class="time-mark-btn" type="button" data-time-close>關閉</button></div>
+
+        <div class="time-mark-actions">
+          <button class="time-mark-btn" type="button" data-time-close>關閉</button>
+        </div>
       `);
-
       o.querySelector('[data-copy-time]').onclick=copyToken;
-      o.querySelector('[data-restore-time]').onclick=async()=>{
-        const field=o.querySelector('#restoreTimeMark');
-        const status=o.querySelector('#restoreTimeMarkStatus');
-        const restoreBtn=o.querySelector('[data-restore-time]');
-        if(restoreBtn.disabled || isCritical()) return;
-
-        const wanted = String(field.value || '').trim().toUpperCase();
-        if(wanted && wanted === token()){
-          status.textContent='這枚時印已經在這台裝置上使用中。';
-          field.select();
-          return;
-        }
-
-        if(!/^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/.test(wanted)){
-          status.textContent='這枚時印的格式不正確。';
-          field.focus();
-          return;
-        }
-
-        const current = token();
-        if(current && current !== wanted){
-          const ok = confirm('取回另一枚時印後，這台裝置會切換到另一段旅程。\n\n目前的時印不會被刪除，只是不再作為這台裝置的目前旅程。\n\n確定要取回嗎？');
-          if(!ok) return;
-        }
-
-        if(!beginCritical('time-mark-restore',15000)) return;
-        restoreBtn.disabled=true;
-        restoreBtn.setAttribute('aria-busy','true');
-        restoreBtn.textContent='確認中……';
-        field.disabled=true;
-        status.textContent='確認時印中……';
-
-        try{
-          const data=await restore(wanted);
-          closeOverlay(true);
-          endCritical();
-          showRestoreSuccess(data);
-        }catch(err){
-          endCritical();
-          status.textContent=err.message||'時印確認失敗。';
-          restoreBtn.disabled=false;
-          restoreBtn.setAttribute('aria-busy','false');
-          restoreBtn.textContent='取回時印';
-          field.disabled=false;
-          field.focus();
-        }
-      };
+      const forgeBtn=o.querySelector('[data-forge-open]');
+      if(forgeBtn) forgeBtn.onclick=()=>openForge();
+      o.querySelector('[data-restore-open]').onclick=()=>openRestoreDialog();
     }catch(err){
-      closeOverlay();
-      toast(err?.message || '時印讀取失敗，請稍後再試。');
+      endCritical();
+      closeOverlay(true);
+      toast(err?.message||'時印讀取失敗，請稍後再試。');
     }finally{
-      timeMarkBusy = false;
+      timeMarkBusy=false;
       setTimeMarkButtonsBusy(false);
       endCritical();
     }

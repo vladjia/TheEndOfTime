@@ -452,3 +452,200 @@ html.adventure-critical .reader-complete-btn{
   font-size:12px;
   line-height:1.6;
 }
+
+
+/* ============================================================
+   v0.17.7 · 首次時印卡儲存
+   ============================================================ */
+.time-mark-device-state span:last-child{
+  transition:color .2s ease;
+}
+
+
+/* ============================================================
+   v0.18.0 · 時印石片 / 時空鑄印 / 時印幻境入口
+   ============================================================ */
+.time-mark-secondary{
+  margin-top:22px;
+  padding-top:16px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.time-mark-link-btn{
+  padding:0;
+  border:0;
+  background:none;
+  color:rgba(238,240,244,.52);
+  font:inherit;
+  font-size:12px;
+  cursor:pointer;
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+.time-mark-link-btn:hover{color:#fff}
+
+.time-forge-layout{
+  display:grid;
+  grid-template-columns:minmax(220px,.8fr) minmax(220px,1fr);
+  gap:34px;
+  align-items:center;
+  margin:28px 0 12px;
+}
+.time-forge-preview{display:grid;place-items:center;min-height:360px}
+.time-forge-controls{align-self:center}
+.time-color-label{
+  display:block;
+  margin-bottom:10px;
+  color:rgba(238,240,244,.72);
+  font-size:13px;
+}
+.time-color-picker{
+  width:100%;
+  height:58px;
+  padding:5px;
+  border:1px solid rgba(255,255,255,.15);
+  background:#080a0d;
+  cursor:pointer;
+}
+.time-color-value{
+  margin-top:9px;
+  color:rgba(255,255,255,.62);
+  font:600 13px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.08em;
+}
+
+.time-shard{
+  --shard-main:#7F1521;
+  --shard-dark:#3A0A10;
+  --shard-deep:#170307;
+  --shard-light:#B73445;
+  --shard-edge:#92202E;
+  --shard-glow:rgba(239,154,164,.56);
+  --shard-mist:rgba(255,214,220,.20);
+  position:relative;
+  width:190px;
+  height:300px;
+  isolation:isolate;
+  overflow:hidden;
+  clip-path:polygon(20% 3%,75% 0,96% 18%,91% 78%,68% 100%,15% 94%,2% 66%,8% 22%);
+  background:
+    radial-gradient(circle at 31% 18%,var(--shard-glow),transparent 25%),
+    radial-gradient(circle at 69% 69%,var(--shard-mist),transparent 36%),
+    linear-gradient(145deg,var(--shard-deep) 0%,var(--shard-dark) 18%,var(--shard-main) 50%,var(--shard-light) 75%,var(--shard-edge) 100%);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:
+    0 28px 70px rgba(0,0,0,.55),
+    0 0 40px color-mix(in srgb,var(--shard-main) 28%,transparent),
+    inset 0 0 30px rgba(255,255,255,.10),
+    inset 0 -38px 60px rgba(0,0,0,.42);
+  transform:rotate(-2deg);
+}
+.time-shard::before{
+  content:"";
+  position:absolute;inset:0;
+  z-index:1;
+  background:
+    linear-gradient(118deg,rgba(255,255,255,.30) 0 4%,rgba(255,255,255,.06) 11%,transparent 27% 67%,rgba(255,255,255,.10) 82%,transparent 93%),
+    repeating-linear-gradient(98deg,transparent 0 24px,rgba(255,255,255,.018) 25px,transparent 27px);
+  mix-blend-mode:screen;
+}
+.time-shard::after{
+  content:"";
+  position:absolute;inset:8px;
+  z-index:2;
+  clip-path:inherit;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:
+    inset 10px 0 18px rgba(255,255,255,.06),
+    inset -13px -10px 28px rgba(0,0,0,.30);
+}
+.time-shard-reflection{
+  position:absolute;z-index:3;
+  left:26px;top:20px;width:26px;height:170px;
+  border-radius:50%;
+  transform:rotate(14deg);
+  background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,.03));
+  filter:blur(5px);
+  opacity:.55;
+}
+.time-shard-mist{
+  position:absolute;z-index:1;
+  width:135px;height:135px;left:26px;top:90px;
+  border-radius:50%;
+  background:var(--shard-mist);
+  filter:blur(24px);
+  animation:shardMist 5s ease-in-out infinite alternate;
+}
+.time-shard-sigil{
+  position:absolute;z-index:4;
+  left:50%;top:43%;
+  transform:translate(-50%,-50%);
+  font-size:35px;
+  color:rgba(255,255,255,.78);
+  text-shadow:0 0 18px var(--shard-glow);
+  opacity:.78;
+}
+.time-shard-inscription{
+  position:absolute;z-index:5;
+  left:20px;right:20px;bottom:24px;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,.6);
+}
+.time-shard-inscription small,
+.time-shard-inscription span{display:block}
+.time-shard-inscription small{
+  color:rgba(255,255,255,.68);font-size:10px;letter-spacing:.12em;
+}
+.time-shard-inscription span{
+  margin-top:5px;color:rgba(255,255,255,.82);
+  font:600 10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.06em;
+}
+.time-shard-crack{
+  position:absolute;z-index:4;
+  width:1px;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.62),transparent);
+  box-shadow:0 0 8px var(--shard-glow);
+  opacity:0;
+}
+.time-shard-crack.crack-a{height:90px;left:57%;top:25%;transform:rotate(21deg)}
+.time-shard-crack.crack-b{height:75px;left:35%;top:48%;transform:rotate(-26deg)}
+.time-shard.resonance-1 .crack-a,
+.time-shard.resonance-2 .crack-a,
+.time-shard.resonance-3 .crack-a,
+.time-shard.resonance-4 .crack-a,
+.time-shard.resonance-5 .crack-a{opacity:.30}
+.time-shard.resonance-3 .crack-b,
+.time-shard.resonance-4 .crack-b,
+.time-shard.resonance-5 .crack-b{opacity:.42}
+.time-shard.resonance-4{filter:saturate(1.08) brightness(1.03)}
+.time-shard.resonance-5{
+  filter:saturate(1.12) brightness(1.06);
+  animation:shardResonance 3.2s ease-in-out infinite;
+}
+@keyframes shardMist{from{transform:translate(-4px,-2px) scale(.92);opacity:.55}to{transform:translate(5px,5px) scale(1.08);opacity:.9}}
+@keyframes shardResonance{50%{filter:saturate(1.18) brightness(1.11) drop-shadow(0 0 12px var(--shard-glow))}}
+
+.time-mark-mini-shard{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  margin:20px 0 6px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.025);
+}
+.time-mark-mini-shard .time-shard{
+  width:72px;height:112px;flex:0 0 72px;
+}
+.time-mark-mini-shard .time-shard-sigil{font-size:16px}
+.time-mark-mini-shard .time-shard-inscription{display:none}
+.time-mark-mini-shard .time-shard-reflection{left:11px;top:9px;width:10px;height:64px}
+.time-mark-mini-shard .time-shard-mist{width:54px;height:54px;left:9px;top:33px;filter:blur(10px)}
+.time-mark-mini-copy small,.time-mark-mini-copy span{display:block;color:rgba(255,255,255,.5);font-size:11px}
+.time-mark-mini-copy strong{display:block;margin:5px 0 4px;font-size:18px;font-weight:600;letter-spacing:.06em}
+
+@media(max-width:680px){
+  .time-forge-layout{grid-template-columns:1fr;gap:12px}
+  .time-forge-preview{min-height:315px}
+  .time-shard{width:170px;height:270px}
+}

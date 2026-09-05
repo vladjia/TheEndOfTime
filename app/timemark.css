@@ -1,0 +1,48 @@
+
+.timemark-page{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 50% 28%,rgba(127,21,33,.11),transparent 30%),
+    radial-gradient(circle at 58% 45%,rgba(91,44,119,.08),transparent 28%),
+    #07090d;
+}
+.timemark-shell{width:min(1120px,calc(100% - 40px));margin:0 auto;padding:110px 0 90px}
+.timemark-head{text-align:center;max-width:720px;margin:0 auto 38px}
+.timemark-head small{letter-spacing:.22em;color:rgba(255,255,255,.42);font-size:11px}
+.timemark-head h1{font-size:clamp(36px,7vw,76px);margin:12px 0 10px;font-weight:500}
+.timemark-head p{color:rgba(255,255,255,.58);line-height:1.8}
+.timemark-stage{
+  display:grid;grid-template-columns:minmax(300px,1.1fr) minmax(260px,.9fr);
+  align-items:center;gap:54px;
+  min-height:560px;padding:42px;
+  border:1px solid rgba(255,255,255,.09);
+  background:
+    linear-gradient(120deg,rgba(255,255,255,.018),transparent 42%),
+    rgba(8,10,14,.72);
+  box-shadow:0 36px 90px rgba(0,0,0,.38);
+}
+.timemark-shard-host{display:grid;place-items:center;min-height:460px}
+.timemark-shard-host .time-shard{width:280px;height:440px}
+.timemark-shard-host .time-shard-sigil{font-size:50px}
+.timemark-profile small{display:block;color:rgba(255,255,255,.42);font-size:11px;letter-spacing:.18em}
+.timemark-profile>strong{display:block;margin:8px 0 26px;font-size:clamp(28px,5vw,52px);font-weight:500;letter-spacing:.06em}
+.timemark-profile p{margin-top:28px;color:rgba(255,255,255,.58);line-height:1.8}
+.timemark-resonance{padding-top:22px;border-top:1px solid rgba(255,255,255,.09)}
+.timemark-resonance span,.timemark-resonance b{display:block}
+.timemark-resonance span{color:rgba(255,255,255,.42);font-size:11px;letter-spacing:.14em}
+.timemark-resonance b{margin-top:7px;font-size:20px;font-weight:550}
+.timemark-records{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.timemark-records article{padding:22px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.018)}
+.timemark-records small{color:rgba(255,255,255,.38);letter-spacing:.14em;font-size:10px}
+.timemark-records strong{display:block;margin:8px 0;font-size:28px;font-weight:500}
+.timemark-records p{margin:0;color:rgba(255,255,255,.48);font-size:12px}
+.timemark-actions-main{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+.timemark-error{text-align:center;color:#d7a9af;min-height:1.5em;margin-top:18px}
+@media(max-width:760px){
+  .timemark-shell{width:min(100% - 24px,1120px);padding-top:88px}
+  .timemark-stage{grid-template-columns:1fr;gap:16px;padding:26px 18px}
+  .timemark-shard-host{min-height:390px}
+  .timemark-shard-host .time-shard{width:220px;height:348px}
+  .timemark-profile{text-align:center}
+  .timemark-records{grid-template-columns:1fr}
+}
