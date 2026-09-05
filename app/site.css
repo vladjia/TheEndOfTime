@@ -2282,3 +2282,76 @@ body.modal-open{overflow:hidden}
   .spoiler-dialog{padding:32px 24px 26px}
   .spoiler-dialog-actions{flex-direction:column}
 }
+
+
+/* ============================================================
+   v0.16.1 · GLOBAL SCROLLBAR
+   《時盡》全站捲軸：深色軌道 / 冷灰滑塊 / hover 紅紫分界
+   ============================================================ */
+
+html{
+  scrollbar-width:thin;
+  scrollbar-color:#343a43 #080a0e;
+}
+
+::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+::-webkit-scrollbar-track{
+  background:#080a0e;
+  border-left:1px solid rgba(255,255,255,.025);
+}
+
+::-webkit-scrollbar-thumb{
+  min-height:48px;
+  background:
+    linear-gradient(
+      180deg,
+      #3b414a 0%,
+      #252a31 52%,
+      #181c22 100%
+    );
+  border:1px solid #3d2630;
+  border-radius:2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.018),
+    0 0 8px rgba(0,0,0,.28);
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background:
+    linear-gradient(
+      180deg,
+      #8f293c 0%,
+      #5d263d 50%,
+      #3a2b50 100%
+    );
+  border-color:#6f3140;
+}
+
+::-webkit-scrollbar-thumb:active{
+  background:
+    linear-gradient(
+      180deg,
+      #a33247 0%,
+      #672b45 48%,
+      #41305b 100%
+    );
+}
+
+::-webkit-scrollbar-corner{
+  background:#080a0e;
+}
+
+/* 橫向導覽列若出現捲軸，保持極細 */
+.main-nav,
+.breadcrumb{
+  scrollbar-width:none;
+}
+.main-nav::-webkit-scrollbar,
+.breadcrumb::-webkit-scrollbar{
+  width:0;
+  height:0;
+}
