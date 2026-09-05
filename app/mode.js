@@ -30,11 +30,11 @@ window.EndOfTimeMode = (() => {
       <div class="spoiler-dialog" role="dialog" aria-modal="true" aria-labelledby="spoilerTitle">
         <div class="spoiler-dialog-mark">!</div>
         <small>FULL ARCHIVE</small>
-        <h2 id="spoilerTitle">${copyText(copy,'site.mode.confirm.title','開啟完整設定？')}</h2>
+        <h2 id="spoilerTitle">${copyText(copy,'site.mode.confirm.title','開啟爆雷模式？')}</h2>
         <p>${copyText(copy,'site.mode.confirm.desc','將顯示人物死亡、完整身世、世界核心真相與劇情內容。')}</p>
         <div class="spoiler-dialog-actions">
-          <button type="button" class="btn" data-spoiler-cancel>${copyText(copy,'site.mode.confirm.keep','保持無雷')}</button>
-          <button type="button" class="btn primary" data-spoiler-confirm>${copyText(copy,'site.mode.confirm.open','開啟有雷內容')}</button>
+          <button type="button" class="btn" data-spoiler-cancel>${copyText(copy,'site.mode.confirm.keep','保持無雷模式')}</button>
+          <button type="button" class="btn primary" data-spoiler-confirm>${copyText(copy,'site.mode.confirm.open','開啟爆雷模式')}</button>
         </div>
       </div>
     `;
@@ -82,12 +82,12 @@ window.EndOfTimeMode = (() => {
         const mode = current();
         button.dataset.mode = mode;
         button.textContent = mode === 'full'
-          ? copyText(copy,'site.mode.full','完整・有雷')
-          : copyText(copy,'site.mode.public','公開・無雷');
+          ? copyText(copy,'site.mode.full','爆雷模式')
+          : copyText(copy,'site.mode.public','無雷模式');
         button.setAttribute('aria-label',
           mode === 'full'
-            ? copyText(copy,'site.mode.full.disable','切回無雷')
-            : copyText(copy,'site.mode.confirm.title','開啟完整設定？')
+            ? copyText(copy,'site.mode.full.disable','切回無雷模式')
+            : copyText(copy,'site.mode.confirm.title','開啟爆雷模式？')
         );
       };
 

@@ -227,6 +227,8 @@ async function initStory(){
     if(target){
       target.innerHTML='<div class="story-empty">故事資料暫時無法載入。</div>';
     }
+  }finally{
+    window.SiteLoading?.hide?.();
   }
 }
 

@@ -33,9 +33,18 @@
 <meta name="twitter:image" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.png">
 
 <link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/">
-<link rel="stylesheet" href="app/site.css?v=0.16.1">
+<link rel="stylesheet" href="app/site.css?v=0.16.2">
 </head>
 <body class="pre-entry" id="top">
+<div class="site-loading" id="siteLoading" aria-live="polite" aria-busy="true">
+  <div class="site-loading-inner">
+    <div class="site-loading-hourglass" aria-hidden="true">
+      <span></span>
+    </div>
+    <div class="site-loading-title">時盡</div>
+    <div class="site-loading-text">讀取時序資料中……</div>
+  </div>
+</div>
 
   <div id="welcomeGate" class="welcome-gate welcome-v2" aria-label="進入《時盡》">
     <div class="welcome-v2-inner">
@@ -62,7 +71,7 @@
     <a href="world/index.html" data-copy="site.nav.world">世界觀</a>
   </nav>
 
-  <button class="nav-status mode-toggle" type="button" data-mode-toggle>公開・無雷</button>
+  <button class="nav-status mode-toggle" type="button" data-mode-toggle>無雷模式</button>
 </header>
 
 <main>
@@ -107,8 +116,10 @@
   </section>
 </main>
 
-<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.16.1</footer>
-<script src="app/mode.js?v=0.16.1" defer></script>
-<script src="app/site.js?v=0.16.1" defer></script>
+<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.16.2</footer>
+<script src="app/loading.js?v=0.16.2" defer></script>
+<script src="app/scrollbar.js?v=0.16.2" defer></script>
+<script src="app/mode.js?v=0.16.2" defer></script>
+<script src="app/site.js?v=0.16.2" defer></script>
 </body>
 </html>

@@ -385,6 +385,7 @@ function applyCopy(copy){
 function renderCharacter(char,id,data){
   if(!char) return;
 
+  document.body.dataset.character = id || char.id || '';
   const order = String(Number(char.order || 0)).padStart(2,'0');
 
   setText('#siteTitle',data.site?.site_title || '時盡');
@@ -441,12 +442,19 @@ async function initCharacterPage(){
     window.EndOfTimeMode?.bind?.(data.copy || {});
     renderCharacter(char,id,data);
 
+    if(mode === 'full'){
+      document.querySelector('.spoiler-gate')?.remove();
+    }
+
     const main = bestCharacterImage(data.images || [],id,{zero:false});
     mountImage($('#characterHero'), main, `${char.fullName || char.name} 主視覺`);
 
     console.info(`《時盡》角色頁資料來源：Google Sheet / GAS · ${id}`);
   }catch(err){
     console.warn('角色頁 GAS 載入失敗，保留 HTML SEO / fallback。',err);
+  }
+  finally{
+    window.SiteLoading?.hide?.();
   }
 }
 

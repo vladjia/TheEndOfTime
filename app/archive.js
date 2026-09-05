@@ -87,6 +87,8 @@ async function initArchive(){
     }
   }catch(err){
     console.error(err);
+  }finally{
+    window.SiteLoading?.hide?.();
   }
 }
 

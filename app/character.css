@@ -734,3 +734,157 @@
 
 /* v0.15.1 · topbar 由 site.css TOPBAR 2.0 統一接管 */
 .character-top-actions{display:none!important}
+
+
+/* ============================================================
+   v0.16.2 · CHARACTER SEAL HOVER
+   角色頁主視覺印記跟首頁角色卡一致擁有角色專屬特效
+   ============================================================ */
+
+.character-main,
+.character-hero,
+.character-visual{
+  position:relative;
+  z-index:1;
+}
+
+.character-visual img{
+  z-index:0!important;
+}
+
+.character-visual-mark{
+  z-index:3!important;
+  transition:
+    color .28s ease,
+    filter .28s ease,
+    transform .28s ease,
+    text-shadow .28s ease;
+}
+
+/* 家｜吸血：血色甦醒與下墜血滴 */
+body[data-character="jiashi"] .character-visual:hover .character-visual-mark{
+  color:rgba(171,26,45,.22);
+  text-shadow:0 0 12px rgba(166,31,50,.28);
+}
+
+body[data-character="jiashi"] .character-visual-mark::before{
+  content:"";
+  position:absolute;
+  left:46%;
+  top:80%;
+  width:9px;
+  height:28px;
+  opacity:0;
+  border-radius:60% 40% 65% 35%;
+  background:linear-gradient(180deg,#a51f37,#601b2c 72%,transparent);
+  transform:translateY(-10px) scaleY(.35);
+}
+
+body[data-character="jiashi"] .character-visual:hover .character-visual-mark::before{
+  animation:characterBloodDrop .9s ease-out 1 forwards;
+}
+
+@keyframes characterBloodDrop{
+  0%{opacity:0;transform:translateY(-10px) scaleY(.3)}
+  32%{opacity:.92}
+  100%{opacity:.08;transform:translateY(24px) scaleY(1.05)}
+}
+
+/* 白｜笑：字下浮出冷淡笑弧 */
+body[data-character="baiji"] .character-visual:hover .character-visual-mark{
+  color:rgba(245,246,249,.16);
+  filter:drop-shadow(0 0 8px rgba(236,238,244,.10));
+  transform:translateY(-2px) scale(.985);
+}
+
+body[data-character="baiji"] .character-visual-mark::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-7px;
+  width:66px;
+  height:19px;
+  border-bottom:2px solid rgba(238,241,245,0);
+  border-radius:0 0 60px 60px;
+  transform:translateX(-50%) scaleX(.5);
+  opacity:0;
+  transition:opacity .2s ease,transform .32s ease,border-color .2s ease;
+}
+
+body[data-character="baiji"] .character-visual:hover .character-visual-mark::after{
+  opacity:.72;
+  transform:translateX(-50%) scaleX(1);
+  border-bottom-color:rgba(238,241,245,.46);
+}
+
+/* 月半｜刀痕 */
+body[data-character="yeshenxing"] .character-visual-mark::after{
+  content:"";
+  position:absolute;
+  width:120px;
+  height:1px;
+  right:-8px;
+  top:50%;
+  background:linear-gradient(90deg,transparent,rgba(226,229,234,.58),transparent);
+  transform:rotate(-18deg) scaleX(0);
+  transform-origin:right center;
+  opacity:0;
+  transition:transform .3s ease,opacity .2s ease;
+}
+
+body[data-character="yeshenxing"] .character-visual:hover .character-visual-mark::after{
+  transform:rotate(-18deg) scaleX(1);
+  opacity:1;
+}
+
+/* 蝶｜黑蝶飛舞 */
+body[data-character="anyanxiu"] .character-visual-mark::before,
+body[data-character="anyanxiu"] .character-visual-mark::after{
+  content:"";
+  position:absolute;
+  width:14px;
+  height:10px;
+  border-radius:72% 28% 68% 32%;
+  background:rgba(0,0,0,.76);
+  opacity:0;
+  filter:drop-shadow(0 0 1px rgba(215,220,226,.16));
+}
+
+body[data-character="anyanxiu"] .character-visual-mark::before{
+  right:13px;
+  top:8px;
+}
+
+body[data-character="anyanxiu"] .character-visual-mark::after{
+  right:-5px;
+  top:36px;
+}
+
+body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark::before{
+  animation:characterButterflyOne 1s ease-out 1 forwards;
+}
+
+body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark::after{
+  animation:characterButterflyTwo 1.12s ease-out .06s 1 forwards;
+}
+
+@keyframes characterButterflyOne{
+  0%{opacity:0;transform:translate(0,0) rotate(0) scale(.62)}
+  20%{opacity:.92}
+  100%{opacity:0;transform:translate(-42px,-26px) rotate(-34deg) scale(1.1)}
+}
+
+@keyframes characterButterflyTwo{
+  0%{opacity:0;transform:translate(0,0) rotate(0) scale(.58)}
+  20%{opacity:.82}
+  100%{opacity:0;transform:translate(-27px,-51px) rotate(28deg) scale(.98)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .character-visual-mark,
+  .character-visual-mark::before,
+  .character-visual-mark::after{
+    animation:none!important;
+    transition:none!important;
+  }
+}

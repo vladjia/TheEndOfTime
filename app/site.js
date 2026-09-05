@@ -271,6 +271,8 @@ async function init(){
   if(footer && (version || dataVersion)){
     footer.textContent = `《時盡》WORLD / CHARACTER ARCHIVE · Core ${version ? 'v'+version : ''}${dataVersion ? ' · Data '+dataVersion : ''}`;
   }
+
+  window.SiteLoading?.hide?.();
 }
 
 init();

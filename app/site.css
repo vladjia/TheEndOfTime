@@ -2355,3 +2355,202 @@ html{
   width:0;
   height:0;
 }
+
+
+/* ============================================================
+   v0.16.2 · UI FIX PACK
+   ============================================================ */
+
+/* Native scrollbar 隱藏，改由右側自訂拉桿顯示 */
+html{
+  scrollbar-width:none!important;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  width:0!important;
+  height:0!important;
+}
+
+/* TOPBAR：更大字、永遠壓在內容上方 */
+.topbar-v3{
+  position:sticky!important;
+  top:0!important;
+  z-index:5000!important;
+  overflow:hidden;
+  isolation:isolate;
+}
+
+.topbar-v3 .main-nav a{
+  font-size:15px!important;
+  font-weight:600;
+  letter-spacing:.11em!important;
+}
+
+.topbar-v3 .nav-status{
+  font-size:12px!important;
+  font-weight:600;
+  letter-spacing:.08em!important;
+}
+
+.brand-v3 strong{
+  font-size:21px!important;
+}
+
+/* 自訂《時盡》捲軸：從 TOPBAR 下方才開始 */
+.time-scrollbar{
+  position:fixed;
+  right:3px;
+  z-index:4900;
+  width:10px;
+  border:1px solid rgba(100,107,118,.18);
+  background:rgba(7,9,13,.78);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.015);
+  transition:opacity .18s ease;
+}
+
+.time-scrollbar[hidden]{
+  display:none!important;
+}
+
+.time-scrollbar-thumb{
+  position:absolute;
+  left:1px;
+  top:0;
+  width:6px;
+  min-height:54px;
+  cursor:grab;
+  background:linear-gradient(180deg,#3c424b 0%,#22272e 100%);
+  border:1px solid #4b3138;
+  border-radius:1px;
+  box-shadow:0 0 8px rgba(0,0,0,.38);
+  will-change:transform;
+}
+
+.time-scrollbar-thumb:hover{
+  width:8px;
+  left:0;
+  background:linear-gradient(
+    180deg,
+    #a33247 0%,
+    #852a43 36%,
+    #5b2c4b 66%,
+    #43305f 100%
+  );
+  border-color:#8a4051;
+  box-shadow:
+    0 0 8px rgba(159,39,59,.25),
+    0 0 11px rgba(85,56,119,.18);
+}
+
+.time-scrollbar-thumb:active,
+body.scrollbar-dragging .time-scrollbar-thumb{
+  cursor:grabbing;
+  background:linear-gradient(180deg,#b23950,#692f4c 52%,#4a356b);
+}
+
+/* 讀取 GAS 時顯示 Loading */
+.site-loading{
+  position:fixed;
+  inset:0;
+  z-index:9999999;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 50% 46%,rgba(120,23,40,.07),transparent 25%),
+    rgba(5,7,10,.985);
+  opacity:1;
+  visibility:visible;
+  transition:opacity .32s ease,visibility .32s ease;
+}
+
+.site-loading.is-leaving{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.site-loading-inner{
+  text-align:center;
+  transform:translateY(-2vh);
+}
+
+.site-loading-hourglass{
+  position:relative;
+  width:42px;
+  height:56px;
+  margin:0 auto 18px;
+  border-top:1px solid rgba(236,239,243,.48);
+  border-bottom:1px solid rgba(236,239,243,.48);
+}
+
+.site-loading-hourglass::before,
+.site-loading-hourglass::after{
+  content:"";
+  position:absolute;
+  left:7px;
+  right:7px;
+  height:25px;
+  border-left:1px solid rgba(236,239,243,.28);
+  border-right:1px solid rgba(236,239,243,.28);
+}
+
+.site-loading-hourglass::before{
+  top:1px;
+  clip-path:polygon(0 0,100% 0,55% 100%,45% 100%);
+}
+
+.site-loading-hourglass::after{
+  bottom:1px;
+  clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);
+}
+
+.site-loading-hourglass span{
+  position:absolute;
+  left:50%;
+  top:26px;
+  width:3px;
+  height:13px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg,#9b2b40,#5d315c);
+  animation:loadingSand 1.05s ease-in-out infinite;
+}
+
+@keyframes loadingSand{
+  0%{opacity:.18;transform:translate(-50%,-8px) scaleY(.25)}
+  45%{opacity:1;transform:translate(-50%,0) scaleY(1)}
+  100%{opacity:.15;transform:translate(-50%,8px) scaleY(.25)}
+}
+
+.site-loading-title{
+  font-family:var(--font-title);
+  color:#e4e7eb;
+  font-size:24px;
+  letter-spacing:.2em;
+}
+
+.site-loading-text{
+  margin-top:8px;
+  color:#717b87;
+  font-size:11px;
+  letter-spacing:.16em;
+}
+
+/* 爆雷模式已開啟時，不再顯示「完整設定 / 防雷區」入口 */
+html[data-content-mode="full"] .spoiler-gate{
+  display:none!important;
+}
+
+@media(max-width:640px){
+  .topbar-v3 .main-nav a{
+    font-size:12px!important;
+  }
+  .topbar-v3 .nav-status{
+    font-size:10px!important;
+  }
+  .brand-v3 strong{
+    font-size:16px!important;
+  }
+  .time-scrollbar{
+    display:none!important;
+  }
+}
