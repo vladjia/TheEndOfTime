@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.16.6
+# 《時盡》網站核心 v0.16.7
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -1083,3 +1083,39 @@ Logo 在既有高度內放大到接近滿版。
 
 只補「版本紀錄」，不修改正式 CORE。
 執行成功後刪除 Migration。
+
+
+## v0.16.7：首頁主視覺 / Loading / 黑蝶定位修正版
+
+### 首頁主視覺
+不再只依賴單一 `<img>` 顯示方式。
+
+同一個 Drive 圖片來源會同時：
+- 建立 `<img>`
+- 設定 Hero CSS background-image
+
+並強制取消會讓 Hero 隱藏的舊動畫 / opacity / mask 規則。
+羽化改由外層漸層覆蓋完成，不再直接 mask 圖片。
+
+### Loading
+保留原本 8 張 PNG 作流沙 frame sequence。
+翻轉改由 CSS 做平滑 180° rotation：
+- 流沙：JS 8 幀
+- 翻轉：CSS 60fps 級連續動畫
+- 不再靠逐格圖片本身表現旋轉節奏
+
+### 安言修「蝶」
+使用使用者提供的 SVG：
+`assets/images/effects/black-butterflies.svg`
+
+定位基準改為：
+- 角色總覽：`.archive-character-seal`（「蝶」字本身）
+- 角色詳細頁：`.character-visual-mark`（印記本身）
+
+不再把蝴蝶掛在整張角色卡或整張主視覺上，因此不會位置漂移。
+
+### 其他
+- 保留 v0.16.6 圖片鑑賞模式
+- 保留滾軸改善
+- Logo 不做修改
+- 本版不修改 GAS CORE

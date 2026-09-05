@@ -1017,3 +1017,69 @@ body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark{
   20%{opacity:.78}
   100%{opacity:0;transform:translate(-92px,-42px) rotate(-48deg) scale(.84)}
 }
+
+
+/* ============================================================
+   v0.16.7 · 角色詳細頁黑蝶 SVG
+   同樣鎖在「蝶」印記本身。
+   ============================================================ */
+
+.character-visual[data-character="anyanxiu"] .character-visual-mark{
+  position:absolute;
+  overflow:visible!important;
+}
+
+.character-visual[data-character="anyanxiu"] .seal-butterflies{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:190px!important;
+  height:190px!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:5!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+
+.character-visual[data-character="anyanxiu"] .seal-butterfly-swarm{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118px;
+  height:118px;
+  margin-left:-59px;
+  margin-top:-59px;
+  opacity:0;
+  background:url('../assets/images/effects/black-butterflies.svg') center/contain no-repeat;
+  filter:
+    drop-shadow(0 0 1px rgba(236,238,242,.45))
+    drop-shadow(0 0 9px rgba(88,54,120,.28));
+  transform-origin:center center;
+}
+
+.character-visual[data-character="anyanxiu"] .seal-butterfly-swarm-2{
+  width:82px;
+  height:82px;
+  margin-left:-41px;
+  margin-top:-41px;
+}
+
+.character-visual[data-character="anyanxiu"].seal-active .seal-butterfly-swarm-1{
+  animation:anyanxiuDetailSvgSwarm1 1.18s cubic-bezier(.18,.68,.28,1) 1 forwards;
+}
+
+.character-visual[data-character="anyanxiu"].seal-active .seal-butterfly-swarm-2{
+  animation:anyanxiuDetailSvgSwarm2 1.30s cubic-bezier(.18,.68,.28,1) .08s 1 forwards;
+}
+
+@keyframes anyanxiuDetailSvgSwarm1{
+  0%{opacity:0;transform:translate(0,14px) scale(.72) rotate(-8deg)}
+  18%{opacity:.88}
+  100%{opacity:0;transform:translate(-68px,-88px) scale(1.08) rotate(-28deg)}
+}
+
+@keyframes anyanxiuDetailSvgSwarm2{
+  0%{opacity:0;transform:translate(8px,8px) scale(.62) rotate(9deg)}
+  22%{opacity:.72}
+  100%{opacity:0;transform:translate(52px,-74px) scale(.92) rotate(24deg)}
+}

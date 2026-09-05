@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.6",
+  "version": "0.16.7",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -103,8 +103,10 @@
         "assets/images/loading/loading-07.png",
         "assets/images/loading/loading-08.png"
       ],
-      "frameMs": 185
-    }
+      "frameMs": 105,
+      "rotation": "CSS 180deg smooth half-turn"
+    },
+    "butterflyEffect": "assets/images/effects/black-butterflies.svg"
   },
   "features": {
     "contentMode": {
@@ -114,15 +116,15 @@
       "confirmationRequired": true
     },
     "customScrollbar": "wider + inset",
-    "loadingOverlay": "8-frame sequence @ 86ms/frame",
+    "loadingOverlay": "8 frame sand sequence + CSS smooth 180deg rotation",
     "scrollbarAvoidsTopbar": true,
     "loadingFailSafeMs": 12000,
     "characterSealEffects": "app/seal-effects.js",
     "homepageImageFeather": true,
     "homepageImageSource": "Drive 圖片表：網站素材，優先首頁/封面/主視覺",
     "homepageHeroActions": false,
-    "homepageImageResolver": "exact homepage filename first + multi-key URL + automatic candidate retry",
+    "homepageImageResolver": "exact sheet filename + img + CSS background dual-render",
     "imageViewer": "wheel zoom + drag + double click + pinch",
-    "anyanxiuSeal": "3 real butterfly silhouettes with flapping wings"
+    "anyanxiuSeal": "user SVG swarm anchored to seal glyph"
   }
 }

@@ -3278,3 +3278,96 @@ body.image-viewer-open .time-scrollbar{
     padding:8px 18px 14px;
   }
 }
+
+
+/* ============================================================
+   v0.16.7 · HOMEPAGE IMAGE / LOADING ROTATION
+   ============================================================ */
+
+/* Homepage image: no animation state is allowed to hide this container anymore. */
+.hero-art.hero-art-reveal,
+body.pre-entry .hero-art.hero-art-reveal,
+body.site-entered .hero-art.hero-art-reveal{
+  opacity:1!important;
+  visibility:visible!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+}
+
+/* Use the same source as CSS background AND <img>, so either rendering path can show it. */
+.hero-art{
+  z-index:auto!important;
+  background-color:transparent!important;
+  background-image:var(--hero-image-url,none);
+  background-size:cover!important;
+  background-position:center 32%!important;
+  background-repeat:no-repeat!important;
+}
+
+.hero-art::after{
+  /* Feather through edge overlays instead of masking the actual image. */
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:-2px!important;
+  z-index:3!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg,
+      #07090d 0%,
+      rgba(7,9,13,.82) 5%,
+      rgba(7,9,13,.22) 16%,
+      transparent 28%,
+      transparent 74%,
+      rgba(7,9,13,.20) 87%,
+      #07090d 100%),
+    linear-gradient(180deg,
+      #07090d 0%,
+      rgba(7,9,13,.18) 13%,
+      transparent 25%,
+      transparent 79%,
+      rgba(7,9,13,.26) 90%,
+      #07090d 100%)!important;
+}
+
+.hero-art .hero-main-image,
+.hero-art > img{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center 32%!important;
+  z-index:2!important;
+
+  /* Kill the previous mask rule completely: the fade now lives in ::after. */
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
+
+  animation:none!important;
+  filter:contrast(1.02) saturate(.95) brightness(.95)!important;
+}
+
+/* Loading: image sequence changes the sand; the wrapper rotates continuously at browser frame rate. */
+.loading-hourglass.loading-frame-sequence{
+  transform-origin:50% 50%;
+  animation:loadingSmoothHalfTurn 1.15s cubic-bezier(.55,.06,.34,.98) infinite!important;
+  will-change:transform;
+}
+
+@keyframes loadingSmoothHalfTurn{
+  0%{transform:rotate(0deg)}
+  34%{transform:rotate(0deg)}
+  82%{transform:rotate(180deg)}
+  100%{transform:rotate(180deg)}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .loading-hourglass.loading-frame-sequence{
+    animation:none!important;
+  }
+}

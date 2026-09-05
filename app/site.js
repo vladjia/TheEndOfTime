@@ -181,63 +181,56 @@ function renderImages(images){
     .replace(/[・·．.＿_\-–—\/\\]/g,'')
     .toLowerCase();
 
-  const imageUrl = x => {
-    const direct = String(
-      x?.url ||
-      x?.imageUrl ||
-      x?.imageURL ||
-      x?.['圖片網址'] ||
-      ''
-    ).trim();
+  const getValue = (x, keys) => {
+    for(const key of keys){
+      const value = x?.[key];
+      if(value !== undefined && value !== null && String(value).trim() !== ''){
+        return String(value).trim();
+      }
+    }
+    return '';
+  };
 
+  const imageUrl = x => {
+    const direct = getValue(x, ['url','imageUrl','imageURL','圖片網址','URL']);
     if(direct) return direct;
 
-    const id = String(
-      x?.id ||
-      x?.fileId ||
-      x?.fileID ||
-      x?.['File ID'] ||
-      ''
-    ).trim();
-
+    const id = getValue(x, ['id','fileId','fileID','File ID','Drive檔案ID']);
     return id
       ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w2000`
       : '';
   };
 
   const exactHomepageName = x => {
-    const name = String(x?.name || x?.fileName || x?.['檔名'] || '').trim();
-    return name === '首頁_封面_主視覺_01.png' ||
-           norm(name) === norm('首頁_封面_主視覺_01.png');
+    const name = getValue(x, ['name','fileName','檔名']);
+    return norm(name) === norm('首頁_封面_主視覺_01.png');
   };
 
   const score = x => {
-    const name = norm(x?.name || x?.fileName || x?.['檔名']);
-    const group = norm(x?.group || x?.['大分類']);
-    const target = norm(x?.target || x?.['對象']);
-    const category = norm(x?.category || x?.['用途分類']);
-    const path = norm(x?.path || x?.relativePath || x?.['Drive 路徑']);
+    const name = norm(getValue(x,['name','fileName','檔名']));
+    const group = norm(getValue(x,['group','大分類','群組']));
+    const target = norm(getValue(x,['target','對象']));
+    const category = norm(getValue(x,['category','用途分類','分類']));
+    const path = norm(getValue(x,['path','relativePath','Drive 路徑','相對路徑']));
     const hay = `${name}|${group}|${target}|${category}|${path}`;
 
     let s = 0;
 
-    if(exactHomepageName(x)) s += 10000;
-    if(hay.includes('網站素材')) s += 120;
-    if(hay.includes('首頁')) s += 220;
-    if(hay.includes('封面')) s += 160;
-    if(hay.includes('主視覺')) s += 130;
-    if(hay.includes('hero')) s += 90;
-    if(hay.includes('cover')) s += 90;
+    if(exactHomepageName(x)) s += 100000;
+    if(hay.includes('網站素材')) s += 1000;
+    if(hay.includes('首頁')) s += 800;
+    if(hay.includes('封面')) s += 500;
+    if(hay.includes('主視覺')) s += 400;
 
-    if(hay.includes('logo')) s -= 900;
-    if(hay.includes('favicon')) s -= 900;
-    if(hay.includes('ogcover')) s -= 700;
-    if(hay.includes('loading')) s -= 700;
+    if(hay.includes('logo')) s -= 5000;
+    if(hay.includes('favicon')) s -= 5000;
+    if(hay.includes('ogcover')) s -= 5000;
+    if(hay.includes('loading')) s -= 5000;
 
-    // 最後備援：家式人物主視覺
-    if(hay.includes('人物') && hay.includes('家式') && hay.includes('主視覺')) s += 35;
+    // Only as a final fallback.
+    if(hay.includes('人物') && hay.includes('家式') && hay.includes('主視覺')) s += 50;
 
-    if(!imageUrl(x)) s -= 2000;
+    if(!imageUrl(x)) s -= 10000;
     return s;
   };
 
@@ -248,55 +241,63 @@ function renderImages(images){
 
   hero.querySelectorAll('img').forEach(el=>el.remove());
   hero.classList.remove('image-loaded','image-error');
-  hero.classList.toggle('has-image',candidates.length > 0);
+  hero.style.removeProperty('--hero-image-url');
+  hero.style.backgroundImage = 'none';
 
   if(!candidates.length){
-    console.warn('首頁主視覺：GAS images 中找不到可用首頁素材。', list);
+    hero.dataset.imageState = 'missing';
     hero.classList.add('image-error');
+    console.error('首頁主視覺：沒有取得可用圖片資料。', list);
     return;
   }
 
-  let index = 0;
+  let candidateIndex = 0;
 
-  const tryCandidate = () => {
-    const candidate = candidates[index];
+  const tryNext = () => {
+    const candidate = candidates[candidateIndex];
+
     if(!candidate){
-      console.warn('首頁主視覺：候選圖片全部載入失敗。', candidates);
+      hero.dataset.imageState = 'failed';
       hero.classList.add('image-error');
+      console.error('首頁主視覺：所有候選圖片都載入失敗。', candidates);
       return;
     }
 
     const source = candidate.x;
+    const src = candidate.url;
+
+    // CSS background is an independent fallback from the <img>.
+    hero.style.setProperty('--hero-image-url', `url("${src.replace(/"/g,'\\"')}")`);
+    hero.style.backgroundImage = `url("${src.replace(/"/g,'\\"')}")`;
+    hero.dataset.imageState = 'loading';
+
     const img = document.createElement('img');
-    img.src = candidate.url;
+    img.className = 'hero-main-image';
+    img.src = src;
     img.alt = '時盡｜首頁主視覺';
     img.decoding = 'async';
     img.loading = 'eager';
     img.dataset.viewer = 'true';
-    img.dataset.viewerLabel = String(
-      source?.name ||
-      source?.fileName ||
-      source?.['檔名'] ||
-      '首頁主視覺'
-    );
+    img.dataset.viewerLabel = getValue(source,['name','fileName','檔名']) || '首頁主視覺';
 
     img.addEventListener('load',()=>{
+      hero.dataset.imageState = 'loaded';
       hero.classList.add('image-loaded');
       hero.classList.remove('image-error');
       console.info('首頁主視覺載入成功：', source);
     },{once:true});
 
     img.addEventListener('error',()=>{
-      console.warn('首頁主視覺候選載入失敗，改試下一張：', source, candidate.url);
+      console.warn('首頁主視覺候選載入失敗，嘗試下一張：', source, src);
       img.remove();
-      index += 1;
-      tryCandidate();
+      candidateIndex += 1;
+      tryNext();
     },{once:true});
 
     hero.appendChild(img);
   };
 
-  tryCandidate();
+  tryNext();
 }
 
 async function loadFromGas(endpoint){

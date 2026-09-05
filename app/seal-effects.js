@@ -12,20 +12,27 @@ window.EndOfTimeSealEffects = (() => {
   }
 
   function ensureButterflies(el, characterId){
-    if(characterId !== 'anyanxiu' || el.querySelector('.seal-butterflies')) return;
+    if(characterId !== 'anyanxiu') return;
+
+    const anchor =
+      el.querySelector('.archive-character-seal') ||
+      el.querySelector('.character-visual-mark');
+
+    if(!anchor || anchor.querySelector('.seal-butterflies')) return;
 
     const group = document.createElement('span');
     group.className = 'seal-butterflies';
     group.setAttribute('aria-hidden','true');
 
-    for(let i=1;i<=3;i++){
-      const butterfly = document.createElement('span');
-      butterfly.className = `seal-butterfly seal-butterfly-${i}`;
-      butterfly.innerHTML = '<i class="seal-wing seal-wing-left"></i><b class="seal-butterfly-body"></b><i class="seal-wing seal-wing-right"></i>';
-      group.appendChild(butterfly);
-    }
+    const swarm1 = document.createElement('span');
+    swarm1.className = 'seal-butterfly-swarm seal-butterfly-swarm-1';
 
-    el.appendChild(group);
+    const swarm2 = document.createElement('span');
+    swarm2.className = 'seal-butterfly-swarm seal-butterfly-swarm-2';
+
+    group.appendChild(swarm1);
+    group.appendChild(swarm2);
+    anchor.appendChild(group);
   }
 
   function bind(el, characterId){
