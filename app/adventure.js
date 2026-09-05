@@ -4,6 +4,8 @@ window.EndOfTimeAdventure = (() => {
   const SESSION_PROMPT_KEY = 'theEndOfTime.timeMark.prompted';
   let configCache = null;
   let progressCache = null;
+  let ensurePromise = null;
+  let timeMarkBusy = false;
 
   function rootPrefix(){
     return location.pathname.includes('/story/') || location.pathname.includes('/characters/') || location.pathname.includes('/world/') || location.pathname.includes('/journey/') ? '../' : '';
@@ -42,19 +44,27 @@ window.EndOfTimeAdventure = (() => {
   }
 
   async function ensure(){
-    let t = token();
-    if(!t){
-      t = generateToken();
-      setToken(t);
-      try{ await api('adventureCreate',{token:t}); }catch(err){ console.warn('時印建立暫時離線',err); }
-      toast('時印已建立。');
-      return {token:t, isNew:true};
-    }
+    if(ensurePromise) return ensurePromise;
+    ensurePromise = (async()=>{
+      let t = token();
+      if(!t){
+        t = generateToken();
+        setToken(t);
+        try{ await api('adventureCreate',{token:t}); }catch(err){ console.warn('時印建立暫時離線',err); }
+        toast('時印已建立。');
+        return {token:t, isNew:true};
+      }
+      try{
+        const loaded = await api('adventureLoad',{token:t});
+        if(!loaded?.exists) await api('adventureCreate',{token:t});
+      }catch(err){ console.warn('時印確認暫時離線',err); }
+      return {token:t, isNew:false};
+    })();
     try{
-      const loaded = await api('adventureLoad',{token:t});
-      if(!loaded?.exists) await api('adventureCreate',{token:t});
-    }catch(err){ console.warn('時印確認暫時離線',err); }
-    return {token:t, isNew:false};
+      return await ensurePromise;
+    }finally{
+      ensurePromise = null;
+    }
   }
 
   async function load(force=false){
@@ -160,33 +170,86 @@ window.EndOfTimeAdventure = (() => {
     return o;
   }
 
-  async function openManager(){
-    const {token:t}=await ensure();
-    const o=overlay(`
-      <div class="time-mark-kicker">TIME MARK</div>
-      <h2>你的時印</h2>
-      <p>你的旅程會自動保存在這台裝置。若要換手機或電腦，請先保存這枚時印。</p>
-      <div class="time-mark-code">${t}</div>
-      <p class="time-mark-note">不需要背下來。保存一份即可。</p>
-      <div class="time-mark-actions">
-        <button class="time-mark-btn primary" type="button" data-copy-time>複製時印</button>
-        <button class="time-mark-btn" type="button" data-save-card>儲存時印卡</button>
-        <a class="time-mark-btn" href="${rootPrefix()}journey/index.html">查看目前旅程</a>
+  function setTimeMarkButtonsBusy(busy){
+    document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+      btn.disabled = !!busy;
+      btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+    });
+  }
+
+  function showTimeMarkLoading(message='正在讀取時印……'){
+    return overlay(`
+      <div class="time-mark-loading" role="status" aria-live="polite">
+        <span class="time-mark-loading-ring" aria-hidden="true"></span>
+        <div>
+          <div class="time-mark-kicker">TIME MARK</div>
+          <strong>${message}</strong>
+        </div>
       </div>
-      <div class="time-mark-field">
-        <label for="restoreTimeMark">在這台裝置取回另一枚時印</label>
-        <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
-      </div>
-      <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
-      <div class="time-mark-actions"><button class="time-mark-btn" type="button" data-restore-time>取回時印</button><button class="time-mark-btn" type="button" data-time-close>關閉</button></div>
     `);
-    o.querySelector('[data-copy-time]').onclick=copyToken;
-    o.querySelector('[data-save-card]').onclick=downloadTimeMarkCard;
-    o.querySelector('[data-restore-time]').onclick=async()=>{
-      const field=o.querySelector('#restoreTimeMark');const status=o.querySelector('#restoreTimeMarkStatus');
-      status.textContent='確認時印中……';
-      try{const data=await restore(field.value);closeOverlay();showResumePrompt(data,true)}catch(err){status.textContent=err.message||'時印確認失敗。'}
-    };
+  }
+
+  async function openManager(){
+    if(timeMarkBusy) return;
+    timeMarkBusy = true;
+    setTimeMarkButtonsBusy(true);
+    showTimeMarkLoading('正在讀取時印……');
+
+    try{
+      const {token:t}=await ensure();
+      const o=overlay(`
+        <div class="time-mark-kicker">TIME MARK</div>
+        <h2>你的時印</h2>
+        <p>你的旅程會自動保存在這台裝置。若要換手機或電腦，請先保存這枚時印。</p>
+        <div class="time-mark-code">${t}</div>
+        <p class="time-mark-note">不需要背下來。保存一份即可。</p>
+        <div class="time-mark-actions">
+          <button class="time-mark-btn primary" type="button" data-copy-time>複製時印</button>
+          <button class="time-mark-btn" type="button" data-save-card>儲存時印卡</button>
+          <a class="time-mark-btn" href="${rootPrefix()}journey/index.html">查看目前旅程</a>
+        </div>
+        <div class="time-mark-field">
+          <label for="restoreTimeMark">在這台裝置取回另一枚時印</label>
+          <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
+        </div>
+        <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
+        <div class="time-mark-actions"><button class="time-mark-btn" type="button" data-restore-time>取回時印</button><button class="time-mark-btn" type="button" data-time-close>關閉</button></div>
+      `);
+
+      o.querySelector('[data-copy-time]').onclick=copyToken;
+      o.querySelector('[data-save-card]').onclick=downloadTimeMarkCard;
+      o.querySelector('[data-restore-time]').onclick=async()=>{
+        const field=o.querySelector('#restoreTimeMark');
+        const status=o.querySelector('#restoreTimeMarkStatus');
+        const restoreBtn=o.querySelector('[data-restore-time]');
+        if(restoreBtn.disabled) return;
+
+        restoreBtn.disabled=true;
+        restoreBtn.setAttribute('aria-busy','true');
+        restoreBtn.textContent='確認中……';
+        field.disabled=true;
+        status.textContent='確認時印中……';
+
+        try{
+          const data=await restore(field.value);
+          closeOverlay();
+          showResumePrompt(data,true);
+        }catch(err){
+          status.textContent=err.message||'時印確認失敗。';
+          restoreBtn.disabled=false;
+          restoreBtn.setAttribute('aria-busy','false');
+          restoreBtn.textContent='取回時印';
+          field.disabled=false;
+          field.focus();
+        }
+      };
+    }catch(err){
+      closeOverlay();
+      toast(err?.message || '時印讀取失敗，請稍後再試。');
+    }finally{
+      timeMarkBusy = false;
+      setTimeMarkButtonsBusy(false);
+    }
   }
 
   function friendlyLast(data){
@@ -231,7 +294,7 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function bindButtons(){
-    document.querySelectorAll('[data-time-mark]').forEach(btn=>{btn.addEventListener('click',openManager)});
+    document.querySelectorAll('[data-time-mark]').forEach(btn=>{btn.addEventListener('click',e=>{e.preventDefault();openManager();})});
   }
 
   async function maybePromptReturning(){

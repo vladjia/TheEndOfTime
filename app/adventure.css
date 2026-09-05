@@ -156,3 +156,52 @@
   .journey-list-row{grid-template-columns:1fr;gap:4px}
   .adventure-toast{left:14px;right:14px;bottom:14px;text-align:center}
 }
+
+
+/* ============================================================
+   v0.17.1 · 時印 Loading / 防重複點擊
+   ============================================================ */
+.time-mark-toggle[disabled],
+.time-mark-toggle[aria-busy="true"]{
+  cursor:wait;
+  opacity:.68;
+  pointer-events:none;
+}
+
+.time-mark-loading{
+  min-height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  text-align:left;
+}
+.time-mark-loading strong{
+  display:block;
+  margin-top:9px;
+  font-size:18px;
+  font-weight:520;
+  letter-spacing:.04em;
+}
+.time-mark-loading-ring{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.12);
+  border-top-color:rgba(255,255,255,.9);
+  box-shadow:0 0 26px rgba(127,21,33,.18);
+  animation:timeMarkSpin .85s linear infinite;
+}
+.time-mark-btn[disabled],
+.time-mark-btn[aria-busy="true"]{
+  cursor:wait;
+  opacity:.55;
+  pointer-events:none;
+}
+@keyframes timeMarkSpin{
+  to{transform:rotate(360deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .time-mark-loading-ring{animation-duration:1.8s}
+}
