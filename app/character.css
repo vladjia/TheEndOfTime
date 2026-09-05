@@ -724,3 +724,9 @@
     grid-template-columns:1fr;
   }
 }
+
+
+/* v0.14.6 · 武器圖片完全資料驅動 */
+.weapon-slots{
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+}

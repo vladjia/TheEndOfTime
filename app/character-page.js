@@ -72,56 +72,31 @@ function bestCharacterImage(images,id,opts={}){
   return picked;
 }
 
-function bestWeaponImage(images, weaponName, keyword){
-  const rows = (images || []).filter(img => {
-    const target = norm(img.target);
-    const group = norm(img.group);
-    const name = norm(img.name);
-    const category = norm(img.category);
-    const path = norm(img.path);
+function getWeaponImages(images, weaponId){
+  return (images || [])
+    .filter(img => img.targetId === weaponId)
+    .sort((a,b) => {
+      const aName = String(a.name || '');
+      const bName = String(b.name || '');
+      return aName.localeCompare(bName,'zh-Hant');
+    });
+}
 
-    const sameWeapon =
-      target === norm(weaponName) ||
-      name.includes(norm(weaponName)) ||
-      path.includes(norm(weaponName));
+function weaponImageLabel(img){
+  const name = String(img?.name || '')
+    .replace(/\.[^.]+$/,'')
+    .trim();
 
-    const isWeapon =
-      group === norm('武器') ||
-      path.includes(norm('武器'));
+  if(!name) return '';
 
-    const matchesState =
-      name.includes(norm(keyword)) ||
-      category.includes(norm(keyword)) ||
-      path.includes(norm(keyword));
+  const parts = name.split('_').filter(Boolean);
 
-    return sameWeapon && isWeapon && matchesState;
-  });
-
-  // 優先檔名直接含「展開 / 收攏」，其次才是路徑 / 分類。
-  rows.sort((a,b) => {
-    const aName = norm(a.name).includes(norm(keyword)) ? 1 : 0;
-    const bName = norm(b.name).includes(norm(keyword)) ? 1 : 0;
-    return bName - aName;
-  });
-
-  const picked = rows[0] || null;
-
-  if(picked){
-    console.info(
-      `[武器圖片配對] ${weaponName} / ${keyword} →`,
-      picked.name || picked.url
-    );
-  }else{
-    console.warn(
-      `[武器圖片配對失敗] ${weaponName} / ${keyword}`,
-      (images || []).filter(img =>
-        norm(img.target) === norm(weaponName) ||
-        norm(img.name).includes(norm(weaponName))
-      )
-    );
+  // 常見命名：武器名_狀態_分類_序號
+  if(parts.length >= 2){
+    return parts[1];
   }
 
-  return picked;
+  return img.category || '';
 }
 
 function mountImage(target, item, alt){
@@ -146,7 +121,7 @@ function mountImage(target, item, alt){
     const ratio = w / h;
     const isHero = target.id === 'characterHero';
     const isZero = target.id === 'zeroVisual';
-    const isWeapon = target.id === 'weaponOpen' || target.id === 'weaponClosed';
+    const isWeapon = target.classList?.contains('weapon-slot');
 
     target.style.setProperty('--media-ratio', `${w} / ${h}`);
 
@@ -308,28 +283,36 @@ function renderWeapon(char,id,weapons,images){
   setText('#weaponDescription',weapon.publicDescription || '');
   setText('#weaponSignatureLine',weapon.signatureLine || '');
 
-  if(id === 'jiashi' && weapon.id === 'duanke'){
-    const slots = $('#weaponSlots');
-    const openSlot = $('#weaponOpen');
-    const closedSlot = $('#weaponClosed');
+  const slots = $('#weaponSlots');
+  if(!slots) return;
 
-    if(slots) slots.hidden = false;
-    if(openSlot) openSlot.hidden = false;
-    if(closedSlot) closedSlot.hidden = false;
+  const weaponImages = getWeaponImages(images, weapon.id);
 
-    const weaponOpen = bestWeaponImage(images,weapon.name,'展開');
-    const weaponClosed = bestWeaponImage(images,weapon.name,'收攏');
-
-    mountImage(openSlot, weaponOpen, `${weapon.name || '武器'} 展開`);
-    mountImage(closedSlot, weaponClosed, `${weapon.name || '武器'} 收攏`);
-
-    if(!weaponOpen && openSlot) openSlot.hidden = true;
-    if(!weaponClosed && closedSlot) closedSlot.hidden = true;
-
-    if(!weaponOpen && !weaponClosed && slots){
-      slots.hidden = true;
-    }
+  if(!weaponImages.length){
+    slots.hidden = true;
+    return;
   }
+
+  slots.hidden = false;
+  slots.innerHTML = '';
+
+  weaponImages.forEach((item,index) => {
+    const slot = document.createElement('div');
+    slot.className = 'weapon-slot';
+    slot.id = `weaponMedia${index + 1}`;
+
+    const label = document.createElement('span');
+    label.textContent = weaponImageLabel(item) || `IMAGE ${String(index + 1).padStart(2,'0')}`;
+    slot.appendChild(label);
+
+    slots.appendChild(slot);
+
+    mountImage(
+      slot,
+      item,
+      `${weapon.name || '武器'} ${label.textContent}`
+    );
+  });
 }
 
 function renderSpecialVisual(char,id,skills,images){
