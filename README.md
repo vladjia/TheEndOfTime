@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.15.1
+# 《時盡》網站核心 v0.15.2
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -777,3 +777,28 @@ Logo 正式路徑：
 本版不修改 GAS CORE。
 新增的導覽文字放在「網站文案」，請執行一次：
 `migrateNavigationCopyV1_6()`
+
+
+## v0.15.2：Logo 可讀性 + Favicon
+
+### Logo
+正式使用：
+`assets/images/the-end-of-time-logo.png`
+
+因 Logo 本體以黑色為主，本版不修改圖片，而是在網站端增加：
+- 極淡白色輪廓
+- 紅紫冷光
+- 很弱的圓形背景光暈
+- hover 時輕微增亮
+
+### Favicon
+正式使用：
+`assets/images/favicon.png`
+
+已接入：
+- 首頁
+- 四個角色頁
+- 故事目錄頁
+- 故事閱讀頁
+
+同時加入 `apple-touch-icon`。

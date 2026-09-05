@@ -1837,3 +1837,57 @@ a.story-preview-item:hover{
     font-size:10px;
   }
 }
+
+
+/* ============================================================
+   v0.15.2 · BRAND LOGO VISIBILITY
+   黑色 Logo 在深色 Header 上增加低調輪廓與冷光，不修改原圖本體。
+   ============================================================ */
+
+.brand-v2{
+  position:relative;
+}
+
+.brand-v2::before{
+  content:"";
+  position:absolute;
+  left:-5px;
+  top:50%;
+  width:54px;
+  height:54px;
+  transform:translateY(-50%);
+  border-radius:50%;
+  background:
+    radial-gradient(circle,
+      rgba(255,255,255,.075) 0%,
+      rgba(130,36,54,.045) 38%,
+      transparent 72%);
+  pointer-events:none;
+  opacity:.9;
+}
+
+.brand-logo{
+  position:relative;
+  z-index:1;
+  filter:
+    drop-shadow(0 0 1px rgba(255,255,255,.52))
+    drop-shadow(0 0 7px rgba(154,30,48,.22))
+    drop-shadow(0 0 12px rgba(106,79,164,.09));
+  transition:filter .22s ease, transform .22s ease;
+}
+
+.brand-v2:hover .brand-logo{
+  transform:scale(1.025);
+  filter:
+    drop-shadow(0 0 1.5px rgba(255,255,255,.66))
+    drop-shadow(0 0 9px rgba(167,36,55,.30))
+    drop-shadow(0 0 14px rgba(111,85,171,.14));
+}
+
+@media (max-width:620px){
+  .brand-v2::before{
+    width:46px;
+    height:46px;
+    left:-4px;
+  }
+}
