@@ -129,7 +129,9 @@ function mountImage(target, item, alt){
 
     if(isHero){
       target.classList.remove('media-cover','media-contain','media-natural-fit');
-      target.classList.add(ratio < 1.35 ? 'media-contain' : 'media-cover');
+      target.classList.add('media-hero-fill');
+      // 角色主視覺展示框直接跟著原圖比例走，不再硬塞進寬卡片。
+      target.style.aspectRatio = `${w} / ${h}`;
     }
 
     if(isZero || isWeapon){

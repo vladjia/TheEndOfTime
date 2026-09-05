@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.8",
+  "version": "0.16.9",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -116,18 +116,20 @@
       "confirmationRequired": true
     },
     "customScrollbar": "wider + inset",
-    "loadingOverlay": "8-frame sand + 2.05s smooth half-turn @ 156px",
+    "loadingOverlay": "126px + 3.85s smooth half-turn + 165ms frames",
     "scrollbarAvoidsTopbar": true,
     "loadingFailSafeMs": 12000,
     "characterSealEffects": "app/seal-effects.js",
     "homepageImageFeather": true,
     "homepageImageSource": "Drive 圖片表：網站素材，優先首頁/封面/主視覺",
     "homepageHeroActions": false,
-    "homepageImageResolver": "exact sheet filename + img + CSS background dual-render",
+    "homepageImageResolver": "exact filename only: 首頁_封面_主視覺_01.png",
     "imageViewer": "wheel zoom + drag + double click + pinch",
     "anyanxiuSeal": "user SVG swarm anchored to seal glyph",
-    "homepageImageDebug": true,
-    "characterVisual": "minimal showcase frame + soft edge fade",
-    "favicon": "normalized + cache-busted on all pages"
+    "homepageImageDebug": false,
+    "characterVisual": "frame follows natural image ratio + full bleed + stronger feather + seal overlay",
+    "favicon": "normalized + cache-busted on all pages",
+    "homepageHero": "homepage-only Drive cover + text overlay",
+    "homepageLegacyRendererGuard": true
   }
 }

@@ -1,26 +1,4 @@
 
-
-function homepageImageDebug(){
-  let panel = document.getElementById('homepageImageDebug');
-  if(!panel){
-    panel = document.createElement('div');
-    panel.id = 'homepageImageDebug';
-    panel.className = 'homepage-image-debug';
-    panel.innerHTML = '<button type="button" class="homepage-image-debug-close" aria-label="關閉首頁圖片診斷">×</button><pre></pre>';
-    document.body.appendChild(panel);
-    panel.querySelector('button').addEventListener('click',()=>panel.remove());
-  }
-  return {
-    write(lines){
-      const pre = panel.querySelector('pre');
-      pre.textContent = Array.isArray(lines) ? lines.join('\n') : String(lines || '');
-    },
-    append(line){
-      const pre = panel.querySelector('pre');
-      pre.textContent += (pre.textContent ? '\n' : '') + String(line || '');
-    }
-  };
-}
 const $ = s => document.querySelector(s);
 
 const LOCAL_FALLBACK = {
@@ -73,6 +51,7 @@ function applyMetaFromCopy(copy,site){
 
 function renderCharacters(chars,copy){
   const box = $('#characterCards');
+  if(!box) return;
   box.innerHTML = '';
 
   const seals = {
@@ -180,10 +159,16 @@ function renderStoryPreview(items,copy){
 }
 
 function renderWorld(items){
-  const first = [...(items || [])].sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999))[0];
+  const nameEl = $('#worldName');
+  const introEl = $('#worldIntro');
+  if(!nameEl && !introEl) return;
+
+  const first = [...(items || [])]
+    .sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999))[0];
+
   if(first){
-    $('#worldName').textContent = first.title || '世界觀';
-    $('#worldIntro').textContent = first.publicContent || '';
+    if(nameEl) nameEl.textContent = first.title || '世界觀';
+    if(introEl) introEl.textContent = first.publicContent || '';
   }
 }
 
@@ -196,8 +181,6 @@ function renderImages(images){
   const list = Array.isArray(images) ? images : [];
   const hero = $('#hero');
   if(!hero) return;
-
-  const debug = homepageImageDebug();
 
   const norm = value => String(value || '')
     .trim()
@@ -218,123 +201,58 @@ function renderImages(images){
   const imageUrl = x => {
     const direct = getValue(x, ['url','imageUrl','imageURL','圖片網址','URL']);
     if(direct) return direct;
+
     const id = getValue(x, ['id','fileId','fileID','File ID','Drive檔案ID']);
     return id
-      ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w2000`
+      ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w2400`
       : '';
   };
 
-  const exactHomepageName = x => {
+  const source = list.find(x => {
     const name = getValue(x, ['name','fileName','檔名']);
     return norm(name) === norm('首頁_封面_主視覺_01.png');
-  };
-
-  const score = x => {
-    const name = norm(getValue(x,['name','fileName','檔名']));
-    const group = norm(getValue(x,['group','大分類','群組']));
-    const target = norm(getValue(x,['target','對象']));
-    const category = norm(getValue(x,['category','用途分類','分類']));
-    const path = norm(getValue(x,['path','relativePath','Drive 路徑','相對路徑']));
-    const hay = `${name}|${group}|${target}|${category}|${path}`;
-
-    let s = 0;
-    if(exactHomepageName(x)) s += 100000;
-    if(hay.includes('網站素材')) s += 1000;
-    if(hay.includes('首頁')) s += 800;
-    if(hay.includes('封面')) s += 500;
-    if(hay.includes('主視覺')) s += 400;
-    if(hay.includes('logo')) s -= 5000;
-    if(hay.includes('favicon')) s -= 5000;
-    if(hay.includes('ogcover')) s -= 5000;
-    if(hay.includes('loading')) s -= 5000;
-    if(hay.includes('人物') && hay.includes('家式') && hay.includes('主視覺')) s += 50;
-    if(!imageUrl(x)) s -= 10000;
-    return s;
-  };
-
-  const candidates = list
-    .map(x => ({x, score:score(x), url:imageUrl(x)}))
-    .filter(item => item.score > 0 && item.url)
-    .sort((a,b) => b.score - a.score);
-
-  debug.write([
-    `images: ${list.length}`,
-    `candidates: ${candidates.length}`,
-    `hero: ${hero ? 'FOUND' : 'MISSING'}`,
-    `exact homepage row: ${list.some(exactHomepageName) ? 'YES' : 'NO'}`
-  ]);
-
-  if(candidates[0]){
-    const c = candidates[0];
-    debug.append(`top match: ${getValue(c.x,['name','fileName','檔名']) || '(no name)'}`);
-    debug.append(`score: ${c.score}`);
-    debug.append(`src: ${c.url}`);
-  }
+  });
 
   hero.querySelectorAll('img').forEach(el=>el.remove());
   hero.classList.remove('image-loaded','image-error');
-  hero.style.removeProperty('--hero-image-url');
-  hero.style.backgroundImage = 'none';
 
-  if(!candidates.length){
+  if(!source){
     hero.dataset.imageState = 'missing';
     hero.classList.add('image-error');
-    debug.append('result: NO CANDIDATE');
-    console.error('首頁主視覺：沒有取得可用圖片資料。', list);
+    console.error('首頁專用圖不存在：首頁_封面_主視覺_01.png');
     return;
   }
 
-  let candidateIndex = 0;
+  const src = imageUrl(source);
+  if(!src){
+    hero.dataset.imageState = 'missing-url';
+    hero.classList.add('image-error');
+    console.error('首頁專用圖存在，但沒有圖片網址 / File ID。', source);
+    return;
+  }
 
-  const tryNext = () => {
-    const candidate = candidates[candidateIndex];
+  const img = document.createElement('img');
+  img.className = 'hero-main-image';
+  img.src = src;
+  img.alt = '時盡｜首頁封面';
+  img.decoding = 'async';
+  img.loading = 'eager';
+  img.dataset.viewer = 'true';
+  img.dataset.viewerLabel = getValue(source,['name','fileName','檔名']) || '首頁封面';
 
-    if(!candidate){
-      hero.dataset.imageState = 'failed';
-      hero.classList.add('image-error');
-      debug.append('result: ALL FAILED');
-      console.error('首頁主視覺：所有候選圖片都載入失敗。', candidates);
-      return;
-    }
+  img.addEventListener('load',()=>{
+    hero.dataset.imageState = 'loaded';
+    hero.classList.add('image-loaded');
+    hero.classList.remove('image-error');
+  },{once:true});
 
-    const source = candidate.x;
-    const src = candidate.url;
+  img.addEventListener('error',()=>{
+    hero.dataset.imageState = 'error';
+    hero.classList.add('image-error');
+    console.error('首頁專用圖載入失敗：',src,source);
+  },{once:true});
 
-    hero.style.setProperty('--hero-image-url', `url("${src.replace(/"/g,'\\"')}")`);
-    hero.style.backgroundImage = `url("${src.replace(/"/g,'\\"')}")`;
-    hero.dataset.imageState = 'loading';
-
-    const img = document.createElement('img');
-    img.className = 'hero-main-image';
-    img.src = src;
-    img.alt = '時盡｜首頁主視覺';
-    img.decoding = 'async';
-    img.loading = 'eager';
-    img.dataset.viewer = 'true';
-    img.dataset.viewerLabel = getValue(source,['name','fileName','檔名']) || '首頁主視覺';
-
-    debug.append('img appended: YES');
-
-    img.addEventListener('load',()=>{
-      hero.dataset.imageState = 'loaded';
-      hero.classList.add('image-loaded');
-      hero.classList.remove('image-error');
-      debug.append(`load: SUCCESS (${img.naturalWidth}×${img.naturalHeight})`);
-      console.info('首頁主視覺載入成功：', source);
-    },{once:true});
-
-    img.addEventListener('error',()=>{
-      debug.append(`load: ERROR candidate ${candidateIndex+1}`);
-      console.warn('首頁主視覺候選載入失敗，嘗試下一張：', source, src);
-      img.remove();
-      candidateIndex += 1;
-      tryNext();
-    },{once:true});
-
-    hero.appendChild(img);
-  };
-
-  tryNext();
+  hero.appendChild(img);
 }
 
 async function loadFromGas(endpoint){

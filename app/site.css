@@ -3431,3 +3431,183 @@ body.site-entered .hero-art.hero-art-reveal{
     width:132px!important;
   }
 }
+
+
+/* ============================================================
+   v0.16.9 · HOMEPAGE COVER HERO
+   首頁專用圖就是 Hero 本體，文字疊在圖上。
+   ============================================================ */
+
+.hero.hero-cover{
+  position:relative!important;
+  display:block!important;
+  width:min(1360px,calc(100% - 64px))!important;
+  min-height:690px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  isolation:isolate;
+}
+
+.hero.hero-cover .hero-art{
+  position:absolute!important;
+  inset:0!important;
+  min-height:0!important;
+  width:100%!important;
+  height:100%!important;
+  z-index:0!important;
+  overflow:hidden!important;
+  background:#07090d!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+
+.hero.hero-cover .hero-art::before{
+  display:none!important;
+  content:none!important;
+}
+
+.hero.hero-cover .hero-art::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  /* 左側留給文字，右側保留封面細節；四周再自然收回黑底。 */
+  background:
+    linear-gradient(90deg,
+      rgba(7,9,13,.97) 0%,
+      rgba(7,9,13,.91) 18%,
+      rgba(7,9,13,.69) 34%,
+      rgba(7,9,13,.27) 52%,
+      rgba(7,9,13,.06) 70%,
+      rgba(7,9,13,.18) 100%),
+    linear-gradient(180deg,
+      rgba(7,9,13,.72) 0%,
+      transparent 15%,
+      transparent 73%,
+      rgba(7,9,13,.70) 100%)!important;
+}
+
+.hero.hero-cover .hero-main-image,
+.hero.hero-cover .hero-art > img{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  opacity:1!important;
+  visibility:visible!important;
+  border:0!important;
+  box-shadow:none!important;
+  mask-image:none!important;
+  -webkit-mask-image:none!important;
+  animation:none!important;
+  filter:brightness(.90) contrast(1.04) saturate(.92)!important;
+}
+
+.hero.hero-cover .hero-copy{
+  position:relative!important;
+  z-index:4!important;
+  width:min(600px,52%)!important;
+  min-height:690px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  padding:88px 0 88px 66px!important;
+  text-shadow:0 2px 22px rgba(0,0,0,.45);
+}
+
+.hero.hero-cover .hero-copy .lead{
+  max-width:540px;
+}
+
+.hero.hero-cover .hero-copy .quote{
+  max-width:500px;
+}
+
+.hero.hero-cover .hero-art.image-error::before{
+  content:"首頁封面載入失敗"!important;
+  display:grid!important;
+  place-items:center!important;
+  color:rgba(210,215,222,.42)!important;
+  font-size:12px!important;
+  letter-spacing:.14em!important;
+}
+
+/* 0.16.8 臨時 Debug 不再使用。 */
+.homepage-image-debug{
+  display:none!important;
+}
+
+/* Loading：縮小、放慢，翻轉保留舒適停頓。 */
+.loading-hourglass.loading-frame-sequence{
+  width:126px!important;
+  animation:loadingSlowHalfTurn 3.85s cubic-bezier(.52,.06,.32,.98) infinite!important;
+}
+
+@keyframes loadingSlowHalfTurn{
+  0%{transform:rotate(0deg)}
+  48%{transform:rotate(0deg)}
+  76%{transform:rotate(180deg)}
+  100%{transform:rotate(180deg)}
+}
+
+@media(max-width:820px){
+  .hero.hero-cover{
+    width:min(100% - 36px,100%)!important;
+    min-height:620px!important;
+  }
+
+  .hero.hero-cover .hero-copy{
+    width:min(680px,84%)!important;
+    min-height:620px!important;
+    padding:70px 34px!important;
+  }
+
+  .hero.hero-cover .hero-art::after{
+    background:
+      linear-gradient(90deg,
+        rgba(7,9,13,.96) 0%,
+        rgba(7,9,13,.83) 38%,
+        rgba(7,9,13,.36) 72%,
+        rgba(7,9,13,.28) 100%),
+      linear-gradient(180deg,
+        rgba(7,9,13,.72) 0%,
+        transparent 18%,
+        transparent 67%,
+        rgba(7,9,13,.80) 100%)!important;
+  }
+}
+
+@media(max-width:640px){
+  .hero.hero-cover{
+    width:100%!important;
+    min-height:600px!important;
+  }
+
+  .hero.hero-cover .hero-copy{
+    width:100%!important;
+    min-height:600px!important;
+    justify-content:flex-end!important;
+    padding:54px 24px 68px!important;
+  }
+
+  .hero.hero-cover .hero-art::after{
+    background:
+      linear-gradient(180deg,
+        rgba(7,9,13,.34) 0%,
+        rgba(7,9,13,.20) 30%,
+        rgba(7,9,13,.62) 63%,
+        rgba(7,9,13,.96) 100%)!important;
+  }
+
+  .loading-hourglass.loading-frame-sequence{
+    width:112px!important;
+  }
+}
