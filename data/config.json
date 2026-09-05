@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -90,7 +90,13 @@
   },
   "assets": {
     "brandLogo": "assets/images/the-end-of-time-logo.png",
-    "favicon": "assets/images/favicon.png"
+    "favicon": "assets/images/favicon.png",
+    "loadingHourglass": {
+      "frame": "assets/images/loading/hourglass-frame.png",
+      "sandTop": "assets/images/loading/sand-top.png",
+      "sandBottom": "assets/images/loading/sand-bottom.png",
+      "sandStream": "assets/images/loading/sand-stream.png"
+    }
   },
   "features": {
     "contentMode": {
@@ -101,6 +107,7 @@
     },
     "customScrollbar": "app/scrollbar.js",
     "loadingOverlay": "app/loading.js",
-    "scrollbarAvoidsTopbar": true
+    "scrollbarAvoidsTopbar": true,
+    "loadingFailSafeMs": 12000
   }
 }

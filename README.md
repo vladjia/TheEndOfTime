@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.16.2
+# 《時盡》網站核心 v0.16.3
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -909,3 +909,51 @@ Header 高度同步增加，避免 Logo 被壓縮。
 `時盡 / 讀取時序資料中……`
 
 資料讀取完成或失敗後都會自動淡出。
+
+
+## v0.16.3：Loading 動圖 + 介面整合修正
+
+### Loading
+正式改用四層 PNG：
+- `assets/images/loading/hourglass-frame.png`
+- `assets/images/loading/sand-top.png`
+- `assets/images/loading/sand-bottom.png`
+- `assets/images/loading/sand-stream.png`
+
+動畫：
+- 整顆沙漏翻轉
+- 上砂逐漸減少
+- 中央流砂
+- 下砂逐漸增加
+- 2.6 秒循環
+
+Loading 結束機制：
+- GAS 成功：關閉
+- GAS 失敗 / fallback：關閉
+- 初始化意外失敗：finally 關閉
+- 最後保險：12 秒 fail-safe 自動關閉
+因此不再允許 Loading 永久卡住。
+
+### 首頁標題
+`時盡｜THE END OF TIME`
+
+### Topbar
+- 導覽字放大
+- 模式標籤放大
+- 圖片不再蓋過 Topbar
+
+### 模式
+- 無雷模式
+- 爆雷模式
+- 爆雷模式仍需二次確認
+- 爆雷模式下角色頁不再顯示「完整設定 / 防雷區」
+
+### 角色頁印記
+- 家：血色 / 吸血感
+- 白：冷笑弧
+- 月半：刀痕
+- 蝶：黑蝶飛舞
+
+### 捲軸
+自訂拉桿只從白色 Topbar 下方開始。
+hover 明顯使用「血紅 → 紫」漸層。

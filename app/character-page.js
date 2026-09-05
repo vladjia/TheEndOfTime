@@ -424,7 +424,10 @@ function renderCharacter(char,id,data){
 async function initCharacterPage(){
   const body = document.body;
   const id = body.dataset.character;
-  if(!id) return;
+  if(!id){
+    window.SiteLoading?.hide?.();
+    return;
+  }
 
   try{
     const config = await getJSON('../data/config.json');
@@ -432,6 +435,10 @@ async function initCharacterPage(){
     if(!endpoint) throw new Error('No GAS endpoint');
 
     const mode = window.EndOfTimeMode?.current?.() || 'public';
+
+    if(mode === 'full'){
+      document.querySelector('.spoiler-gate')?.remove();
+    }
     const data = await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`);
     if(!data?.ok) throw new Error('GAS API returned ok=false');
 

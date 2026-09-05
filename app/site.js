@@ -247,6 +247,7 @@ async function loadFallback(){
 }
 
 async function init(){
+  try{
   let data;
   try{
     const config = await getLocalConfig();
@@ -272,7 +273,9 @@ async function init(){
     footer.textContent = `《時盡》WORLD / CHARACTER ARCHIVE · Core ${version ? 'v'+version : ''}${dataVersion ? ' · Data '+dataVersion : ''}`;
   }
 
-  window.SiteLoading?.hide?.();
+  }finally{
+    window.SiteLoading?.hide?.();
+  }
 }
 
 init();
