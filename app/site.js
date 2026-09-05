@@ -172,45 +172,89 @@ function renderHero(site,copy){
 
 function renderImages(images){
   const list = images || [];
+  const norm = value => String(value || '')
+    .trim()
+    .replace(/\s+/g,'')
+    .replace(/[・·．.＿_\-–—]/g,'')
+    .toLowerCase();
+
+  const isWebsiteAsset = x =>
+    norm(x.group).includes('網站素材') ||
+    norm(x.path).includes('網站素材');
+
+  const scoreCover = x => {
+    if(!isWebsiteAsset(x)) return -999;
+
+    const name = norm(x.name);
+    const target = norm(x.target);
+    const category = norm(x.category);
+    const path = norm(x.path);
+    const hay = `${name}|${target}|${category}|${path}`;
+
+    let score = 0;
+    if(hay.includes('首頁')) score += 100;
+    if(hay.includes('封面')) score += 80;
+    if(hay.includes('主視覺')) score += 60;
+    if(hay.includes('hero')) score += 50;
+    if(hay.includes('cover')) score += 50;
+
+    if(hay.includes('logo')) score -= 150;
+    if(hay.includes('favicon')) score -= 150;
+    if(hay.includes('ogcover')) score -= 120;
+    if(hay.includes('loading')) score -= 120;
+
+    return score;
+  };
+
+  const websiteAssets = list
+    .map(x => ({x,score:scoreCover(x)}))
+    .filter(item => item.score > -999)
+    .sort((a,b) => b.score - a.score);
 
   const homepageCover =
-    list.find(x =>
-      x.group === '網站素材' &&
-      /首頁/.test(x.name || '') &&
-      /封面|主視覺/.test(x.name || '')
-    ) ||
-    list.find(x =>
-      x.group === '網站素材' &&
-      /hero|cover/i.test(x.name || '')
-    ) ||
-    list.find(x =>
-      x.group === '網站素材' &&
-      /首頁|hero/i.test(x.target || '') &&
-      /封面|主視覺|hero/i.test(x.category || '')
-    );
+    websiteAssets.find(item => item.score > 0)?.x ||
+    (websiteAssets.length === 1 ? websiteAssets[0].x : null);
 
   const fallback =
     list.find(x =>
-      x.group === '人物' &&
-      x.target === '家式' &&
-      x.category === '主視覺' &&
-      /常體/.test(x.name || '')
+      norm(x.group) === norm('人物') &&
+      norm(x.target).includes(norm('家式')) &&
+      norm(x.category).includes(norm('主視覺')) &&
+      norm(x.name).includes(norm('常體'))
     ) ||
     list.find(x =>
-      x.group === '人物' && x.target === '家式' && x.category === '主視覺'
+      norm(x.group) === norm('人物') &&
+      norm(x.target).includes(norm('家式')) &&
+      norm(x.category).includes(norm('主視覺'))
     );
 
   const source = homepageCover || fallback;
-  if(!source) return;
-
   const hero = $('#hero');
   if(!hero) return;
+
+  hero.classList.toggle('has-image',Boolean(source));
+
+  if(!source){
+    console.warn('首頁主視覺：圖片表中找不到可用圖片。');
+    return;
+  }
 
   hero.querySelectorAll('img').forEach(el=>el.remove());
 
   const img = document.createElement('img');
   img.src = source.url;
-  img.alt = homepageCover ? '時盡｜首頁封面主視覺' : '時盡・家式';
+  img.alt = homepageCover ? '時盡｜首頁主視覺' : '時盡・家式';
+  img.decoding = 'async';
+
+  img.addEventListener('load',()=>{
+    hero.classList.add('image-loaded');
+  },{once:true});
+
+  img.addEventListener('error',()=>{
+    console.warn('首頁主視覺載入失敗：',source);
+    hero.classList.remove('image-loaded');
+  },{once:true});
+
   hero.appendChild(img);
 }
 

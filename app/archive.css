@@ -127,3 +127,147 @@
   .world-archive-item{grid-template-columns:1fr;gap:8px}
   .world-archive-number{font-size:18px}
 }
+
+/* ============================================================
+   v0.16.4 · CHARACTER ARCHIVE SEAL EFFECTS
+   ============================================================ */
+
+.archive-character{
+  isolation:isolate;
+}
+
+.archive-character-seal{
+  z-index:1;
+  overflow:visible;
+  transition:color .24s ease,text-shadow .24s ease,filter .24s ease,transform .24s ease;
+}
+
+.archive-character > :not(.archive-character-seal){
+  position:relative;
+  z-index:2;
+}
+
+/* 家：吸血 / 血滴 */
+.archive-character[data-character="jiashi"].seal-active .archive-character-seal{
+  color:rgba(181,31,51,.22);
+  text-shadow:0 0 10px rgba(177,34,54,.26),0 0 26px rgba(110,18,36,.16);
+  transform:scale(1.035);
+}
+
+.archive-character[data-character="jiashi"] .archive-character-seal::before{
+  content:"";
+  position:absolute;
+  left:52%;
+  top:69%;
+  width:9px;
+  height:31px;
+  opacity:0;
+  border-radius:58% 42% 68% 32%;
+  background:linear-gradient(180deg,#b02b44,#681c31 74%,transparent);
+}
+
+.archive-character[data-character="jiashi"].seal-active .archive-character-seal::before{
+  animation:archiveBloodDrop .95s ease-out 1 forwards;
+}
+
+@keyframes archiveBloodDrop{
+  0%{opacity:0;transform:translateY(-12px) scaleY(.25)}
+  26%{opacity:.92}
+  100%{opacity:.04;transform:translateY(36px) scaleY(1.08)}
+}
+
+/* 白：冷淡笑弧 */
+.archive-character[data-character="baiji"].seal-active .archive-character-seal{
+  color:rgba(240,242,246,.12);
+  text-shadow:0 0 18px rgba(238,241,245,.12);
+  transform:translateY(-2px) scale(.99);
+}
+
+.archive-character[data-character="baiji"] .archive-character-seal::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:15px;
+  width:68px;
+  height:20px;
+  border-bottom:2px solid rgba(239,241,245,0);
+  border-radius:0 0 70px 70px;
+  opacity:0;
+  transform:translateX(-50%) scaleX(.42);
+}
+
+.archive-character[data-character="baiji"].seal-active .archive-character-seal::after{
+  animation:archiveColdSmile .68s ease-out 1 forwards;
+}
+
+@keyframes archiveColdSmile{
+  0%{opacity:0;transform:translateX(-50%) scaleX(.42) translateY(5px);border-bottom-color:rgba(239,241,245,0)}
+  100%{opacity:.68;transform:translateX(-50%) scaleX(1) translateY(0);border-bottom-color:rgba(239,241,245,.44)}
+}
+
+/* 月半：刀痕 */
+.archive-character[data-character="yeshenxing"] .archive-character-seal::after{
+  content:"";
+  position:absolute;
+  right:-10px;
+  top:49%;
+  width:132px;
+  height:1px;
+  opacity:0;
+  transform:rotate(-18deg) scaleX(0);
+  transform-origin:right center;
+  background:linear-gradient(90deg,transparent,rgba(229,232,236,.66),transparent);
+}
+
+.archive-character[data-character="yeshenxing"].seal-active .archive-character-seal::after{
+  animation:archiveBladeCut .55s ease-out 1 forwards;
+}
+
+@keyframes archiveBladeCut{
+  0%{opacity:0;transform:rotate(-18deg) scaleX(0)}
+  30%{opacity:1}
+  100%{opacity:.12;transform:rotate(-18deg) scaleX(1)}
+}
+
+/* 蝶：黑蝶飛舞 */
+.archive-character[data-character="anyanxiu"] .archive-character-seal::before,
+.archive-character[data-character="anyanxiu"] .archive-character-seal::after{
+  content:"";
+  position:absolute;
+  width:15px;
+  height:10px;
+  border-radius:74% 26% 68% 32%;
+  background:rgba(0,0,0,.82);
+  opacity:0;
+  filter:drop-shadow(0 0 1px rgba(238,241,245,.24)) drop-shadow(0 0 5px rgba(0,0,0,.48));
+}
+
+.archive-character[data-character="anyanxiu"] .archive-character-seal::before{
+  right:22px;
+  top:15px;
+}
+
+.archive-character[data-character="anyanxiu"] .archive-character-seal::after{
+  right:-4px;
+  top:48px;
+}
+
+.archive-character[data-character="anyanxiu"].seal-active .archive-character-seal::before{
+  animation:archiveButterflyOne 1.05s ease-out 1 forwards;
+}
+
+.archive-character[data-character="anyanxiu"].seal-active .archive-character-seal::after{
+  animation:archiveButterflyTwo 1.14s ease-out .05s 1 forwards;
+}
+
+@keyframes archiveButterflyOne{
+  0%{opacity:0;transform:translate(0,0) rotate(0) scale(.55)}
+  18%{opacity:.9}
+  100%{opacity:0;transform:translate(-45px,-35px) rotate(-38deg) scale(1.08)}
+}
+
+@keyframes archiveButterflyTwo{
+  0%{opacity:0;transform:translate(0,0) rotate(0) scale(.58)}
+  18%{opacity:.85}
+  100%{opacity:0;transform:translate(-28px,-56px) rotate(30deg) scale(.96)}
+}

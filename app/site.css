@@ -2874,3 +2874,151 @@ html[data-content-mode="full"] .spoiler-gate{
     animation:none!important;
   }
 }
+
+
+/* ============================================================
+   v0.16.4 · HOMEPAGE ART + BRAND SIZE
+   ============================================================ */
+
+/* Topbar 高度維持；Logo 盡量吃滿既有空間 */
+.topbar-v3{
+  min-height:112px!important;
+  height:112px;
+  padding-top:2px!important;
+  padding-bottom:2px!important;
+}
+
+.brand-v3{
+  height:100%;
+  gap:14px!important;
+}
+
+.brand-v3 .brand-logo{
+  width:108px!important;
+  height:108px!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  flex:0 0 108px;
+  filter:none!important;
+  transform:none!important;
+}
+
+/* 首頁主視覺不再使用硬框 */
+.hero-art{
+  position:relative;
+  min-height:610px!important;
+  border:0!important;
+  background:transparent!important;
+  clip-path:none!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  isolation:isolate;
+}
+
+.hero-art::before{
+  display:none!important;
+}
+
+.hero-art .note{
+  display:none!important;
+}
+
+.hero-art::after{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  z-index:2;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      #07090d 0%,
+      rgba(7,9,13,.76) 7%,
+      rgba(7,9,13,0) 23%,
+      rgba(7,9,13,0) 79%,
+      rgba(7,9,13,.52) 93%,
+      #07090d 100%),
+    linear-gradient(180deg,
+      #07090d 0%,
+      rgba(7,9,13,0) 13%,
+      rgba(7,9,13,0) 83%,
+      #07090d 100%);
+  opacity:.92;
+}
+
+.hero-art img{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center 32%!important;
+  border:0!important;
+  -webkit-mask-image:
+    radial-gradient(
+      ellipse 78% 84% at 54% 48%,
+      #000 0%,
+      #000 57%,
+      rgba(0,0,0,.88) 69%,
+      rgba(0,0,0,.48) 82%,
+      transparent 100%
+    );
+  mask-image:
+    radial-gradient(
+      ellipse 78% 84% at 54% 48%,
+      #000 0%,
+      #000 57%,
+      rgba(0,0,0,.88) 69%,
+      rgba(0,0,0,.48) 82%,
+      transparent 100%
+    );
+  filter:contrast(1.025) saturate(.94) brightness(.93);
+}
+
+.hero-art.image-loaded img{
+  animation:heroImageFeatherIn .8s ease-out both!important;
+}
+
+@keyframes heroImageFeatherIn{
+  from{opacity:0;filter:contrast(1.02) saturate(.85) brightness(.64)}
+  to{opacity:1;filter:contrast(1.025) saturate(.94) brightness(.93)}
+}
+
+@media(max-width:820px){
+  .topbar-v3{
+    min-height:96px!important;
+    height:96px;
+  }
+
+  .brand-v3 .brand-logo{
+    width:92px!important;
+    height:92px!important;
+    flex-basis:92px;
+  }
+
+  .hero-art{
+    min-height:500px!important;
+  }
+}
+
+@media(max-width:640px){
+  .topbar-v3{
+    height:auto!important;
+    min-height:106px!important;
+  }
+
+  .brand-v3 .brand-logo{
+    width:78px!important;
+    height:78px!important;
+    flex-basis:78px;
+  }
+
+  .hero-art{
+    min-height:440px!important;
+  }
+
+  .hero-art img{
+    object-position:center 28%!important;
+  }
+}

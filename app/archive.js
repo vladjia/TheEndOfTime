@@ -35,6 +35,7 @@ function renderCharacters(chars){
     .forEach(c=>{
       const a = document.createElement('a');
       a.className='archive-character';
+      a.dataset.character=c.id || '';
       a.href=pages[c.id] || '#';
       a.innerHTML=`
         <div class="archive-character-seal">${c.seal || ''}</div>
@@ -45,6 +46,8 @@ function renderCharacters(chars){
         <span>VIEW FILE →</span>`;
       box.appendChild(a);
     });
+
+  window.EndOfTimeSealEffects?.bindArchive?.(box);
 }
 
 function renderWorld(items){

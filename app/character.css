@@ -916,3 +916,54 @@ body[data-character="yeshenxing"] .character-visual:hover .character-visual-mark
 body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark{
   color:rgba(217,221,227,.15)!important;
 }
+
+
+/* ============================================================
+   v0.16.4 · CHARACTER DETAIL SEAL EFFECTS
+   ============================================================ */
+
+.character-visual[data-character]{
+  isolation:isolate;
+}
+
+.character-visual[data-character].seal-active .character-visual-mark{
+  overflow:visible!important;
+}
+
+/* 家 */
+.character-visual[data-character="jiashi"].seal-active .character-visual-mark{
+  color:rgba(181,31,51,.30)!important;
+  text-shadow:0 0 9px rgba(176,35,54,.30),0 0 22px rgba(111,20,37,.18)!important;
+  transform:scale(1.03);
+}
+
+.character-visual[data-character="jiashi"].seal-active .character-visual-mark::before{
+  animation:characterBloodDrop .9s ease-out 1 forwards!important;
+}
+
+/* 白 */
+.character-visual[data-character="baiji"].seal-active .character-visual-mark{
+  color:rgba(246,247,249,.22)!important;
+  text-shadow:0 0 17px rgba(240,242,246,.18)!important;
+  transform:translateY(-2px) scale(.985);
+}
+
+.character-visual[data-character="baiji"].seal-active .character-visual-mark::after{
+  opacity:.72!important;
+  transform:translateX(-50%) scaleX(1)!important;
+  border-bottom-color:rgba(238,241,245,.46)!important;
+}
+
+/* 月半 */
+.character-visual[data-character="yeshenxing"].seal-active .character-visual-mark::after{
+  transform:rotate(-18deg) scaleX(1)!important;
+  opacity:1!important;
+}
+
+/* 蝶 */
+.character-visual[data-character="anyanxiu"].seal-active .character-visual-mark::before{
+  animation:characterButterflyOne 1s ease-out 1 forwards!important;
+}
+.character-visual[data-character="anyanxiu"].seal-active .character-visual-mark::after{
+  animation:characterButterflyTwo 1.12s ease-out .06s 1 forwards!important;
+}

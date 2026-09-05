@@ -448,6 +448,7 @@ async function initCharacterPage(){
     applyCopy(data.copy || {});
     window.EndOfTimeMode?.bind?.(data.copy || {});
     renderCharacter(char,id,data);
+    window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
 
     if(mode === 'full'){
       document.querySelector('.spoiler-gate')?.remove();
