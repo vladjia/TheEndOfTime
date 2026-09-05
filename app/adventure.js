@@ -6,6 +6,8 @@ window.EndOfTimeAdventure = (() => {
   let progressCache = null;
   let ensurePromise = null;
   let timeMarkBusy = false;
+  let criticalAction = '';
+  let criticalTimer = null;
 
   function rootPrefix(){
     return location.pathname.includes('/story/') || location.pathname.includes('/characters/') || location.pathname.includes('/world/') || location.pathname.includes('/journey/') ? '../' : '';
@@ -30,6 +32,27 @@ window.EndOfTimeAdventure = (() => {
   function token(){ return localStorage.getItem(STORAGE_KEY) || ''; }
   function setToken(value){ localStorage.setItem(STORAGE_KEY, String(value || '').trim().toUpperCase()); }
   function clearToken(){ localStorage.removeItem(STORAGE_KEY); progressCache = null; }
+
+  function beginCritical(name, timeout=12000){
+    if(criticalAction) return false;
+    criticalAction = name || 'busy';
+    document.documentElement.classList.add('adventure-critical');
+    clearTimeout(criticalTimer);
+    criticalTimer = setTimeout(()=>{
+      console.warn('Adventure critical lock timeout:', criticalAction);
+      endCritical();
+    }, timeout);
+    return true;
+  }
+
+  function endCritical(){
+    criticalAction = '';
+    clearTimeout(criticalTimer);
+    criticalTimer = null;
+    document.documentElement.classList.remove('adventure-critical');
+  }
+
+  function isCritical(){ return !!criticalAction; }
 
   async function api(action, params={}){
     const config = await getConfig();
@@ -156,17 +179,29 @@ window.EndOfTimeAdventure = (() => {
     toast('時印卡已儲存。');
   }
 
-  function closeOverlay(){
+  function closeOverlay(force=false){
+    if(isCritical() && !force) return;
     const o=document.getElementById('timeMarkOverlay');
-    if(!o) return;o.classList.remove('is-open');setTimeout(()=>o.remove(),220);
+    if(!o) return;
+    o.classList.remove('is-open');
+    setTimeout(()=>o.remove(),220);
   }
 
-  function overlay(html){
-    closeOverlay();
-    const o=document.createElement('div');o.id='timeMarkOverlay';o.className='time-mark-overlay';o.innerHTML=`<section class="time-mark-panel" role="dialog" aria-modal="true">${html}</section>`;
+  function overlay(html,{lockClose=false}={}){
+    closeOverlay(true);
+    const o=document.createElement('div');
+    o.id='timeMarkOverlay';
+    o.className='time-mark-overlay';
+    if(lockClose) o.dataset.lockClose='1';
+    o.innerHTML=`<section class="time-mark-panel" role="dialog" aria-modal="true">${html}</section>`;
     document.body.appendChild(o);
     requestAnimationFrame(()=>o.classList.add('is-open'));
-    o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-time-close]'))closeOverlay()});
+    o.addEventListener('click',e=>{
+      const wantsClose = e.target===o || e.target.closest('[data-time-close]');
+      if(!wantsClose) return;
+      if(o.dataset.lockClose==='1' || isCritical()) return;
+      closeOverlay();
+    });
     return o;
   }
 
@@ -186,12 +221,13 @@ window.EndOfTimeAdventure = (() => {
           <strong>${message}</strong>
         </div>
       </div>
-    `);
+    `,{lockClose:true});
   }
 
   async function openManager(){
-    if(timeMarkBusy) return;
+    if(timeMarkBusy || isCritical()) return;
     timeMarkBusy = true;
+    beginCritical('time-mark-open',10000);
     setTimeMarkButtonsBusy(true);
     showTimeMarkLoading('正在讀取時印……');
 
@@ -203,13 +239,19 @@ window.EndOfTimeAdventure = (() => {
         <p>你的旅程會自動保存在這台裝置。若要換手機或電腦，請先保存這枚時印。</p>
         <div class="time-mark-code">${t}</div>
         <p class="time-mark-note">不需要背下來。保存一份即可。</p>
+        <div class="time-mark-device-state">
+          <span class="time-mark-device-dot" aria-hidden="true"></span>
+          <div>
+            <strong>此裝置已記住這枚時印</strong>
+            <span>你的旅程會在這台裝置上自動延續。</span>
+          </div>
+        </div>
         <div class="time-mark-actions">
           <button class="time-mark-btn primary" type="button" data-copy-time>複製時印</button>
-          <button class="time-mark-btn" type="button" data-save-card>儲存時印卡</button>
           <a class="time-mark-btn" href="${rootPrefix()}journey/index.html">查看目前旅程</a>
         </div>
         <div class="time-mark-field">
-          <label for="restoreTimeMark">在這台裝置取回另一枚時印</label>
+          <label for="restoreTimeMark">切換到另一枚時印</label>
           <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
         </div>
         <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
@@ -217,13 +259,32 @@ window.EndOfTimeAdventure = (() => {
       `);
 
       o.querySelector('[data-copy-time]').onclick=copyToken;
-      o.querySelector('[data-save-card]').onclick=downloadTimeMarkCard;
       o.querySelector('[data-restore-time]').onclick=async()=>{
         const field=o.querySelector('#restoreTimeMark');
         const status=o.querySelector('#restoreTimeMarkStatus');
         const restoreBtn=o.querySelector('[data-restore-time]');
-        if(restoreBtn.disabled) return;
+        if(restoreBtn.disabled || isCritical()) return;
 
+        const wanted = String(field.value || '').trim().toUpperCase();
+        if(wanted && wanted === token()){
+          status.textContent='這枚時印已經在這台裝置上使用中。';
+          field.select();
+          return;
+        }
+
+        if(!/^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/.test(wanted)){
+          status.textContent='這枚時印的格式不正確。';
+          field.focus();
+          return;
+        }
+
+        const current = token();
+        if(current && current !== wanted){
+          const ok = confirm('取回另一枚時印後，這台裝置會切換到另一段旅程。\n\n目前的時印不會被刪除，只是不再作為這台裝置的目前旅程。\n\n確定要取回嗎？');
+          if(!ok) return;
+        }
+
+        if(!beginCritical('time-mark-restore',15000)) return;
         restoreBtn.disabled=true;
         restoreBtn.setAttribute('aria-busy','true');
         restoreBtn.textContent='確認中……';
@@ -231,10 +292,12 @@ window.EndOfTimeAdventure = (() => {
         status.textContent='確認時印中……';
 
         try{
-          const data=await restore(field.value);
-          closeOverlay();
+          const data=await restore(wanted);
+          closeOverlay(true);
+          endCritical();
           showRestoreSuccess(data);
         }catch(err){
+          endCritical();
           status.textContent=err.message||'時印確認失敗。';
           restoreBtn.disabled=false;
           restoreBtn.setAttribute('aria-busy','false');
@@ -249,10 +312,13 @@ window.EndOfTimeAdventure = (() => {
     }finally{
       timeMarkBusy = false;
       setTimeMarkButtonsBusy(false);
+      endCritical();
     }
   }
 
   function playTimeRiftTransition({mode='restore', onDone}={}){
+    if(isCritical()) return null;
+    beginCritical(`time-rift-${mode}`,7000);
     const copy = mode==='resume'
       ? {kicker:'TIME RIFT', title:'正在回到時間裂縫……', text:'時間正在重新接合。'}
       : {kicker:'TIME MARK RESTORED', title:'正在尋回你的時間痕跡……', text:'散落的時間正在重新聚合。'};
@@ -269,7 +335,7 @@ window.EndOfTimeAdventure = (() => {
           <p>${copy.text}</p>
         </div>
       </div>
-    `);
+    `,{lockClose:true});
 
     const video=o.querySelector('.time-rift-video');
     let finished=false;
@@ -277,7 +343,10 @@ window.EndOfTimeAdventure = (() => {
       if(finished) return;
       finished=true;
       o.classList.add('is-rift-finishing');
-      setTimeout(()=>{ if(typeof onDone==='function') onDone(); }, 420);
+      setTimeout(()=>{
+        endCritical();
+        if(typeof onDone==='function') onDone();
+      }, 420);
     };
     const timer=setTimeout(finish,4600);
     video.addEventListener('ended',()=>{ clearTimeout(timer); finish(); },{once:true});
@@ -354,14 +423,28 @@ window.EndOfTimeAdventure = (() => {
         <button class="time-mark-btn" type="button" data-time-close>回到《時盡》入口</button>
       </div>
     `);
-    o.querySelector('[data-resume]').onclick=()=>{
+    o.querySelector('[data-resume]').onclick=(e)=>{
+      const btn=e.currentTarget;
+      if(btn.disabled || isCritical()) return;
+      btn.disabled=true;
+      btn.setAttribute('aria-busy','true');
+      btn.textContent='正在接合時間……';
       sessionStorage.setItem('theEndOfTime.resumeScroll',String(last.scroll||0));
-      playTimeRiftTransition({mode:'resume',onDone:()=>{ location.href=last.url; }});
+      const started=playTimeRiftTransition({mode:'resume',onDone:()=>{ location.href=last.url; }});
+      if(!started){
+        btn.disabled=false;
+        btn.removeAttribute('aria-busy');
+        btn.textContent='回到時間裂縫';
+      }
     };
   }
 
   function bindButtons(){
-    document.querySelectorAll('[data-time-mark]').forEach(btn=>{btn.addEventListener('click',e=>{e.preventDefault();openManager();})});
+    document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+      if(btn.dataset.timeMarkBound==='1') return;
+      btn.dataset.timeMarkBound='1';
+      btn.addEventListener('click',e=>{e.preventDefault();openManager();});
+    });
   }
 
   async function maybePromptReturning(){

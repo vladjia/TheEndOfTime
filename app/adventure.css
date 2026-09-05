@@ -392,3 +392,63 @@
     animation-delay:0s!important;
   }
 }
+
+
+/* ============================================================
+   v0.17.5 · 操作防呆 / 防連點 / 關鍵流程鎖定
+   ============================================================ */
+html.adventure-critical [data-time-mark],
+html.adventure-critical .reader-complete-btn{
+  pointer-events:none!important;
+  opacity:.55;
+}
+
+.time-mark-overlay[data-lock-close="1"]{
+  cursor:wait;
+}
+.time-mark-overlay[data-lock-close="1"] .time-mark-panel{
+  cursor:default;
+}
+.time-mark-btn[aria-busy="true"],
+.reader-complete-btn[aria-busy="true"]{
+  pointer-events:none!important;
+  cursor:wait!important;
+  opacity:.58!important;
+}
+
+
+/* ============================================================
+   v0.17.6 · 已綁定時印介面
+   ============================================================ */
+.time-mark-device-state{
+  margin:18px 0 4px;
+  padding:14px 15px;
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.025);
+}
+.time-mark-device-dot{
+  width:8px;
+  height:8px;
+  flex:0 0 8px;
+  margin-top:7px;
+  border-radius:50%;
+  background:#8f1b2a;
+  box-shadow:0 0 12px rgba(143,27,42,.55);
+}
+.time-mark-device-state strong{
+  display:block;
+  color:#f1f2f4;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.02em;
+}
+.time-mark-device-state span{
+  display:block;
+  margin-top:3px;
+  color:rgba(238,240,244,.50);
+  font-size:12px;
+  line-height:1.6;
+}
