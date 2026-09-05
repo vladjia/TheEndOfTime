@@ -199,7 +199,6 @@ function renderStrip(char){
 
   const rows = [
     ['IDENTITY',char.role],
-    ['SIGNATURE',char.signature],
     ['CORE',char.coreLine]
   ].filter(([,value])=>value);
 
