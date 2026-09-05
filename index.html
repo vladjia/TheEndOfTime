@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>時盡｜世界觀・角色資料站</title>
+<title>時盡｜故事・角色・世界觀</title>
 <meta name="description" content="《時盡》是一個關於時間、命運、血與選擇的原創世界。他活過世界的終點，卻沒能逃過那些早已注定的結局。">
 <meta name="theme-color" content="#07090d">
 <meta name="robots" content="index,follow">
@@ -13,7 +13,7 @@
 <meta property="og:locale" content="zh_TW">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="時盡">
-<meta property="og:title" content="時盡｜世界觀・角色資料站">
+<meta property="og:title" content="時盡｜故事・角色・世界觀">
 <meta property="og:description" content="一個關於時間、命運、血與選擇的原創世界。他活過世界的終點，卻沒能逃過那些早已注定的結局。">
 <!-- 正式上線後，把 YOUR-GITHUB-USERNAME / YOUR-REPO 改成實際 GitHub Pages 網址 -->
 <meta property="og:url" content="https://vladjia.github.io/TheEndOfTime/">
@@ -26,13 +26,13 @@
 
 <!-- X / Twitter card；部分平台也會取這組 -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="時盡｜世界觀・角色資料站">
+<meta name="twitter:title" content="時盡｜故事・角色・世界觀">
 <meta name="twitter:description" content="他活過世界的終點，卻沒能逃過那些早已注定的結局。">
 <meta name="twitter:image" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.png">
 
 <link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="app/site.css?v=0.14.9">
+<link rel="stylesheet" href="app/site.css?v=0.15.0">
 </head>
 <body class="pre-entry">
 
@@ -65,8 +65,8 @@
       <p class="lead hero-reveal hero-reveal-3" id="tagline" data-copy="site.home.tagline">他活過世界的終點，卻沒能逃過那些早已注定的結局。</p>
       <div class="quote hero-reveal hero-reveal-4" data-copy="site.home.law">「過程可以改變，結果不能。」</div>
       <div class="actions hero-reveal hero-reveal-5">
-        <a class="btn primary" href="#characters" data-copy="site.home.btn.characters">角色介紹</a>
-        <a class="btn" href="#gallery" data-copy="site.home.btn.gallery">角色圖庫</a>
+        <a class="btn primary" href="story/index.html" data-copy="site.home.btn.story">故事</a>
+        <a class="btn" href="#characters" data-copy="site.home.btn.characters">角色介紹</a>
         <a class="btn" href="#world" data-copy="site.home.btn.world">世界觀</a>
       </div>
     </div>
@@ -75,29 +75,29 @@
     </div>
   </section>
 
+
+  <section class="section story-home" id="story">
+    <div class="section-head">
+      <div>
+        <small data-copy="site.home.story.kicker">01 / STORY</small>
+        <h2 data-copy="site.home.story.title">故事</h2>
+      </div>
+      <p data-copy="site.home.story.desc">從章與節開始，沿著時間留下的裂縫讀下去。</p>
+    </div>
+    <div class="story-preview-list" id="storyPreviewList"></div>
+    <div class="section-action">
+      <a class="btn primary" href="story/index.html" data-copy="site.home.story.enter">進入故事 →</a>
+    </div>
+  </section>
+
   <section class="section" id="characters">
     <div class="section-head">
-      <div><small data-copy="site.home.characters.kicker">01 / CHARACTERS</small><h2 data-copy="site.home.characters.title">角色介紹</h2></div>
+      <div><small data-copy="site.home.characters.kicker">02 / CHARACTERS</small><h2 data-copy="site.home.characters.title">角色介紹</h2></div>
       <p data-copy="site.home.characters.desc">公開區只放無雷設定。完整身世、人物死亡與世界核心真相，之後會從受保護的資料來源載入。</p>
     </div>
     <div class="cards" id="characterCards"></div>
   </section>
-
-  <section class="section" id="gallery">
-    <div class="section-head">
-      <div><small data-copy="site.home.gallery.kicker">02 / GALLERY</small><h2 data-copy="site.home.gallery.title">角色圖庫</h2></div>
-      <p data-copy="site.home.gallery.desc">圖片由 Google Drive 與 GAS 自動載入。</p>
-    </div>
-    <div class="gallery">
-      <div class="slot main" id="gallery-jiashi" data-label="家式・主視覺"></div>
-      <div class="slot" id="gallery-baiji" data-label="無晝・白霽"></div>
-      <div class="slot" id="gallery-anyanxiu" data-label="蝶君・安言修"></div>
-      <div class="slot" id="gallery-yeshenxing" data-label="月半刀・葉慎行"></div>
-      <div class="slot" id="gallery-weapon" data-label="武器"></div>
-    </div>
-  </section>
-
-  <section class="section" id="world">
+<section class="section" id="world">
     <div class="section-head">
       <div><small data-copy="site.home.world.kicker">03 / WORLD</small><h2 data-copy="site.home.world.title">世界觀</h2></div>
       <p data-copy="site.home.world.desc">這裡只顯示無雷的世界輪廓；真正的沙漏法則與劇情核心會留給防雷模式。</p>
@@ -109,7 +109,7 @@
   </section>
 </main>
 
-<footer class="footer">《時盡》WORLD / CHARACTER ARCHIVE · Core v0.14.9</footer>
-<script src="app/site.js?v=0.14.9" defer></script>
+<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.15.0</footer>
+<script src="app/site.js?v=0.15.0" defer></script>
 </body>
 </html>

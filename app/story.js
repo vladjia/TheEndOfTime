@@ -1,0 +1,225 @@
+const $ = s => document.querySelector(s);
+
+async function getJSON(path){
+  const r = await fetch(path,{cache:'no-store'});
+  if(!r.ok) throw new Error(`${path}: ${r.status}`);
+  return r.json();
+}
+
+function copyText(copy,key,fallback=''){
+  const item = copy?.[key];
+  if(item == null) return fallback;
+  if(typeof item === 'string') return item || fallback;
+  return item.text || fallback;
+}
+
+function applyCopy(copy){
+  document.querySelectorAll('[data-copy]').forEach(el=>{
+    const key = el.dataset.copy;
+    const value = copyText(copy,key,el.textContent);
+    if(value) el.textContent = value;
+  });
+}
+
+function chineseNumber(n){
+  const num = Number(n);
+  const d = ['零','一','二','三','四','五','六','七','八','九','十'];
+  if(!Number.isFinite(num) || num <= 0) return String(n || '');
+  if(num <= 10) return d[num];
+  if(num < 20) return '十' + d[num - 10];
+  if(num < 100){
+    const t = Math.floor(num / 10), o = num % 10;
+    return d[t] + '十' + (o ? d[o] : '');
+  }
+  return String(num);
+}
+
+function chapterLabel(item){
+  return item.chapterNumber ? `第${chineseNumber(item.chapterNumber)}章` : '';
+}
+
+function sectionLabel(item){
+  return item.sectionNumber ? `第${chineseNumber(item.sectionNumber)}節` : '';
+}
+
+function readerHref(item){
+  return `read.html?id=${encodeURIComponent(item.id || '')}`;
+}
+
+function paragraphs(text){
+  return String(text || '')
+    .replace(/\r\n/g,'\n')
+    .split(/\n\s*\n/)
+    .map(x=>x.trim())
+    .filter(Boolean);
+}
+
+function renderToc(story,copy){
+  const box = $('#storyToc');
+  if(!box) return;
+
+  const rows = [...(story || [])]
+    .sort((a,b)=>(Number(a.order)||9999)-(Number(b.order)||9999));
+
+  const chapters = new Map();
+
+  rows.forEach(item=>{
+    const key = String(item.chapterNumber || item.chapterTitle || '0');
+    if(!chapters.has(key)){
+      chapters.set(key,{
+        number:item.chapterNumber,
+        title:item.chapterTitle,
+        items:[]
+      });
+    }
+    chapters.get(key).items.push(item);
+  });
+
+  box.innerHTML = '';
+
+  if(!rows.length){
+    box.innerHTML = '<div class="story-empty">故事仍在時間裡成形。</div>';
+    return;
+  }
+
+  chapters.forEach(ch=>{
+    const section = document.createElement('section');
+    section.className='toc-chapter';
+
+    const head = document.createElement('div');
+    head.className='toc-chapter-head';
+    head.innerHTML = `
+      <small>${ch.number ? chapterLabel({chapterNumber:ch.number}) : 'CHAPTER'}</small>
+      <h2>${ch.title || '未命名章節'}</h2>
+    `;
+    section.appendChild(head);
+
+    const list = document.createElement('div');
+    list.className='toc-section-list';
+
+    ch.items.forEach(item=>{
+      const el = document.createElement(item.isReadable ? 'a' : 'article');
+      el.className='toc-section-item';
+      if(item.isReadable) el.href=readerHref(item);
+      else el.classList.add('is-locked');
+
+      el.innerHTML=`
+        <div class="toc-section-number">${sectionLabel(item) || '—'}</div>
+        <div class="toc-section-main">
+          <h3>${item.sectionTitle || '未命名篇章'}</h3>
+          ${item.subtitle ? `<small>${item.subtitle}</small>` : ''}
+          ${item.publicSummary ? `<p>${item.publicSummary}</p>` : ''}
+        </div>
+        <div class="toc-section-status">
+          ${item.isReadable
+            ? copyText(copy,'site.story.read','閱讀本節 →')
+            : copyText(copy,'site.story.locked','尚未公開')}
+        </div>
+      `;
+      list.appendChild(el);
+    });
+
+    section.appendChild(list);
+    box.appendChild(section);
+  });
+}
+
+function renderReader(story,copy,id){
+  const article = $('#readerArticle');
+  if(!article) return;
+
+  const rows = [...(story || [])]
+    .sort((a,b)=>(Number(a.order)||9999)-(Number(b.order)||9999));
+
+  const index = rows.findIndex(x=>x.id===id);
+  const item = rows[index];
+
+  if(!item){
+    article.innerHTML = `
+      <div class="reader-locked">
+        <small>STORY</small>
+        <h1>找不到這一節</h1>
+        <p>這個章節識別碼不存在，或目前沒有公開。</p>
+      </div>`;
+    return;
+  }
+
+  document.title = `${chapterLabel(item)} ${sectionLabel(item)}｜${item.sectionTitle || '時盡'}`;
+
+  if(!item.isReadable){
+    article.innerHTML = `
+      <div class="reader-locked">
+        <small>${chapterLabel(item)}　${sectionLabel(item)}</small>
+        <h1>${copyText(copy,'site.reader.lockedTitle','本節尚未公開')}</h1>
+        <p>${copyText(copy,'site.reader.lockedDesc','這一節仍停留在尚未落下的沙粒之中。')}</p>
+      </div>`;
+  }else{
+    const body = paragraphs(item.body);
+
+    article.innerHTML = `
+      <header class="reader-head">
+        <div class="reader-chapter">${chapterLabel(item)}${item.chapterTitle ? `｜${item.chapterTitle}` : ''}</div>
+        <div class="reader-section">${sectionLabel(item)}</div>
+        <h1>${item.sectionTitle || '未命名篇章'}</h1>
+        ${item.subtitle ? `<div class="reader-subtitle">${item.subtitle}</div>` : ''}
+      </header>
+      <div class="reader-body">
+        ${body.map(p=>{
+          if(/^[-—－*＊]{3,}$/.test(p)){
+            return '<div class="scene-break" aria-hidden="true"><span></span></div>';
+          }
+          return `<p>${p.replace(/\n/g,'<br>')}</p>`;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  const prev = rows.slice(0,index).reverse().find(x=>x.isReadable);
+  const next = rows.slice(index+1).find(x=>x.isReadable);
+
+  const prevEl = $('#prevStory');
+  const nextEl = $('#nextStory');
+
+  if(prev){
+    prevEl.href=readerHref(prev);
+    prevEl.textContent=copyText(copy,'site.reader.prev','← 上一節');
+  }else{
+    prevEl.hidden=true;
+  }
+
+  if(next){
+    nextEl.href=readerHref(next);
+    nextEl.textContent=copyText(copy,'site.reader.next','下一節 →');
+  }else{
+    nextEl.hidden=true;
+  }
+}
+
+async function initStory(){
+  try{
+    const config = await getJSON('../data/config.json');
+    const endpoint = config.gasApiEndpoint;
+    if(!endpoint) throw new Error('No GAS endpoint');
+
+    const data = await getJSON(`${endpoint}?type=public&_=${Date.now()}`);
+    applyCopy(data.copy || {});
+
+    if(document.body.classList.contains('story-index-page')){
+      renderToc(data.story || [],data.copy || {});
+      return;
+    }
+
+    if(document.body.classList.contains('story-reader-page')){
+      const id = new URLSearchParams(location.search).get('id') || '';
+      renderReader(data.story || [],data.copy || {},id);
+    }
+  }catch(err){
+    console.error('故事資料載入失敗',err);
+    const target = $('#storyToc') || $('#readerArticle');
+    if(target){
+      target.innerHTML='<div class="story-empty">故事資料暫時無法載入。</div>';
+    }
+  }
+}
+
+initStory();

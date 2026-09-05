@@ -1551,3 +1551,66 @@ small{
   20%{opacity:.88}
   100%{opacity:0;transform:translate(-38px,-10px) rotate(-18deg) scale(1)}
 }
+
+
+/* v0.15.0 · 首頁故事區 */
+.story-home .section-action{
+  margin-top:26px;
+}
+.story-preview-list{
+  border-top:1px solid var(--line-soft);
+}
+.story-preview-item{
+  display:grid;
+  grid-template-columns:145px 1fr 100px;
+  gap:24px;
+  align-items:center;
+  min-height:126px;
+  padding:22px 0;
+  border-bottom:1px solid var(--line-soft);
+  color:inherit;
+  text-decoration:none;
+}
+a.story-preview-item:hover{
+  background:rgba(255,255,255,.018);
+  padding-left:12px;
+  padding-right:12px;
+}
+.story-preview-item.is-locked{opacity:.55}
+.story-preview-index{
+  font-size:11px;
+  color:#7c8693;
+  letter-spacing:.12em;
+}
+.story-preview-main h3{
+  margin:0 0 6px;
+  font-family:var(--font-title);
+  font-size:22px;
+  font-weight:500;
+}
+.story-preview-main small{
+  color:#68727f;
+  font-size:9px;
+  letter-spacing:.14em;
+}
+.story-preview-main p{
+  color:#8e97a3;
+  font-size:13px;
+  line-height:1.7;
+  margin:10px 0 0;
+}
+.story-preview-status{
+  justify-self:end;
+  color:#8f2737;
+  font-size:9px;
+  letter-spacing:.12em;
+}
+
+@media (max-width:760px){
+  .story-preview-item{
+    grid-template-columns:1fr;
+    gap:7px;
+    padding:20px 3px;
+  }
+  .story-preview-status{justify-self:start}
+}

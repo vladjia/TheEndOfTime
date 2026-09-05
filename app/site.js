@@ -88,6 +88,75 @@ function renderCharacters(chars,copy){
     });
 }
 
+
+function chineseNumber(n){
+  const num = Number(n);
+  const digits = ['零','一','二','三','四','五','六','七','八','九','十'];
+  if(!Number.isFinite(num) || num <= 0) return String(n || '');
+  if(num <= 10) return digits[num];
+  if(num < 20) return '十' + digits[num - 10];
+  if(num < 100){
+    const tens = Math.floor(num / 10);
+    const ones = num % 10;
+    return digits[tens] + '十' + (ones ? digits[ones] : '');
+  }
+  return String(num);
+}
+
+function storyLabel(item){
+  const ch = item.chapterNumber ? `第${chineseNumber(item.chapterNumber)}章` : '';
+  const sec = item.sectionNumber ? `第${chineseNumber(item.sectionNumber)}節` : '';
+  return [ch,sec].filter(Boolean).join('　');
+}
+
+function storyReaderHref(item, base=''){
+  return `${base}story/read.html?id=${encodeURIComponent(item.id || '')}`;
+}
+
+function renderStoryPreview(items,copy){
+  const box = $('#storyPreviewList');
+  if(!box) return;
+
+  const rows = [...(items || [])]
+    .sort((a,b)=>(Number(a.order)||9999)-(Number(b.order)||9999))
+    .slice(0,3);
+
+  box.innerHTML = '';
+
+  if(!rows.length){
+    const empty = document.createElement('div');
+    empty.className = 'story-empty';
+    empty.textContent = '故事仍在時間裡成形。';
+    box.appendChild(empty);
+    return;
+  }
+
+  rows.forEach(item=>{
+    const el = document.createElement(item.isReadable ? 'a' : 'article');
+    el.className = 'story-preview-item';
+
+    if(item.isReadable){
+      el.href = storyReaderHref(item,'');
+    }else{
+      el.classList.add('is-locked');
+    }
+
+    el.innerHTML = `
+      <div class="story-preview-index">${storyLabel(item)}</div>
+      <div class="story-preview-main">
+        <h3>${item.sectionTitle || item.chapterTitle || '未命名篇章'}</h3>
+        ${item.subtitle ? `<small>${item.subtitle}</small>` : ''}
+        <p>${item.publicSummary || ''}</p>
+      </div>
+      <div class="story-preview-status">
+        ${item.isReadable ? 'READ →' : copyText(copy,'site.story.locked','尚未公開')}
+      </div>
+    `;
+
+    box.appendChild(el);
+  });
+}
+
 function renderWorld(items){
   const first = [...(items || [])].sort((a,b)=>(Number(a.order)||999)-(Number(b.order)||999))[0];
   if(first){
@@ -189,6 +258,7 @@ async function init(){
   }
 
   renderHero(data.site,data.copy || {});
+  renderStoryPreview(data.story || [],data.copy || {});
   renderCharacters(data.characters,data.copy || {});
   renderWorld(data.world);
   renderImages(data.images);
