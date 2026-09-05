@@ -166,14 +166,31 @@ function renderMeta(char){
   const box = $('#characterMeta');
   if(!box) return;
 
-  const rows = [
-    ['戰鬥識別',char.signature],
-    ['狀態',char.state]
-  ].filter(([,value])=>value);
+  const fields = Array.isArray(char.introFields)
+    ? char.introFields.filter(item => item && (item.title || item.value)).slice(0,3)
+    : [];
 
-  box.innerHTML = rows.map(([label,value])=>
-    `<div><small>${label}</small><strong>${value}</strong></div>`
-  ).join('');
+  box.innerHTML = '';
+
+  for(let i = 0; i < 3; i++){
+    const item = fields[i] || {title:'', value:''};
+
+    const cell = document.createElement('div');
+
+    if(item.title){
+      const small = document.createElement('small');
+      small.textContent = item.title;
+      cell.appendChild(small);
+    }
+
+    if(item.value){
+      const strong = document.createElement('strong');
+      strong.textContent = item.value;
+      cell.appendChild(strong);
+    }
+
+    box.appendChild(cell);
+  }
 }
 
 function renderStrip(char){
