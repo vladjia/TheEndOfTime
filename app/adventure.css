@@ -958,3 +958,82 @@ html.time-mark-guide-open{
     width:min(330px,calc(100vw - 20px));
   }
 }
+
+
+/* ============================================================
+   v0.18.5 · 透明時印石片 / 解除裁切與黑底
+   ============================================================ */
+.time-mark-orb{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  isolation:auto;
+  gap:6px;
+}
+.time-mark-orb:hover{
+  transform:translateY(-1px);
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.time-mark-orb::after{
+  display:none!important;
+}
+.time-mark-orb-media{
+  width:54px!important;
+  height:54px!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.time-mark-orb-video{
+  width:54px!important;
+  height:96px!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  object-fit:contain!important;
+  mix-blend-mode:normal!important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,255,255,.16))
+    drop-shadow(0 0 10px rgba(166,122,255,.16));
+  opacity:1!important;
+  animation:timeMarkTransparentBreathe 3.8s ease-in-out infinite!important;
+  pointer-events:none;
+}
+.time-mark-orb-label{
+  color:rgba(20,22,26,.78)!important;
+  text-shadow:none!important;
+}
+.time-mark-orb:hover .time-mark-orb-video{
+  filter:
+    drop-shadow(0 0 7px rgba(255,255,255,.22))
+    drop-shadow(0 0 15px rgba(166,122,255,.26));
+}
+@keyframes timeMarkTransparentBreathe{
+  0%,100%{opacity:.88;filter:brightness(.98) saturate(.96) drop-shadow(0 0 5px rgba(255,255,255,.13)) drop-shadow(0 0 9px rgba(166,122,255,.13))}
+  50%{opacity:1;filter:brightness(1.12) saturate(1.08) drop-shadow(0 0 8px rgba(255,255,255,.22)) drop-shadow(0 0 14px rgba(166,122,255,.22))}
+}
+
+/* 若導覽列或上層容器曾設定裁切，讓石片能完整伸出 */
+.site-header,
+.topbar,
+.topbar-inner,
+.nav,
+.nav-actions,
+.header-actions{
+  overflow:visible!important;
+}
+
+@media(max-width:720px){
+  .time-mark-orb-media{
+    width:48px!important;
+    height:48px!important;
+  }
+  .time-mark-orb-video{
+    width:48px!important;
+    height:86px!important;
+  }
+}
