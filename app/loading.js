@@ -4,7 +4,7 @@ window.SiteLoading = (() => {
   let frameTimer = null;
   let frameIndex = 0;
   const FRAME_COUNT = 8;
-  const FRAME_MS = 105;
+  const FRAME_MS = 125;
 
   function getEl(){
     return document.getElementById('siteLoading');

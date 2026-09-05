@@ -1,4 +1,26 @@
 
+
+function homepageImageDebug(){
+  let panel = document.getElementById('homepageImageDebug');
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = 'homepageImageDebug';
+    panel.className = 'homepage-image-debug';
+    panel.innerHTML = '<button type="button" class="homepage-image-debug-close" aria-label="關閉首頁圖片診斷">×</button><pre></pre>';
+    document.body.appendChild(panel);
+    panel.querySelector('button').addEventListener('click',()=>panel.remove());
+  }
+  return {
+    write(lines){
+      const pre = panel.querySelector('pre');
+      pre.textContent = Array.isArray(lines) ? lines.join('\n') : String(lines || '');
+    },
+    append(line){
+      const pre = panel.querySelector('pre');
+      pre.textContent += (pre.textContent ? '\n' : '') + String(line || '');
+    }
+  };
+}
 const $ = s => document.querySelector(s);
 
 const LOCAL_FALLBACK = {
@@ -175,6 +197,8 @@ function renderImages(images){
   const hero = $('#hero');
   if(!hero) return;
 
+  const debug = homepageImageDebug();
+
   const norm = value => String(value || '')
     .trim()
     .replace(/\s+/g,'')
@@ -194,7 +218,6 @@ function renderImages(images){
   const imageUrl = x => {
     const direct = getValue(x, ['url','imageUrl','imageURL','圖片網址','URL']);
     if(direct) return direct;
-
     const id = getValue(x, ['id','fileId','fileID','File ID','Drive檔案ID']);
     return id
       ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w2000`
@@ -215,21 +238,16 @@ function renderImages(images){
     const hay = `${name}|${group}|${target}|${category}|${path}`;
 
     let s = 0;
-
     if(exactHomepageName(x)) s += 100000;
     if(hay.includes('網站素材')) s += 1000;
     if(hay.includes('首頁')) s += 800;
     if(hay.includes('封面')) s += 500;
     if(hay.includes('主視覺')) s += 400;
-
     if(hay.includes('logo')) s -= 5000;
     if(hay.includes('favicon')) s -= 5000;
     if(hay.includes('ogcover')) s -= 5000;
     if(hay.includes('loading')) s -= 5000;
-
-    // Only as a final fallback.
     if(hay.includes('人物') && hay.includes('家式') && hay.includes('主視覺')) s += 50;
-
     if(!imageUrl(x)) s -= 10000;
     return s;
   };
@@ -239,6 +257,20 @@ function renderImages(images){
     .filter(item => item.score > 0 && item.url)
     .sort((a,b) => b.score - a.score);
 
+  debug.write([
+    `images: ${list.length}`,
+    `candidates: ${candidates.length}`,
+    `hero: ${hero ? 'FOUND' : 'MISSING'}`,
+    `exact homepage row: ${list.some(exactHomepageName) ? 'YES' : 'NO'}`
+  ]);
+
+  if(candidates[0]){
+    const c = candidates[0];
+    debug.append(`top match: ${getValue(c.x,['name','fileName','檔名']) || '(no name)'}`);
+    debug.append(`score: ${c.score}`);
+    debug.append(`src: ${c.url}`);
+  }
+
   hero.querySelectorAll('img').forEach(el=>el.remove());
   hero.classList.remove('image-loaded','image-error');
   hero.style.removeProperty('--hero-image-url');
@@ -247,6 +279,7 @@ function renderImages(images){
   if(!candidates.length){
     hero.dataset.imageState = 'missing';
     hero.classList.add('image-error');
+    debug.append('result: NO CANDIDATE');
     console.error('首頁主視覺：沒有取得可用圖片資料。', list);
     return;
   }
@@ -259,6 +292,7 @@ function renderImages(images){
     if(!candidate){
       hero.dataset.imageState = 'failed';
       hero.classList.add('image-error');
+      debug.append('result: ALL FAILED');
       console.error('首頁主視覺：所有候選圖片都載入失敗。', candidates);
       return;
     }
@@ -266,7 +300,6 @@ function renderImages(images){
     const source = candidate.x;
     const src = candidate.url;
 
-    // CSS background is an independent fallback from the <img>.
     hero.style.setProperty('--hero-image-url', `url("${src.replace(/"/g,'\\"')}")`);
     hero.style.backgroundImage = `url("${src.replace(/"/g,'\\"')}")`;
     hero.dataset.imageState = 'loading';
@@ -280,14 +313,18 @@ function renderImages(images){
     img.dataset.viewer = 'true';
     img.dataset.viewerLabel = getValue(source,['name','fileName','檔名']) || '首頁主視覺';
 
+    debug.append('img appended: YES');
+
     img.addEventListener('load',()=>{
       hero.dataset.imageState = 'loaded';
       hero.classList.add('image-loaded');
       hero.classList.remove('image-error');
+      debug.append(`load: SUCCESS (${img.naturalWidth}×${img.naturalHeight})`);
       console.info('首頁主視覺載入成功：', source);
     },{once:true});
 
     img.addEventListener('error',()=>{
+      debug.append(`load: ERROR candidate ${candidateIndex+1}`);
       console.warn('首頁主視覺候選載入失敗，嘗試下一張：', source, src);
       img.remove();
       candidateIndex += 1;

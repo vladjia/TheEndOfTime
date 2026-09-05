@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.7",
+  "version": "0.16.8",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -116,7 +116,7 @@
       "confirmationRequired": true
     },
     "customScrollbar": "wider + inset",
-    "loadingOverlay": "8 frame sand sequence + CSS smooth 180deg rotation",
+    "loadingOverlay": "8-frame sand + 2.05s smooth half-turn @ 156px",
     "scrollbarAvoidsTopbar": true,
     "loadingFailSafeMs": 12000,
     "characterSealEffects": "app/seal-effects.js",
@@ -125,6 +125,9 @@
     "homepageHeroActions": false,
     "homepageImageResolver": "exact sheet filename + img + CSS background dual-render",
     "imageViewer": "wheel zoom + drag + double click + pinch",
-    "anyanxiuSeal": "user SVG swarm anchored to seal glyph"
+    "anyanxiuSeal": "user SVG swarm anchored to seal glyph",
+    "homepageImageDebug": true,
+    "characterVisual": "minimal showcase frame + soft edge fade",
+    "favicon": "normalized + cache-busted on all pages"
   }
 }

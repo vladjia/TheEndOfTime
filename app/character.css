@@ -1083,3 +1083,125 @@ body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark{
   22%{opacity:.72}
   100%{opacity:0;transform:translate(52px,-74px) scale(.92) rotate(24deg)}
 }
+
+
+/* ============================================================
+   v0.16.8 · CHARACTER VISUAL DISPLAY
+   角色主視覺改成展示框，不再像資料庫圖片卡。
+   ============================================================ */
+
+.character-visual{
+  position:relative!important;
+  min-height:520px;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+  overflow:visible!important;
+  padding:0!important;
+  isolation:isolate;
+}
+
+.character-visual::before{
+  content:""!important;
+  position:absolute;
+  inset:10px 10px 10px 10px;
+  z-index:0;
+  border:1px solid rgba(210,214,220,.10);
+  border-radius:8px;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(77,57,94,.10),transparent 48%),
+    linear-gradient(180deg,rgba(16,19,24,.16),rgba(5,7,10,.34));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.02) inset,
+    0 18px 48px rgba(0,0,0,.18);
+  pointer-events:none;
+}
+
+.character-visual::after{
+  content:""!important;
+  position:absolute;
+  inset:10px;
+  z-index:2;
+  border-radius:8px;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      rgba(7,9,13,.22) 0%,
+      transparent 15%,
+      transparent 72%,
+      rgba(7,9,13,.58) 100%),
+    linear-gradient(90deg,
+      rgba(7,9,13,.30) 0%,
+      transparent 12%,
+      transparent 88%,
+      rgba(7,9,13,.30) 100%);
+}
+
+.character-visual > img,
+.character-visual .character-main-image{
+  position:relative!important;
+  z-index:1!important;
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  margin:0 auto!important;
+  border:0!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+  -webkit-mask-image:
+    linear-gradient(180deg,
+      transparent 0%,
+      #000 4%,
+      #000 92%,
+      transparent 100%);
+  mask-image:
+    linear-gradient(180deg,
+      transparent 0%,
+      #000 4%,
+      #000 92%,
+      transparent 100%);
+  transition:filter .24s ease,transform .24s ease;
+}
+
+.character-visual:hover > img,
+.character-visual:hover .character-main-image{
+  filter:brightness(1.03) contrast(1.02);
+}
+
+.character-visual-mark{
+  right:28px!important;
+  bottom:24px!important;
+  z-index:4!important;
+  opacity:.22!important;
+  transform:none!important;
+  font-size:clamp(72px,8vw,132px)!important;
+  pointer-events:none;
+}
+
+/* 拿掉舊切角 / decorative slash 類元素 */
+.character-visual .visual-corner,
+.character-visual .corner-cut,
+.character-visual .image-corner,
+.character-visual .character-visual-corner{
+  display:none!important;
+}
+
+@media(max-width:820px){
+  .character-visual{
+    min-height:auto;
+  }
+
+  .character-visual::before,
+  .character-visual::after{
+    inset:6px;
+  }
+
+  .character-visual-mark{
+    right:18px!important;
+    bottom:16px!important;
+    font-size:clamp(56px,18vw,92px)!important;
+  }
+}

@@ -3371,3 +3371,63 @@ body.site-entered .hero-art.hero-art-reveal{
     animation:none!important;
   }
 }
+
+
+/* ============================================================
+   v0.16.8 · HOMEPAGE DEBUG / LOADING COMFORT / FAVICON SUPPORT
+   ============================================================ */
+
+.loading-hourglass.loading-frame-sequence{
+  width:156px!important;
+  animation:loadingComfortHalfTurn 2.05s cubic-bezier(.55,.06,.34,.98) infinite!important;
+}
+
+@keyframes loadingComfortHalfTurn{
+  0%{transform:rotate(0deg)}
+  43%{transform:rotate(0deg)}
+  78%{transform:rotate(180deg)}
+  100%{transform:rotate(180deg)}
+}
+
+.homepage-image-debug{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:300000;
+  width:min(430px,calc(100vw - 36px));
+  max-height:42vh;
+  overflow:auto;
+  padding:14px 44px 14px 14px;
+  border:1px solid rgba(166,37,61,.45);
+  border-radius:10px;
+  background:rgba(6,8,12,.94);
+  box-shadow:0 14px 38px rgba(0,0,0,.42);
+  color:rgba(236,239,243,.88);
+  font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;
+  white-space:pre-wrap;
+}
+
+.homepage-image-debug pre{
+  margin:0;
+  white-space:pre-wrap;
+  word-break:break-all;
+}
+
+.homepage-image-debug-close{
+  position:absolute;
+  top:7px;
+  right:8px;
+  width:28px;
+  height:28px;
+  border:0;
+  background:transparent;
+  color:rgba(236,239,243,.66);
+  font-size:22px;
+  cursor:pointer;
+}
+
+@media(max-width:640px){
+  .loading-hourglass.loading-frame-sequence{
+    width:132px!important;
+  }
+}
