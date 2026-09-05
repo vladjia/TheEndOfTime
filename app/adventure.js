@@ -93,7 +93,9 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function serialLabel(value){
-    const n=Number(value||0);
+    const raw=String(value??'').trim().toUpperCase();
+    if(/^DEV-\d+$/.test(raw)) return raw;
+    const n=Number(raw||0);
     return n>0 ? `No.${String(n).padStart(6,'0')}` : '';
   }
 
