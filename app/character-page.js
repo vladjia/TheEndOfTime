@@ -392,6 +392,7 @@ function renderCharacter(char,id,data){
   setText('#characterNumber',order);
   setText('#characterTitle',char.title);
   setText('#characterName',char.name);
+  setText('#breadcrumbCurrent',char.name || char.fullName || '角色');
   setText('#characterIntro',char.publicIntro);
   setText('#characterCore',char.coreLine);
   setText('#characterSeal',char.seal);

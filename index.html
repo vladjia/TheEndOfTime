@@ -32,9 +32,9 @@
 
 <link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="app/site.css?v=0.15.0">
+<link rel="stylesheet" href="app/site.css?v=0.15.1">
 </head>
-<body class="pre-entry">
+<body class="pre-entry" id="top">
 
   <div id="welcomeGate" class="welcome-gate welcome-v2" aria-label="進入《時盡》">
     <div class="welcome-v2-inner">
@@ -49,12 +49,19 @@
 
 <div class="time-sand"></div>
 
-<header class="topbar">
-  <a class="brand" href="#">
-    <div class="brand-mark">時</div>
-    <div><strong id="brandTitle">時盡</strong><small data-copy="site.brand.subtitle">WORLD / CHARACTER ARCHIVE</small></div>
+<header class="topbar topbar-v2 home-topbar">
+  <a class="brand brand-v2" href="#top" aria-label="時盡首頁">
+    <img class="brand-logo" src="assets/images/the-end-of-time-logo.png" alt="時盡 Logo">
+    <strong id="brandTitle">時盡</strong>
   </a>
-  <div class="mode" data-copy="site.mode.public">PUBLIC · 無雷</div>
+
+  <nav class="main-nav" aria-label="主導覽">
+    <a href="story/index.html" data-copy="site.nav.story">故事</a>
+    <a href="#characters" data-copy="site.nav.characters">角色</a>
+    <a href="#world" data-copy="site.nav.world">世界觀</a>
+  </nav>
+
+  <div class="nav-status" data-copy="site.nav.public">公開・無雷</div>
 </header>
 
 <main>
@@ -109,7 +116,7 @@
   </section>
 </main>
 
-<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.15.0</footer>
-<script src="app/site.js?v=0.15.0" defer></script>
+<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.15.1</footer>
+<script src="app/site.js?v=0.15.1" defer></script>
 </body>
 </html>

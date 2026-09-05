@@ -145,6 +145,12 @@ function renderReader(story,copy,id){
   }
 
   document.title = `${chapterLabel(item)} ${sectionLabel(item)}｜${item.sectionTitle || '時盡'}`;
+  const crumb = $('#storyBreadcrumbCurrent');
+  if(crumb){
+    crumb.textContent = [chapterLabel(item),sectionLabel(item)]
+      .filter(Boolean)
+      .join(' ');
+  }
 
   if(!item.isReadable){
     article.innerHTML = `

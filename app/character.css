@@ -730,3 +730,7 @@
 .weapon-slots{
   grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
 }
+
+
+/* v0.15.1 · topbar 由 site.css TOPBAR 2.0 統一接管 */
+.character-top-actions{display:none!important}
