@@ -17,23 +17,21 @@
 <meta property="og:image" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/story/">
-<link rel="stylesheet" href="../app/site.css?v=0.15.3">
-<link rel="stylesheet" href="../app/story.css?v=0.15.3">
+<link rel="stylesheet" href="../app/site.css?v=0.16.0">
+<link rel="stylesheet" href="../app/story.css?v=0.16.0">
 </head>
 <body class="story-index-page">
-<header class="topbar topbar-v2 story-topbar">
-  <a class="brand brand-v2" href="../index.html?skipWelcome=1" aria-label="返回《時盡》首頁">
+<header class="topbar topbar-v3 story-topbar">
+  <a class="brand brand-v3" href="../index.html?skipWelcome=1">
     <img class="brand-logo" src="../assets/images/the-end-of-time-logo.png" alt="時盡 Logo">
     <strong>時盡</strong>
   </a>
-
-  <nav class="breadcrumb" aria-label="目前位置">
-    <a href="../index.html?skipWelcome=1" data-copy="site.nav.home">首頁</a>
-    <span>/</span>
-    <strong data-copy="site.nav.storyToc">章節目錄</strong>
+  <nav class="main-nav">
+    <a class="is-current" href="index.html" data-copy="site.nav.story">故事</a>
+    <a href="../characters/index.html" data-copy="site.nav.characters">角色</a>
+    <a href="../world/index.html" data-copy="site.nav.world">世界觀</a>
   </nav>
-
-  <div class="nav-status" data-copy="site.nav.public">公開・無雷</div>
+  <button class="nav-status mode-toggle" type="button" data-mode-toggle>公開・無雷</button>
 </header>
 
 <main class="story-shell">
@@ -46,7 +44,8 @@
   <section id="storyToc" class="story-toc"></section>
 </main>
 
-<footer class="footer">《時盡》STORY ARCHIVE · Core v0.15.3</footer>
-<script src="../app/story.js?v=0.15.3" defer></script>
+<footer class="footer">《時盡》STORY ARCHIVE · Core v0.16.0</footer>
+<script src="../app/mode.js?v=0.16.0" defer></script>
+<script src="../app/story.js?v=0.16.0" defer></script>
 </body>
 </html>

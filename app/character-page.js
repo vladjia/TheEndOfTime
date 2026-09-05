@@ -430,13 +430,15 @@ async function initCharacterPage(){
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
-    const data = await getJSON(`${endpoint}?type=public&_=${Date.now()}`);
+    const mode = window.EndOfTimeMode?.current?.() || 'public';
+    const data = await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`);
     if(!data?.ok) throw new Error('GAS API returned ok=false');
 
     const char = (data.characters || []).find(x=>x.id===id);
     if(!char) throw new Error(`Character not found: ${id}`);
 
     applyCopy(data.copy || {});
+    window.EndOfTimeMode?.bind?.(data.copy || {});
     renderCharacter(char,id,data);
 
     const main = bestCharacterImage(data.images || [],id,{zero:false});

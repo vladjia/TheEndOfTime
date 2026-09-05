@@ -207,8 +207,10 @@ async function initStory(){
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
-    const data = await getJSON(`${endpoint}?type=public&_=${Date.now()}`);
+    const mode = window.EndOfTimeMode?.current?.() || 'public';
+    const data = await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`);
     applyCopy(data.copy || {});
+    window.EndOfTimeMode?.bind?.(data.copy || {});
 
     if(document.body.classList.contains('story-index-page')){
       renderToc(data.story || [],data.copy || {});

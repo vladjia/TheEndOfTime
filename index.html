@@ -33,7 +33,7 @@
 <meta name="twitter:image" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.png">
 
 <link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/">
-<link rel="stylesheet" href="app/site.css?v=0.15.3">
+<link rel="stylesheet" href="app/site.css?v=0.16.0">
 </head>
 <body class="pre-entry" id="top">
 
@@ -50,19 +50,19 @@
 
 <div class="time-sand"></div>
 
-<header class="topbar topbar-v2 home-topbar">
-  <a class="brand brand-v2" href="#top" aria-label="時盡首頁">
+<header class="topbar topbar-v3 home-topbar">
+  <a class="brand brand-v3" href="#top" aria-label="時盡首頁">
     <img class="brand-logo" src="assets/images/the-end-of-time-logo.png" alt="時盡 Logo">
     <strong id="brandTitle">時盡</strong>
   </a>
 
   <nav class="main-nav" aria-label="主導覽">
     <a href="story/index.html" data-copy="site.nav.story">故事</a>
-    <a href="#characters" data-copy="site.nav.characters">角色</a>
-    <a href="#world" data-copy="site.nav.world">世界觀</a>
+    <a href="characters/index.html" data-copy="site.nav.characters">角色</a>
+    <a href="world/index.html" data-copy="site.nav.world">世界觀</a>
   </nav>
 
-  <div class="nav-status" data-copy="site.nav.public">公開・無雷</div>
+  <button class="nav-status mode-toggle" type="button" data-mode-toggle>公開・無雷</button>
 </header>
 
 <main>
@@ -74,8 +74,8 @@
       <div class="quote hero-reveal hero-reveal-4" data-copy="site.home.law">「過程可以改變，結果不能。」</div>
       <div class="actions hero-reveal hero-reveal-5">
         <a class="btn primary" href="story/index.html" data-copy="site.home.btn.story">故事</a>
-        <a class="btn" href="#characters" data-copy="site.home.btn.characters">角色介紹</a>
-        <a class="btn" href="#world" data-copy="site.home.btn.world">世界觀</a>
+        <a class="btn" href="characters/index.html" data-copy="site.home.btn.characters">角色介紹</a>
+        <a class="btn" href="world/index.html" data-copy="site.home.btn.world">世界觀</a>
       </div>
     </div>
     <div class="hero-art hero-art-reveal" id="hero">
@@ -83,41 +83,32 @@
     </div>
   </section>
 
+  <section class="home-portals" aria-label="網站主要入口">
+    <a class="home-portal" href="story/index.html">
+      <small>01 / STORY</small>
+      <h2 data-copy="site.home.portal.story.title">故事</h2>
+      <p data-copy="site.home.portal.story.desc">從章與節開始，沿著時間留下的裂縫讀下去。</p>
+      <span data-copy="site.home.portal.enter">ENTER →</span>
+    </a>
 
-  <section class="section story-home" id="story">
-    <div class="section-head">
-      <div>
-        <small data-copy="site.home.story.kicker">01 / STORY</small>
-        <h2 data-copy="site.home.story.title">故事</h2>
-      </div>
-      <p data-copy="site.home.story.desc">從章與節開始，沿著時間留下的裂縫讀下去。</p>
-    </div>
-    <div class="story-preview-list" id="storyPreviewList"></div>
-    <div class="section-action">
-      <a class="btn primary" href="story/index.html" data-copy="site.home.story.enter">進入故事 →</a>
-    </div>
-  </section>
+    <a class="home-portal" href="characters/index.html">
+      <small>02 / CHARACTERS</small>
+      <h2 data-copy="site.home.portal.characters.title">角色</h2>
+      <p data-copy="site.home.portal.characters.desc">閱讀人物檔案、武器、能力與彼此留下的痕跡。</p>
+      <span data-copy="site.home.portal.enter">ENTER →</span>
+    </a>
 
-  <section class="section" id="characters">
-    <div class="section-head">
-      <div><small data-copy="site.home.characters.kicker">02 / CHARACTERS</small><h2 data-copy="site.home.characters.title">角色介紹</h2></div>
-      <p data-copy="site.home.characters.desc">公開區只放無雷設定。完整身世、人物死亡與世界核心真相，之後會從受保護的資料來源載入。</p>
-    </div>
-    <div class="cards" id="characterCards"></div>
-  </section>
-<section class="section" id="world">
-    <div class="section-head">
-      <div><small data-copy="site.home.world.kicker">03 / WORLD</small><h2 data-copy="site.home.world.title">世界觀</h2></div>
-      <p data-copy="site.home.world.desc">這裡只顯示無雷的世界輪廓；真正的沙漏法則與劇情核心會留給防雷模式。</p>
-    </div>
-    <div class="world">
-      <h3 id="worldName">時之沙漏</h3>
-      <p id="worldIntro">世界的時間並非單純向前延伸的直線，而像一只巨大的沙漏。</p>
-    </div>
+    <a class="home-portal" href="world/index.html">
+      <small>03 / WORLD</small>
+      <h2 data-copy="site.home.portal.world.title">世界觀</h2>
+      <p data-copy="site.home.portal.world.desc">理解時之沙漏、血族與這個世界運行的法則。</p>
+      <span data-copy="site.home.portal.enter">ENTER →</span>
+    </a>
   </section>
 </main>
 
-<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.15.3</footer>
-<script src="app/site.js?v=0.15.3" defer></script>
+<footer class="footer">《時盡》STORY / CHARACTER / WORLD · Core v0.16.0</footer>
+<script src="app/mode.js?v=0.16.0" defer></script>
+<script src="app/site.js?v=0.16.0" defer></script>
 </body>
 </html>
