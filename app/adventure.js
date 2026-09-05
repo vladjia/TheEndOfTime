@@ -4,6 +4,7 @@ window.EndOfTimeAdventure = (() => {
   const SESSION_PROMPT_KEY = 'theEndOfTime.timeMark.prompted';
   const SAVED_CARD_KEY = 'theEndOfTime.timeMark.savedCardToken';
   const FIRST_GUIDE_KEY = 'theEndOfTime.timeMark.firstGuideSeen';
+  const ENTRY_COACH_KEY = 'theEndOfTime.timeMark.entryCoachSeen';
   let configCache = null;
   let progressCache = null;
   let ensurePromise = null;
@@ -620,39 +621,72 @@ window.EndOfTimeAdventure = (() => {
     localStorage.setItem(FIRST_GUIDE_KEY,'1');
   }
 
-  function showFirstTimeGuide(){
-    if(hasSeenFirstGuide()) return;
+  function showTimeMarkEntryCoach(){
+    if(localStorage.getItem(ENTRY_COACH_KEY)==='1') return;
     const btn=document.querySelector('[data-time-mark]');
     if(!btn) return;
 
+    const coach=document.createElement('div');
+    coach.className='time-mark-entry-coach';
+    coach.innerHTML=`
+      <div class="time-mark-entry-coach-card">
+        <strong>想留下旅程時，點這枚時印石片。</strong>
+        <p>之後無論逛到哪裡，都可以從這裡回來進行時空鑄印、查看旅程或取回其他時印。</p>
+        <button class="time-mark-link-btn" type="button" data-entry-coach-close>知道了</button>
+      </div>
+    `;
+    document.body.appendChild(coach);
+    btn.classList.add('is-coach-highlight');
+    requestAnimationFrame(()=>coach.classList.add('is-visible'));
+
+    const close=()=>{
+      localStorage.setItem(ENTRY_COACH_KEY,'1');
+      btn.classList.remove('is-coach-highlight');
+      coach.classList.remove('is-visible');
+      setTimeout(()=>coach.remove(),220);
+    };
+    coach.querySelector('[data-entry-coach-close]').onclick=close;
+    setTimeout(close,9000);
+  }
+
+  function showFirstTimeGuide(){
+    if(hasSeenFirstGuide()) return;
+    if(document.getElementById('timeMarkFirstGuide')) return;
+
     const guide=document.createElement('div');
+    guide.id='timeMarkFirstGuide';
     guide.className='time-mark-first-guide';
     guide.innerHTML=`
-      <div class="time-mark-guide-card" role="dialog" aria-modal="false" aria-label="時印導覽">
+      <div class="time-mark-guide-backdrop" aria-hidden="true"></div>
+      <section class="time-mark-guide-card" role="dialog" aria-modal="true" aria-labelledby="timeMarkGuideTitle">
         <div class="time-mark-kicker">TIME MARK</div>
-        <strong>讓時間記住你走過的路。</strong>
+        <h2 id="timeMarkGuideTitle">讓時間記住你走過的路。</h2>
         <p>時印會保存你讀過的故事、遇見的人，以及已理解的世界。</p>
-        <div class="time-mark-actions">
+        <div class="time-mark-guide-actions">
           <button class="time-mark-btn primary" type="button" data-guide-open>留下我的時印</button>
           <button class="time-mark-btn" type="button" data-guide-skip>先進入看看</button>
         </div>
-      </div>
-      <span class="time-mark-guide-arrow" aria-hidden="true"></span>
+      </section>
     `;
     document.body.appendChild(guide);
+    document.documentElement.classList.add('time-mark-guide-open');
     requestAnimationFrame(()=>guide.classList.add('is-visible'));
 
     const close=()=>{
       markFirstGuideSeen();
       guide.classList.remove('is-visible');
-      setTimeout(()=>guide.remove(),220);
+      document.documentElement.classList.remove('time-mark-guide-open');
+      setTimeout(()=>guide.remove(),260);
     };
 
     guide.querySelector('[data-guide-open]').onclick=()=>{
       close();
-      setTimeout(()=>openManager(),250);
+      setTimeout(()=>openForge(),280);
     };
-    guide.querySelector('[data-guide-skip]').onclick=close;
+    guide.querySelector('[data-guide-skip]').onclick=()=>{
+      close();
+      setTimeout(showTimeMarkEntryCoach,420);
+    };
   }
 
   function bindButtons(){
@@ -677,9 +711,23 @@ window.EndOfTimeAdventure = (() => {
     }catch(_){ }
   }
 
+  async function refreshTimeMarkEntryState(){
+    try{
+      const data=await load(true);
+      const forged=!!data?.stone?.forged;
+      document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+        const label=btn.querySelector('.time-mark-orb-label');
+        if(label) label.textContent=forged?'時印':'留下時印';
+        btn.setAttribute('aria-label',forged?'開啟時印':'留下我的時印');
+        btn.classList.toggle('is-unforged',!forged);
+      });
+    }catch(_){}
+  }
+
   async function init(){
     bindButtons();
     await ensure();
+    await refreshTimeMarkEntryState();
     maybePromptReturning();
 
     if(document.body.classList.contains('home-page')){

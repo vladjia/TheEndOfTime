@@ -791,3 +791,170 @@ html.adventure-critical .reader-complete-btn{
 @media(prefers-reduced-motion:reduce){
   .time-mark-orb-video,.time-mark-orb::after{animation:none!important}
 }
+
+
+/* ============================================================
+   v0.18.3 · 首次導覽改為全畫面置中 / 背景霧化
+   ============================================================ */
+html.time-mark-guide-open{
+  overflow:hidden;
+}
+.time-mark-first-guide{
+  position:fixed!important;
+  inset:0!important;
+  z-index:14000!important;
+  width:auto!important;
+  opacity:0;
+  transform:none!important;
+  pointer-events:none;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  transition:opacity .26s ease;
+}
+.time-mark-first-guide.is-visible{
+  opacity:1;
+  pointer-events:auto;
+}
+.time-mark-guide-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(4,5,8,.46);
+  backdrop-filter:blur(18px) saturate(.78);
+  -webkit-backdrop-filter:blur(18px) saturate(.78);
+}
+.time-mark-guide-card{
+  position:relative;
+  z-index:1;
+  width:min(560px,calc(100vw - 32px));
+  padding:36px 38px 34px;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 50% -20%,rgba(127,21,33,.18),transparent 44%),
+    linear-gradient(180deg,rgba(12,14,18,.97),rgba(7,9,12,.98));
+  color:#f1f2f4;
+  box-shadow:
+    0 40px 120px rgba(0,0,0,.58),
+    0 0 0 1px rgba(255,255,255,.015) inset;
+  text-align:left;
+  transform:translateY(10px) scale(.985);
+  transition:transform .28s cubic-bezier(.2,.75,.2,1);
+}
+.time-mark-first-guide.is-visible .time-mark-guide-card{
+  transform:none;
+}
+.time-mark-guide-card::before{
+  content:"";
+  position:absolute;
+  left:38px;
+  right:38px;
+  top:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(139,24,38,.78),transparent);
+}
+.time-mark-guide-card h2{
+  margin:12px 0 12px;
+  font-size:clamp(26px,4vw,38px);
+  font-weight:600;
+  line-height:1.35;
+  letter-spacing:.01em;
+}
+.time-mark-guide-card p{
+  margin:0;
+  color:rgba(238,240,244,.64);
+  line-height:1.9;
+  font-size:14px;
+}
+.time-mark-guide-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:28px;
+}
+.time-mark-guide-arrow{
+  display:none!important;
+}
+
+@media(max-width:680px){
+  .time-mark-first-guide{
+    padding:16px;
+  }
+  .time-mark-guide-card{
+    width:min(100%,520px);
+    padding:28px 24px 24px;
+  }
+  .time-mark-guide-card::before{
+    left:24px;
+    right:24px;
+  }
+  .time-mark-guide-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .time-mark-guide-actions .time-mark-btn{
+    width:100%;
+    text-align:center;
+  }
+}
+
+
+/* ============================================================
+   v0.18.4 · 首次跳過後的時印入口指引
+   ============================================================ */
+.time-mark-entry-coach{
+  position:fixed;
+  top:80px;
+  right:18px;
+  z-index:13950;
+  width:min(360px,calc(100vw - 28px));
+  opacity:0;
+  transform:translateY(-8px);
+  pointer-events:none;
+  transition:.22s ease;
+}
+.time-mark-entry-coach.is-visible{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+}
+.time-mark-entry-coach-card{
+  padding:18px 20px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(8,10,14,.96);
+  color:#f2f3f5;
+  box-shadow:0 18px 52px rgba(0,0,0,.40);
+}
+.time-mark-entry-coach-card strong{
+  display:block;
+  font-size:14px;
+  line-height:1.55;
+}
+.time-mark-entry-coach-card p{
+  margin:7px 0 10px;
+  color:rgba(238,240,244,.58);
+  font-size:12px;
+  line-height:1.7;
+}
+.time-mark-orb.is-coach-highlight{
+  z-index:14010!important;
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,.10),
+    0 0 0 7px rgba(165,111,255,.12),
+    0 0 28px rgba(165,111,255,.34)!important;
+  animation:timeMarkCoachPulse 1.35s ease-in-out infinite;
+}
+.time-mark-orb.is-unforged .time-mark-orb-media{
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.10),
+    0 0 16px rgba(190,150,255,.24);
+}
+@keyframes timeMarkCoachPulse{
+  50%{transform:translateY(-1px) scale(1.055)}
+}
+@media(max-width:720px){
+  .time-mark-entry-coach{
+    top:72px;
+    right:10px;
+    width:min(330px,calc(100vw - 20px));
+  }
+}
