@@ -3442,7 +3442,7 @@ body.site-entered .hero-art.hero-art-reveal{
   position:relative!important;
   display:block!important;
   width:min(1360px,calc(100% - 64px))!important;
-  min-height:560px!important;
+  min-height:420px!important;
   margin:0 auto!important;
   padding:0!important;
   overflow:hidden!important;
@@ -3515,7 +3515,7 @@ body.site-entered .hero-art.hero-art-reveal{
   position:relative!important;
   z-index:4!important;
   width:min(600px,52%)!important;
-  min-height:560px!important;
+  min-height:420px!important;
   display:flex!important;
   flex-direction:column!important;
   justify-content:center!important;
