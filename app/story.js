@@ -144,7 +144,7 @@ function renderToc(story,copy,progress){
   });
 }
 
-function renderReader(story,copy,id){
+function renderReader(story,copy,id,progress){
   const article = $('#readerArticle');
   if(!article) return;
 
@@ -272,7 +272,8 @@ async function initStory(){
 
     if(document.body.classList.contains('story-reader-page')){
       const id = new URLSearchParams(location.search).get('id') || '';
-      renderReader(data.story || [],data.copy || {},id);
+      const progress = await adventureProgress();
+      renderReader(data.story || [],data.copy || {},id,progress);
     }
   }catch(err){
     console.error('故事資料載入失敗',err);
