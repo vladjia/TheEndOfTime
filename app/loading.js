@@ -4,7 +4,7 @@ window.SiteLoading = (() => {
   let frameTimer = null;
   let frameIndex = 0;
   const FRAME_COUNT = 8;
-  const FRAME_MS = 185;
+  const FRAME_MS = 86;
 
   function getEl(){
     return document.getElementById('siteLoading');
@@ -61,7 +61,7 @@ window.SiteLoading = (() => {
 
     setTimeout(()=>{
       el.remove();
-    }, 420);
+    }, 220);
   }
 
   function setText(text){

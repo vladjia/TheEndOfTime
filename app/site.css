@@ -3132,3 +3132,149 @@ body.scrollbar-dragging .time-scrollbar-thumb{
     width:168px!important;
   }
 }
+
+
+/* ============================================================
+   v0.16.6 · IMAGE VIEWER / LOADING RHYTHM
+   ============================================================ */
+
+.loading-frame-image{
+  image-rendering:auto;
+}
+
+.site-loading.is-leaving{
+  transition:opacity .20s ease,visibility .20s ease!important;
+}
+
+/* 圖片可鑑賞提示，不做厚框。 */
+main img[data-viewer="true"],
+main img:not(.brand-logo):not(.loading-frame-image){
+  cursor:zoom-in;
+}
+
+/* 開啟鑑賞模式時鎖定頁面背景。 */
+body.image-viewer-open{
+  overflow:hidden!important;
+}
+
+body.image-viewer-open .time-scrollbar{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+.image-viewer{
+  position:fixed;
+  inset:0;
+  z-index:200000;
+  display:grid;
+  grid-template-rows:1fr auto;
+  background:rgba(3,4,7,.94);
+  backdrop-filter:blur(8px);
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .18s ease,visibility .18s ease;
+  touch-action:none;
+}
+
+.image-viewer.is-open{
+  visibility:visible;
+}
+
+.image-viewer.is-ready{
+  opacity:1;
+}
+
+.image-viewer-stage{
+  min-width:0;
+  min-height:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  cursor:grab;
+  touch-action:none;
+}
+
+.image-viewer-stage.is-dragging{
+  cursor:grabbing;
+}
+
+.image-viewer-image{
+  display:block;
+  max-width:92vw;
+  max-height:84vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  user-select:none;
+  -webkit-user-drag:none;
+  transform-origin:center center;
+  will-change:transform;
+  transition:transform .06s linear;
+}
+
+.image-viewer-stage.is-dragging .image-viewer-image{
+  transition:none;
+}
+
+.image-viewer-close{
+  position:absolute;
+  top:18px;
+  right:22px;
+  z-index:3;
+  width:46px;
+  height:46px;
+  border:1px solid rgba(230,233,238,.18);
+  border-radius:50%;
+  background:rgba(9,11,15,.48);
+  color:rgba(240,242,245,.84);
+  font:300 30px/1 var(--font-body);
+  cursor:pointer;
+}
+
+.image-viewer-close:hover{
+  border-color:rgba(177,34,54,.58);
+  color:#fff;
+}
+
+.image-viewer-footer{
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:10px 72px 14px;
+  color:rgba(226,230,235,.56);
+  font-size:12px;
+  letter-spacing:.08em;
+  pointer-events:none;
+}
+
+.image-viewer-caption{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.image-viewer-zoom{
+  flex:0 0 auto;
+  color:rgba(183,48,66,.82);
+  font-variant-numeric:tabular-nums;
+}
+
+@media(max-width:640px){
+  .image-viewer-close{
+    top:12px;
+    right:12px;
+    width:44px;
+    height:44px;
+  }
+
+  .image-viewer-image{
+    max-width:96vw;
+    max-height:78vh;
+  }
+
+  .image-viewer-footer{
+    padding:8px 18px 14px;
+  }
+}

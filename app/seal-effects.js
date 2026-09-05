@@ -11,10 +11,28 @@ window.EndOfTimeSealEffects = (() => {
     el.classList.remove('seal-active');
   }
 
+  function ensureButterflies(el, characterId){
+    if(characterId !== 'anyanxiu' || el.querySelector('.seal-butterflies')) return;
+
+    const group = document.createElement('span');
+    group.className = 'seal-butterflies';
+    group.setAttribute('aria-hidden','true');
+
+    for(let i=1;i<=3;i++){
+      const butterfly = document.createElement('span');
+      butterfly.className = `seal-butterfly seal-butterfly-${i}`;
+      butterfly.innerHTML = '<i class="seal-wing seal-wing-left"></i><b class="seal-butterfly-body"></b><i class="seal-wing seal-wing-right"></i>';
+      group.appendChild(butterfly);
+    }
+
+    el.appendChild(group);
+  }
+
   function bind(el, characterId){
     if(!el || !KNOWN.has(characterId)) return;
 
     el.dataset.character = characterId;
+    ensureButterflies(el, characterId);
 
     if(el.dataset.sealBound === '1') return;
     el.dataset.sealBound = '1';

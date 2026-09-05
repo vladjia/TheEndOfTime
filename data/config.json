@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.5",
+  "version": "0.16.6",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -114,13 +114,15 @@
       "confirmationRequired": true
     },
     "customScrollbar": "wider + inset",
-    "loadingOverlay": "8-frame sequence",
+    "loadingOverlay": "8-frame sequence @ 86ms/frame",
     "scrollbarAvoidsTopbar": true,
     "loadingFailSafeMs": 12000,
     "characterSealEffects": "app/seal-effects.js",
     "homepageImageFeather": true,
     "homepageImageSource": "Drive 圖片表：網站素材，優先首頁/封面/主視覺",
     "homepageHeroActions": false,
-    "homepageImageResolver": "broad filename/path scoring + Drive id fallback"
+    "homepageImageResolver": "exact homepage filename first + multi-key URL + automatic candidate retry",
+    "imageViewer": "wheel zoom + drag + double click + pinch",
+    "anyanxiuSeal": "3 real butterfly silhouettes with flapping wings"
   }
 }

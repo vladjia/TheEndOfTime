@@ -111,6 +111,8 @@ function mountImage(target, item, alt){
   img.src = item.url;
   img.alt = alt;
   img.loading = 'eager';
+  img.dataset.viewer = 'true';
+  img.dataset.viewerLabel = alt || '';
 
   img.addEventListener('load', () => {
     const w = img.naturalWidth || 0;

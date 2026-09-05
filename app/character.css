@@ -967,3 +967,53 @@ body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark{
 .character-visual[data-character="anyanxiu"].seal-active .character-visual-mark::after{
   animation:characterButterflyTwo 1.12s ease-out .06s 1 forwards!important;
 }
+
+
+/* v0.16.6 · 角色詳細頁同步使用真正黑蝶 */
+.character-visual[data-character="anyanxiu"] .seal-butterfly-1{
+  right:20%;
+  top:31%;
+}
+.character-visual[data-character="anyanxiu"] .seal-butterfly-2{
+  right:13%;
+  top:40%;
+  transform:scale(.82);
+}
+.character-visual[data-character="anyanxiu"] .seal-butterfly-3{
+  right:27%;
+  top:47%;
+  transform:scale(.64);
+}
+
+.character-visual[data-character="anyanxiu"].seal-active .seal-butterfly-1{
+  animation:detailButterflyOne 1.18s cubic-bezier(.2,.68,.3,1) 1 forwards;
+}
+.character-visual[data-character="anyanxiu"].seal-active .seal-butterfly-2{
+  animation:detailButterflyTwo 1.30s cubic-bezier(.2,.68,.3,1) .05s 1 forwards;
+}
+.character-visual[data-character="anyanxiu"].seal-active .seal-butterfly-3{
+  animation:detailButterflyThree 1.08s cubic-bezier(.2,.68,.3,1) .12s 1 forwards;
+}
+
+.character-visual[data-character="anyanxiu"].seal-active .seal-wing-left{
+  animation:wingLeft .22s ease-in-out 5 alternate;
+}
+.character-visual[data-character="anyanxiu"].seal-active .seal-wing-right{
+  animation:wingRight .22s ease-in-out 5 alternate;
+}
+
+@keyframes detailButterflyOne{
+  0%{opacity:0;transform:translate(0,0) rotate(-4deg) scale(.72)}
+  17%{opacity:.92}
+  100%{opacity:0;transform:translate(-66px,-72px) rotate(-32deg) scale(1.12)}
+}
+@keyframes detailButterflyTwo{
+  0%{opacity:0;transform:translate(0,0) rotate(12deg) scale(.60)}
+  18%{opacity:.86}
+  100%{opacity:0;transform:translate(46px,-88px) rotate(36deg) scale(.98)}
+}
+@keyframes detailButterflyThree{
+  0%{opacity:0;transform:translate(0,0) rotate(-16deg) scale(.50)}
+  20%{opacity:.78}
+  100%{opacity:0;transform:translate(-92px,-42px) rotate(-48deg) scale(.84)}
+}

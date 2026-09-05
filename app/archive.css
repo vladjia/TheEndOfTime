@@ -322,3 +322,128 @@
   20%{opacity:.88}
   100%{opacity:0;transform:translate(-66px,-44px) rotate(-48deg) scale(1.12)}
 }
+
+
+/* ============================================================
+   v0.16.6 · 安言修「蝶」重製
+   不再使用菱形 pseudo-element，改成三隻有左右翼與蝶身的黑蝶。
+   ============================================================ */
+
+/* 關閉舊的假蝶 */
+.archive-character[data-character="anyanxiu"] .archive-character-seal::before,
+.archive-character[data-character="anyanxiu"] .archive-character-seal::after,
+.archive-character[data-character="anyanxiu"].seal-active::after{
+  display:none!important;
+  content:none!important;
+}
+
+.seal-butterflies{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  overflow:visible;
+}
+
+.seal-butterfly{
+  position:absolute;
+  width:22px;
+  height:16px;
+  opacity:0;
+  transform-origin:center center;
+}
+
+.seal-wing{
+  position:absolute;
+  top:2px;
+  width:10px;
+  height:12px;
+  background:#030307;
+  border:1px solid rgba(215,218,225,.28);
+  box-shadow:
+    0 0 5px rgba(86,53,117,.26),
+    0 0 8px rgba(126,30,64,.12);
+}
+
+.seal-wing-left{
+  left:1px;
+  border-radius:90% 18% 78% 28%;
+  transform-origin:100% 66%;
+  transform:rotate(-27deg);
+}
+
+.seal-wing-right{
+  right:1px;
+  border-radius:18% 90% 28% 78%;
+  transform-origin:0 66%;
+  transform:rotate(27deg);
+}
+
+.seal-butterfly-body{
+  position:absolute;
+  left:50%;
+  top:5px;
+  width:2px;
+  height:9px;
+  margin-left:-1px;
+  border-radius:2px;
+  background:rgba(225,228,235,.42);
+  box-shadow:0 0 3px rgba(0,0,0,.8);
+}
+
+.archive-character[data-character="anyanxiu"] .seal-butterfly-1{
+  right:48px;
+  bottom:46px;
+}
+.archive-character[data-character="anyanxiu"] .seal-butterfly-2{
+  right:30px;
+  bottom:58px;
+  transform:scale(.78);
+}
+.archive-character[data-character="anyanxiu"] .seal-butterfly-3{
+  right:72px;
+  bottom:32px;
+  transform:scale(.62);
+}
+
+.archive-character[data-character="anyanxiu"].seal-active .seal-butterfly-1{
+  animation:realButterflyOne 1.14s cubic-bezier(.2,.68,.3,1) 1 forwards;
+}
+.archive-character[data-character="anyanxiu"].seal-active .seal-butterfly-2{
+  animation:realButterflyTwo 1.28s cubic-bezier(.2,.68,.3,1) .06s 1 forwards;
+}
+.archive-character[data-character="anyanxiu"].seal-active .seal-butterfly-3{
+  animation:realButterflyThree 1.06s cubic-bezier(.2,.68,.3,1) .14s 1 forwards;
+}
+
+.archive-character[data-character="anyanxiu"].seal-active .seal-wing-left{
+  animation:wingLeft .22s ease-in-out 5 alternate;
+}
+.archive-character[data-character="anyanxiu"].seal-active .seal-wing-right{
+  animation:wingRight .22s ease-in-out 5 alternate;
+}
+
+@keyframes wingLeft{
+  from{transform:rotate(-15deg) scaleX(.76)}
+  to{transform:rotate(-43deg) scaleX(1)}
+}
+@keyframes wingRight{
+  from{transform:rotate(15deg) scaleX(.76)}
+  to{transform:rotate(43deg) scaleX(1)}
+}
+
+@keyframes realButterflyOne{
+  0%{opacity:0;transform:translate(0,0) rotate(-8deg) scale(.68)}
+  16%{opacity:.95}
+  100%{opacity:0;transform:translate(-58px,-62px) rotate(-28deg) scale(1.08)}
+}
+@keyframes realButterflyTwo{
+  0%{opacity:0;transform:translate(0,0) rotate(14deg) scale(.58)}
+  18%{opacity:.88}
+  100%{opacity:0;transform:translate(34px,-76px) rotate(38deg) scale(.92)}
+}
+@keyframes realButterflyThree{
+  0%{opacity:0;transform:translate(0,0) rotate(-18deg) scale(.50)}
+  20%{opacity:.80}
+  100%{opacity:0;transform:translate(-82px,-36px) rotate(-52deg) scale(.82)}
+}
