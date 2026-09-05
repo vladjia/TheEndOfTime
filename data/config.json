@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "INTERACTIVE STORY / JOURNEY",
-  "version": "0.18.0",
+  "version": "0.18.2",
   "defaultMode": "adventure",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -152,7 +152,9 @@
       "timeMarkRealm": true,
       "timeMarkSerial": true,
       "relayCode": true,
-      "resonanceGrowth": true
+      "resonanceGrowth": true,
+      "animatedTimeMarkButton": true,
+      "firstTimeGuide": true
     }
   }
 }

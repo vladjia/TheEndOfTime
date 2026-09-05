@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="../app/character.css?v=0.17.3">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png?v=0.17.3">
   <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=0.17.3">
-<link rel="stylesheet" href="../app/adventure.css?v=0.18.0">
+<link rel="stylesheet" href="../app/adventure.css?v=0.18.2">
 </head>
 
 <body class="character-page character-jiashi" data-character="jiashi" data-character-name="家式">
@@ -55,7 +55,12 @@
     <a class="is-current" href="index.html" data-copy="site.nav.characters">角色</a>
     <a href="../world/index.html" data-copy="site.nav.world">世界觀</a>
   </nav>
-  <button class="nav-status time-mark-toggle" type="button" data-time-mark>時印</button>
+  <button class="nav-status time-mark-toggle time-mark-orb" type="button" data-time-mark aria-label="開啟時印" title="時印">
+    <span class="time-mark-orb-media" aria-hidden="true">
+      <video class="time-mark-orb-video" src="../assets/video/time-mark-shard.mp4?v=0.18.2" autoplay muted loop playsinline preload="metadata"></video>
+    </span>
+    <span class="time-mark-orb-label">時印</span>
+  </button>
 </header>
 
 <main class="character-main">
@@ -168,6 +173,6 @@
 <script src="../app/seal-effects.js?v=0.17.3" defer></script>
 <script src="../app/character-page.js?v=0.17.3" defer></script>
 <script src="../app/image-viewer.js?v=0.17.3" defer></script>
-<script src="../app/adventure.js?v=0.18.1" defer></script>
+<script src="../app/adventure.js?v=0.18.2" defer></script>
 </body>
 </html>

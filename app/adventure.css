@@ -649,3 +649,145 @@ html.adventure-critical .reader-complete-btn{
   .time-forge-preview{min-height:315px}
   .time-shard{width:170px;height:270px}
 }
+
+
+/* ============================================================
+   v0.18.2 · 動態時印石片 / 首次導覽
+   ============================================================ */
+.time-mark-orb{
+  position:relative;
+  display:inline-flex!important;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  padding:4px 9px 4px 5px!important;
+  border:1px solid rgba(20,22,26,.16)!important;
+  background:rgba(13,15,19,.94)!important;
+  color:#f5f6f7!important;
+  overflow:hidden;
+  isolation:isolate;
+  box-shadow:0 4px 14px rgba(0,0,0,.12);
+  transition:transform .18s ease,box-shadow .24s ease,border-color .24s ease;
+}
+.time-mark-orb:hover{
+  transform:translateY(-1px);
+  border-color:rgba(127,21,33,.45)!important;
+  box-shadow:0 6px 20px rgba(0,0,0,.17),0 0 18px rgba(127,21,33,.10);
+}
+.time-mark-orb-media{
+  position:relative;
+  display:block;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  overflow:hidden;
+  background:#000;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    0 0 12px rgba(193,143,255,.16);
+}
+.time-mark-orb-video{
+  position:absolute;
+  width:62px;
+  height:62px;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  object-fit:cover;
+  mix-blend-mode:screen;
+  filter:saturate(.95) brightness(1.08);
+  animation:timeMarkOrbBreathe 3.8s ease-in-out infinite;
+  pointer-events:none;
+}
+.time-mark-orb::after{
+  content:"";
+  position:absolute;
+  inset:-30%;
+  z-index:-1;
+  background:conic-gradient(
+    from 0deg,
+    rgba(255,255,255,0),
+    rgba(181,128,255,.20),
+    rgba(255,122,169,.16),
+    rgba(105,204,255,.14),
+    rgba(255,255,255,0)
+  );
+  filter:blur(12px);
+  animation:timeMarkOrbAura 5.6s linear infinite;
+}
+.time-mark-orb-label{
+  font-size:12px;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+@keyframes timeMarkOrbBreathe{
+  0%,100%{opacity:.72;filter:saturate(.90) brightness(.92)}
+  50%{opacity:1;filter:saturate(1.18) brightness(1.34)}
+}
+@keyframes timeMarkOrbAura{to{transform:rotate(360deg)}}
+
+.time-mark-first-guide{
+  position:fixed;
+  top:86px;
+  right:22px;
+  z-index:11950;
+  width:min(360px,calc(100vw - 28px));
+  opacity:0;
+  transform:translateY(-8px);
+  pointer-events:none;
+  transition:.22s ease;
+}
+.time-mark-first-guide.is-visible{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+}
+.time-mark-guide-card{
+  position:relative;
+  padding:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 85% 0%,rgba(127,21,33,.16),transparent 36%),
+    rgba(8,10,14,.97);
+  color:#f1f2f4;
+  box-shadow:0 22px 60px rgba(0,0,0,.42);
+}
+.time-mark-guide-card strong{
+  display:block;
+  margin-top:9px;
+  font-size:18px;
+  line-height:1.55;
+}
+.time-mark-guide-card p{
+  margin-top:9px;
+  color:rgba(238,240,244,.62);
+  line-height:1.75;
+  font-size:13px;
+}
+.time-mark-guide-arrow{
+  position:absolute;
+  top:-8px;
+  right:28px;
+  width:15px;
+  height:15px;
+  transform:rotate(45deg);
+  background:rgba(8,10,14,.97);
+  border-left:1px solid rgba(255,255,255,.12);
+  border-top:1px solid rgba(255,255,255,.12);
+}
+@media(max-width:720px){
+  .time-mark-orb{
+    padding:3px 5px!important;
+    gap:0;
+  }
+  .time-mark-orb-media{width:31px;height:31px}
+  .time-mark-orb-label{display:none}
+  .time-mark-first-guide{
+    top:78px;
+    right:12px;
+    width:min(340px,calc(100vw - 24px));
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .time-mark-orb-video,.time-mark-orb::after{animation:none!important}
+}

@@ -3,6 +3,7 @@ window.EndOfTimeAdventure = (() => {
   const STORAGE_KEY = 'theEndOfTime.timeMark';
   const SESSION_PROMPT_KEY = 'theEndOfTime.timeMark.prompted';
   const SAVED_CARD_KEY = 'theEndOfTime.timeMark.savedCardToken';
+  const FIRST_GUIDE_KEY = 'theEndOfTime.timeMark.firstGuideSeen';
   let configCache = null;
   let progressCache = null;
   let ensurePromise = null;
@@ -611,6 +612,49 @@ window.EndOfTimeAdventure = (() => {
     };
   }
 
+  function hasSeenFirstGuide(){
+    return localStorage.getItem(FIRST_GUIDE_KEY)==='1';
+  }
+
+  function markFirstGuideSeen(){
+    localStorage.setItem(FIRST_GUIDE_KEY,'1');
+  }
+
+  function showFirstTimeGuide(){
+    if(hasSeenFirstGuide()) return;
+    const btn=document.querySelector('[data-time-mark]');
+    if(!btn) return;
+
+    const guide=document.createElement('div');
+    guide.className='time-mark-first-guide';
+    guide.innerHTML=`
+      <div class="time-mark-guide-card" role="dialog" aria-modal="false" aria-label="時印導覽">
+        <div class="time-mark-kicker">TIME MARK</div>
+        <strong>讓時間記住你走過的路。</strong>
+        <p>時印會保存你讀過的故事、遇見的人，以及已理解的世界。</p>
+        <div class="time-mark-actions">
+          <button class="time-mark-btn primary" type="button" data-guide-open>留下我的時印</button>
+          <button class="time-mark-btn" type="button" data-guide-skip>先進入看看</button>
+        </div>
+      </div>
+      <span class="time-mark-guide-arrow" aria-hidden="true"></span>
+    `;
+    document.body.appendChild(guide);
+    requestAnimationFrame(()=>guide.classList.add('is-visible'));
+
+    const close=()=>{
+      markFirstGuideSeen();
+      guide.classList.remove('is-visible');
+      setTimeout(()=>guide.remove(),220);
+    };
+
+    guide.querySelector('[data-guide-open]').onclick=()=>{
+      close();
+      setTimeout(()=>openManager(),250);
+    };
+    guide.querySelector('[data-guide-skip]').onclick=close;
+  }
+
   function bindButtons(){
     document.querySelectorAll('[data-time-mark]').forEach(btn=>{
       if(btn.dataset.timeMarkBound==='1') return;
@@ -637,6 +681,23 @@ window.EndOfTimeAdventure = (() => {
     bindButtons();
     await ensure();
     maybePromptReturning();
+
+    if(document.body.classList.contains('home-page')){
+      const showGuide=()=>{
+        if(!hasSeenFirstGuide()) setTimeout(showFirstTimeGuide,700);
+      };
+      if(document.body.classList.contains('pre-entry')){
+        const ob=new MutationObserver(()=>{
+          if(!document.body.classList.contains('pre-entry')){
+            ob.disconnect();
+            showGuide();
+          }
+        });
+        ob.observe(document.body,{attributes:true,attributeFilter:['class']});
+      }else{
+        showGuide();
+      }
+    }
   }
 
   document.addEventListener('DOMContentLoaded',init);
