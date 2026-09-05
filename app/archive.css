@@ -271,3 +271,54 @@
   18%{opacity:.85}
   100%{opacity:0;transform:translate(-28px,-56px) rotate(30deg) scale(.96)}
 }
+
+
+/* ============================================================
+   v0.16.5 · 蝶印記可視化修正
+   黑蝶本體保留黑色，但加入冷白 / 紫紅邊緣，避免消失在黑底。
+   ============================================================ */
+.archive-character[data-character="anyanxiu"].seal-active .archive-character-seal{
+  color:rgba(255,255,255,.085);
+  text-shadow:
+    0 0 14px rgba(89,61,118,.16),
+    0 0 26px rgba(137,28,56,.10);
+  transform:scale(1.025);
+}
+
+.archive-character[data-character="anyanxiu"] .archive-character-seal::before,
+.archive-character[data-character="anyanxiu"] .archive-character-seal::after{
+  width:18px!important;
+  height:12px!important;
+  background:
+    radial-gradient(ellipse at 28% 50%,#020205 0 52%,transparent 55%),
+    radial-gradient(ellipse at 72% 50%,#020205 0 52%,transparent 55%)!important;
+  border-radius:0!important;
+  outline:1px solid rgba(220,222,229,.24);
+  box-shadow:
+    0 0 0 1px rgba(85,53,118,.20),
+    0 0 8px rgba(118,33,75,.24);
+  filter:none!important;
+}
+
+.archive-character[data-character="anyanxiu"].seal-active::after{
+  content:"";
+  position:absolute;
+  right:62px;
+  bottom:82px;
+  width:13px;
+  height:9px;
+  z-index:3;
+  opacity:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 28% 50%,#020205 0 52%,transparent 55%),
+    radial-gradient(ellipse at 72% 50%,#020205 0 52%,transparent 55%);
+  outline:1px solid rgba(220,222,229,.18);
+  animation:archiveButterflyThree 1.18s ease-out .12s 1 forwards;
+}
+
+@keyframes archiveButterflyThree{
+  0%{opacity:0;transform:translate(0,0) rotate(10deg) scale(.55)}
+  20%{opacity:.88}
+  100%{opacity:0;transform:translate(-66px,-44px) rotate(-48deg) scale(1.12)}
+}

@@ -1,4 +1,4 @@
-# 《時盡》網站核心 v0.16.4
+# 《時盡》網站核心 v0.16.5
 
 這一版開始把「網站核心」與「內容資料」分離，方便未來持續改版。
 
@@ -993,3 +993,39 @@ Logo 在既有高度內放大到接近滿版。
 - 蝶：黑蝶飛舞
 
 本版不需要修改 GAS，也不需要新的 Migration。
+
+
+## v0.16.5：網站 BUG 整合修正版
+
+本版一次處理：
+1. `/characters/` 蝶君「蝶」印記特效在黑底不可見
+2. 首頁主視覺抓不到
+3. 首頁同畫面重複三組「故事 / 角色 / 世界觀」
+4. 自訂滾軸太細、太貼右側
+5. Loading 改為 `loading-01.png`～`loading-08.png` 逐幀動畫
+
+### 首頁主視覺
+前端不再只依賴 `group=網站素材`。
+會同時評分檔名、路徑、大分類、對象、用途分類中的：
+`首頁 / 封面 / 主視覺 / hero / cover`
+
+若 GAS 有 File ID 但 `圖片網址` 空白，前端也會自動組出 Drive thumbnail URL。
+
+### 首頁導覽
+保留：
+- Topbar 主導覽
+- 首頁下方三個作品入口
+
+移除 Hero 內第二組三顆按鈕。
+
+### Loading
+固定品牌資產改為：
+- `assets/images/loading/loading-01.png`
+- ...
+- `assets/images/loading/loading-08.png`
+
+由 `loading.js` 逐幀切換，185ms / frame。
+舊四層 loading 架構停止使用。
+
+### GAS
+本版不需要修改 GAS，也不需要 Migration。

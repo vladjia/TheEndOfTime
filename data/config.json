@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.4",
+  "version": "0.16.5",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -92,10 +92,18 @@
     "brandLogo": "assets/images/the-end-of-time-logo.png",
     "favicon": "assets/images/favicon.png",
     "loadingHourglass": {
-      "frame": "assets/images/loading/hourglass-frame.png",
-      "sandTop": "assets/images/loading/sand-top.png",
-      "sandBottom": "assets/images/loading/sand-bottom.png",
-      "sandStream": "assets/images/loading/sand-stream.png"
+      "type": "frame-sequence",
+      "frames": [
+        "assets/images/loading/loading-01.png",
+        "assets/images/loading/loading-02.png",
+        "assets/images/loading/loading-03.png",
+        "assets/images/loading/loading-04.png",
+        "assets/images/loading/loading-05.png",
+        "assets/images/loading/loading-06.png",
+        "assets/images/loading/loading-07.png",
+        "assets/images/loading/loading-08.png"
+      ],
+      "frameMs": 185
     }
   },
   "features": {
@@ -105,12 +113,14 @@
       "full": "?type=full",
       "confirmationRequired": true
     },
-    "customScrollbar": "app/scrollbar.js",
-    "loadingOverlay": "app/loading.js",
+    "customScrollbar": "wider + inset",
+    "loadingOverlay": "8-frame sequence",
     "scrollbarAvoidsTopbar": true,
     "loadingFailSafeMs": 12000,
     "characterSealEffects": "app/seal-effects.js",
     "homepageImageFeather": true,
-    "homepageImageSource": "Drive 圖片表：網站素材，優先首頁/封面/主視覺"
+    "homepageImageSource": "Drive 圖片表：網站素材，優先首頁/封面/主視覺",
+    "homepageHeroActions": false,
+    "homepageImageResolver": "broad filename/path scoring + Drive id fallback"
   }
 }

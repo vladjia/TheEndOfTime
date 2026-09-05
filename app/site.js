@@ -171,88 +171,87 @@ function renderHero(site,copy){
 }
 
 function renderImages(images){
-  const list = images || [];
-  const norm = value => String(value || '')
-    .trim()
-    .replace(/\s+/g,'')
-    .replace(/[・·．.＿_\-–—]/g,'')
-    .toLowerCase();
-
-  const isWebsiteAsset = x =>
-    norm(x.group).includes('網站素材') ||
-    norm(x.path).includes('網站素材');
-
-  const scoreCover = x => {
-    if(!isWebsiteAsset(x)) return -999;
-
-    const name = norm(x.name);
-    const target = norm(x.target);
-    const category = norm(x.category);
-    const path = norm(x.path);
-    const hay = `${name}|${target}|${category}|${path}`;
-
-    let score = 0;
-    if(hay.includes('首頁')) score += 100;
-    if(hay.includes('封面')) score += 80;
-    if(hay.includes('主視覺')) score += 60;
-    if(hay.includes('hero')) score += 50;
-    if(hay.includes('cover')) score += 50;
-
-    if(hay.includes('logo')) score -= 150;
-    if(hay.includes('favicon')) score -= 150;
-    if(hay.includes('ogcover')) score -= 120;
-    if(hay.includes('loading')) score -= 120;
-
-    return score;
-  };
-
-  const websiteAssets = list
-    .map(x => ({x,score:scoreCover(x)}))
-    .filter(item => item.score > -999)
-    .sort((a,b) => b.score - a.score);
-
-  const homepageCover =
-    websiteAssets.find(item => item.score > 0)?.x ||
-    (websiteAssets.length === 1 ? websiteAssets[0].x : null);
-
-  const fallback =
-    list.find(x =>
-      norm(x.group) === norm('人物') &&
-      norm(x.target).includes(norm('家式')) &&
-      norm(x.category).includes(norm('主視覺')) &&
-      norm(x.name).includes(norm('常體'))
-    ) ||
-    list.find(x =>
-      norm(x.group) === norm('人物') &&
-      norm(x.target).includes(norm('家式')) &&
-      norm(x.category).includes(norm('主視覺'))
-    );
-
-  const source = homepageCover || fallback;
+  const list = Array.isArray(images) ? images : [];
   const hero = $('#hero');
   if(!hero) return;
 
+  const norm = value => String(value || '')
+    .trim()
+    .replace(/\s+/g,'')
+    .replace(/[・·．.＿_\-–—\/\\]/g,'')
+    .toLowerCase();
+
+  const imageUrl = x => {
+    const direct = String(x?.url || '').trim();
+    if(direct) return direct;
+    const id = String(x?.id || '').trim();
+    return id ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w2000` : '';
+  };
+
+  const score = x => {
+    const name = norm(x?.name);
+    const group = norm(x?.group);
+    const target = norm(x?.target);
+    const category = norm(x?.category);
+    const path = norm(x?.path);
+    const hay = `${name}|${group}|${target}|${category}|${path}`;
+
+    let s = 0;
+
+    // 首頁素材：不要過度依賴資料夾解析結果，只要檔名/路徑明確即可。
+    if(hay.includes('網站素材')) s += 80;
+    if(hay.includes('首頁')) s += 150;
+    if(hay.includes('封面')) s += 110;
+    if(hay.includes('主視覺')) s += 90;
+    if(hay.includes('hero')) s += 70;
+    if(hay.includes('cover')) s += 70;
+
+    // 固定品牌資產不可誤抓。
+    if(hay.includes('logo')) s -= 400;
+    if(hay.includes('favicon')) s -= 400;
+    if(hay.includes('ogcover')) s -= 300;
+    if(hay.includes('loading')) s -= 300;
+
+    // 家式人物主視覺作最後備援。
+    if(hay.includes('人物') && hay.includes('家式') && hay.includes('主視覺')) s += 30;
+
+    if(!imageUrl(x)) s -= 1000;
+    return s;
+  };
+
+  const ranked = list
+    .map(x => ({x,score:score(x)}))
+    .filter(item => item.score > 0)
+    .sort((a,b) => b.score - a.score);
+
+  const source = ranked[0]?.x || null;
+
+  hero.querySelectorAll('img').forEach(el=>el.remove());
+  hero.classList.remove('image-loaded','image-error');
   hero.classList.toggle('has-image',Boolean(source));
 
   if(!source){
-    console.warn('首頁主視覺：圖片表中找不到可用圖片。');
+    console.warn('首頁主視覺：GAS images 中找不到首頁素材。', list);
+    hero.classList.add('image-error');
     return;
   }
 
-  hero.querySelectorAll('img').forEach(el=>el.remove());
-
+  const src = imageUrl(source);
   const img = document.createElement('img');
-  img.src = source.url;
-  img.alt = homepageCover ? '時盡｜首頁主視覺' : '時盡・家式';
+  img.src = src;
+  img.alt = '時盡｜首頁主視覺';
   img.decoding = 'async';
+  img.loading = 'eager';
+  img.referrerPolicy = 'no-referrer';
 
   img.addEventListener('load',()=>{
     hero.classList.add('image-loaded');
+    hero.classList.remove('image-error');
   },{once:true});
 
   img.addEventListener('error',()=>{
-    console.warn('首頁主視覺載入失敗：',source);
-    hero.classList.remove('image-loaded');
+    console.warn('首頁主視覺載入失敗：',source,src);
+    hero.classList.add('image-error');
   },{once:true});
 
   hero.appendChild(img);
