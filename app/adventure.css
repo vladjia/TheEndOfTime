@@ -302,3 +302,93 @@
     animation-delay:0s!important;
   }
 }
+
+
+/* ============================================================
+   v0.17.3 · 時印穿越影片 / 時間裂縫轉場
+   ============================================================ */
+.time-rift-video-scene{
+  position:relative;
+  min-height:min(68vh,620px);
+  overflow:hidden;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  background:#000;
+  isolation:isolate;
+}
+.time-rift-video-scene::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  background:
+    linear-gradient(to bottom,rgba(0,0,0,.05) 0%,rgba(0,0,0,.03) 48%,rgba(0,0,0,.72) 100%),
+    radial-gradient(circle at center,transparent 34%,rgba(0,0,0,.38) 82%,rgba(0,0,0,.78) 100%);
+  pointer-events:none;
+}
+.time-rift-video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center center;
+  background:#000;
+  opacity:0;
+  transform:scale(.985);
+  animation:timeRiftVideoIn .5s ease forwards;
+}
+.time-rift-video-vignette{
+  position:absolute;
+  inset:-1px;
+  z-index:3;
+  box-shadow:inset 0 0 90px 38px #000;
+  pointer-events:none;
+}
+.time-rift-video-copy{
+  position:relative;
+  z-index:4;
+  width:min(520px,calc(100% - 44px));
+  padding:0 0 30px;
+  text-align:center;
+  text-shadow:0 2px 18px rgba(0,0,0,.95);
+  animation:timeRiftCopyIn .6s .28s both;
+}
+.time-rift-video-copy h2{
+  margin:9px 0 7px;
+  font-size:clamp(22px,3.2vw,32px);
+  font-weight:560;
+  letter-spacing:.035em;
+}
+.time-rift-video-copy p{
+  margin:0;
+  color:rgba(238,240,244,.68);
+  line-height:1.75;
+}
+.time-mark-overlay.is-rift-finishing .time-rift-video-scene{
+  animation:timeRiftSceneOut .42s ease forwards;
+}
+@keyframes timeRiftVideoIn{
+  from{opacity:0;transform:scale(.985)}
+  to{opacity:1;transform:scale(1)}
+}
+@keyframes timeRiftCopyIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+@keyframes timeRiftSceneOut{
+  to{opacity:0;filter:blur(4px);transform:scale(1.015)}
+}
+@media(max-width:720px){
+  .time-rift-video-scene{min-height:min(62vh,520px)}
+  .time-rift-video{object-fit:cover;transform:scale(1.02)}
+  .time-rift-video-copy{padding-bottom:24px}
+  .time-rift-video-vignette{box-shadow:inset 0 0 58px 24px #000}
+}
+@media(prefers-reduced-motion:reduce){
+  .time-rift-video,.time-rift-video-copy,.time-mark-overlay.is-rift-finishing .time-rift-video-scene{
+    animation-duration:.01ms!important;
+    animation-delay:0s!important;
+  }
+}

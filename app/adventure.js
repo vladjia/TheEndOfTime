@@ -252,30 +252,49 @@ window.EndOfTimeAdventure = (() => {
     }
   }
 
-  function showRestoreSuccess(data){
-    const hasLast = !!data?.player?.lastStoryId;
-    const o = overlay(`
-      <div class="time-mark-restore-scene" role="status" aria-live="polite">
-        <div class="time-rift" aria-hidden="true">
-          <span class="time-rift-ring r1"></span>
-          <span class="time-rift-ring r2"></span>
-          <span class="time-rift-ring r3"></span>
-          <span class="time-rift-core"></span>
+  function playTimeRiftTransition({mode='restore', onDone}={}){
+    const copy = mode==='resume'
+      ? {kicker:'TIME RIFT', title:'正在回到時間裂縫……', text:'時間正在重新接合。'}
+      : {kicker:'TIME MARK RESTORED', title:'正在尋回你的時間痕跡……', text:'散落的時間正在重新聚合。'};
+
+    const o=overlay(`
+      <div class="time-rift-video-scene" role="status" aria-live="polite">
+        <video class="time-rift-video" muted playsinline preload="auto" aria-hidden="true">
+          <source src="${rootPrefix()}assets/video/time-rift.mp4?v=0.17.3" type="video/mp4">
+        </video>
+        <div class="time-rift-video-vignette" aria-hidden="true"></div>
+        <div class="time-rift-video-copy">
+          <div class="time-mark-kicker">${copy.kicker}</div>
+          <h2>${copy.title}</h2>
+          <p>${copy.text}</p>
         </div>
-        <div class="time-mark-kicker">TIME MARK RESTORED</div>
-        <h2>時印已復歸。</h2>
-        <p>${hasLast ? '散落的時間痕跡正在重新聚合。' : '這枚時印的痕跡已經回到你的手中。'}</p>
       </div>
     `);
 
-    setTimeout(()=>{
-      if(!document.body.contains(o)) return;
-      if(hasLast){
-        showResumePrompt(data,true);
-      }else{
-        showNoRiftPrompt(data);
+    const video=o.querySelector('.time-rift-video');
+    let finished=false;
+    const finish=()=>{
+      if(finished) return;
+      finished=true;
+      o.classList.add('is-rift-finishing');
+      setTimeout(()=>{ if(typeof onDone==='function') onDone(); }, 420);
+    };
+    const timer=setTimeout(finish,4600);
+    video.addEventListener('ended',()=>{ clearTimeout(timer); finish(); },{once:true});
+    video.addEventListener('error',()=>{ clearTimeout(timer); finish(); },{once:true});
+    video.play().catch(()=>{ clearTimeout(timer); finish(); });
+    return o;
+  }
+
+  function showRestoreSuccess(data){
+    const hasLast = !!data?.player?.lastStoryId;
+    playTimeRiftTransition({
+      mode:'restore',
+      onDone:()=>{
+        if(hasLast) showResumePrompt(data,true);
+        else showNoRiftPrompt(data);
       }
-    }, 1450);
+    });
   }
 
   function showNoRiftPrompt(data){
@@ -337,7 +356,7 @@ window.EndOfTimeAdventure = (() => {
     `);
     o.querySelector('[data-resume]').onclick=()=>{
       sessionStorage.setItem('theEndOfTime.resumeScroll',String(last.scroll||0));
-      location.href=last.url;
+      playTimeRiftTransition({mode:'resume',onDone:()=>{ location.href=last.url; }});
     };
   }
 
@@ -366,5 +385,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, completeStory, touchPosition, openManager, showResumePrompt, showRestoreSuccess, copyToken, downloadTimeMarkCard};
+  return {token, ensure, load, restore, completeStory, touchPosition, openManager, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard};
 })();

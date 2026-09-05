@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "INTERACTIVE STORY / JOURNEY",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "defaultMode": "adventure",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -144,7 +144,9 @@
       "preventDoubleClick": true,
       "ensureRequestDeduplication": true,
       "restoreSuccessEffect": true,
-      "noRiftFallbackPrompt": true
+      "noRiftFallbackPrompt": true,
+      "timeRiftVideo": "assets/video/time-rift.mp4",
+      "timeRiftVideoTransition": true
     }
   }
 }
