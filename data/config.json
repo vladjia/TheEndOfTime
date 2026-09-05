@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.9",
+  "version": "0.16.10",
   "defaultMode": "public",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -130,6 +130,13 @@
     "characterVisual": "frame follows natural image ratio + full bleed + stronger feather + seal overlay",
     "favicon": "normalized + cache-busted on all pages",
     "homepageHero": "homepage-only Drive cover + text overlay",
-    "homepageLegacyRendererGuard": true
+    "homepageLegacyRendererGuard": true,
+    "homepageHeroFinal": {
+      "x": "52%",
+      "y": "0%",
+      "height": "600px",
+      "scale": 1.1
+    },
+    "heroTuner": false
   }
 }

@@ -3442,7 +3442,7 @@ body.site-entered .hero-art.hero-art-reveal{
   position:relative!important;
   display:block!important;
   width:min(1360px,calc(100% - 64px))!important;
-  min-height:520px!important;
+  min-height:690px!important;
   margin:0 auto!important;
   padding:0!important;
   overflow:hidden!important;
@@ -3515,7 +3515,7 @@ body.site-entered .hero-art.hero-art-reveal{
   position:relative!important;
   z-index:4!important;
   width:min(600px,52%)!important;
-  min-height:520px!important;
+  min-height:690px!important;
   display:flex!important;
   flex-direction:column!important;
   justify-content:center!important;
@@ -3614,14 +3614,14 @@ body.site-entered .hero-art.hero-art-reveal{
 
 
 /* ============================================================
-   v0.16.9b · HOMEPAGE HERO TUNER
-   這四個變數就是首頁圖定位的最終參數。
+   v0.16.10 · HOMEPAGE HERO FINAL LOCK
+   正式定案：首頁 Hero 定位值
    ============================================================ */
 :root{
-  --home-hero-x: 52%;
-  --home-hero-y: 8%;
-  --home-hero-height: 520px;
-  --home-hero-scale: 1;
+  --home-hero-x:52%;
+  --home-hero-y:0%;
+  --home-hero-height:600px;
+  --home-hero-scale:1.1;
 }
 
 .hero.hero-cover{
@@ -3637,111 +3637,4 @@ body.site-entered .hero-art.hero-art-reveal{
   object-position:var(--home-hero-x) var(--home-hero-y)!important;
   transform:scale(var(--home-hero-scale))!important;
   transform-origin:center center!important;
-}
-
-/* 開發用定位器 */
-.hero-tuner{
-  position:fixed;
-  right:18px;
-  bottom:18px;
-  z-index:400000;
-  width:310px;
-  padding:14px;
-  border:1px solid rgba(176,38,60,.38);
-  border-radius:12px;
-  background:rgba(6,8,12,.95);
-  box-shadow:0 18px 48px rgba(0,0,0,.45);
-  color:rgba(238,240,244,.90);
-  backdrop-filter:blur(12px);
-  font:13px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-
-.hero-tuner.is-collapsed .hero-tuner-body{
-  display:none;
-}
-
-.hero-tuner-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.hero-tuner-title{
-  font-weight:700;
-  letter-spacing:.04em;
-}
-
-.hero-tuner-toggle{
-  width:30px;
-  height:30px;
-  border:1px solid rgba(230,233,238,.16);
-  border-radius:8px;
-  background:rgba(255,255,255,.03);
-  color:rgba(238,240,244,.80);
-  cursor:pointer;
-}
-
-.hero-tuner-row{
-  display:grid;
-  grid-template-columns:72px 1fr 58px;
-  align-items:center;
-  gap:8px;
-  margin:9px 0;
-}
-
-.hero-tuner-row label{
-  color:rgba(220,224,230,.68);
-}
-
-.hero-tuner-row input[type="range"]{
-  width:100%;
-  accent-color:#a72a45;
-}
-
-.hero-tuner-value{
-  text-align:right;
-  font-variant-numeric:tabular-nums;
-  color:rgba(242,244,247,.88);
-}
-
-.hero-tuner-code{
-  margin:12px 0 0;
-  padding:10px;
-  border-radius:8px;
-  background:rgba(255,255,255,.035);
-  color:rgba(213,217,223,.76);
-  font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-
-.hero-tuner-actions{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-
-.hero-tuner-actions button{
-  flex:1;
-  min-height:34px;
-  border:1px solid rgba(230,233,238,.14);
-  border-radius:8px;
-  background:rgba(255,255,255,.035);
-  color:rgba(238,240,244,.82);
-  cursor:pointer;
-}
-
-.hero-tuner-actions button:hover{
-  border-color:rgba(176,38,60,.42);
-}
-
-@media(max-width:640px){
-  .hero-tuner{
-    left:12px;
-    right:12px;
-    bottom:12px;
-    width:auto;
-  }
 }
