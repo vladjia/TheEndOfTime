@@ -256,8 +256,7 @@ function renderImages(images){
 }
 
 async function loadFromGas(endpoint){
-  const mode = window.EndOfTimeMode?.current?.() || 'public';
-  const url = `${endpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`;
+  const url = `${endpoint}?type=public&_=${Date.now()}`;
   const data = await getJSON(url);
   if(!data?.ok) throw new Error('GAS API returned ok=false');
   return data;
@@ -301,7 +300,6 @@ async function init(){
   }
 
   renderHero(data.site,data.copy || {});
-  window.EndOfTimeMode?.bind?.(data.copy || {});
   renderStoryPreview(data.story || [],data.copy || {});
   renderCharacters(data.characters,data.copy || {});
   renderWorld(data.world);

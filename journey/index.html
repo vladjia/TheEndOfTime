@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>旅程｜時盡</title>
+<meta name="description" content="查看你在《時盡》留下的旅程。">
+<meta name="theme-color" content="#07090d">
+<link rel="stylesheet" href="../app/site.css?v=0.17.0">
+<link rel="stylesheet" href="../app/adventure.css?v=0.17.0">
+<link rel="icon" type="image/png" href="../assets/images/favicon.png?v=0.17.0">
+</head>
+<body class="journey-page">
+<div class="site-loading" id="siteLoading" aria-live="polite" aria-busy="true">
+  <div class="site-loading-inner"><div class="loading-hourglass loading-frame-sequence" aria-hidden="true"><img class="loading-frame-image" src="../assets/images/loading/loading-01.png" data-loading-base="../assets/images/loading/" alt=""></div><div class="site-loading-title">時盡</div><div class="site-loading-text">尋回時印中……</div></div>
+</div>
+<header class="topbar topbar-v3">
+  <a class="brand brand-v3" href="../index.html?skipWelcome=1"><img class="brand-logo" src="../assets/images/the-end-of-time-logo.png" alt="時盡 Logo"><strong>時盡</strong></a>
+  <nav class="main-nav"><a href="../story/index.html">故事</a><a href="../characters/index.html">角色</a><a href="../world/index.html">世界觀</a></nav>
+  <button class="nav-status time-mark-toggle" type="button" data-time-mark>時印</button>
+</header>
+<main class="journey-shell">
+  <header class="journey-head"><small>YOUR JOURNEY</small><h1>旅程</h1><p>你所讀過的故事、遇見的人，以及已經理解的世界，都會留在這枚時印裡。你尚未理解的事，不會出現在這裡。</p></header>
+  <section class="journey-current">
+    <small>上一次，你停在——</small>
+    <h2 id="journeyCurrentTitle">讀取中……</h2>
+    <p id="journeyCurrentDesc"></p>
+    <div class="journey-actions"><a id="journeyResume" class="time-mark-btn primary" hidden>回到時間裂縫</a><a class="time-mark-btn" href="../story/index.html">繼續探索</a></div>
+  </section>
+  <section class="journey-grid">
+    <article class="journey-card"><small>STORY</small><strong id="journeyStoryCount">0</strong><p>已被時印記下的故事。</p></article>
+    <article class="journey-card"><small>CHARACTER</small><strong id="journeyCharCount">0</strong><p>你目前真正認識的人。</p></article>
+    <article class="journey-card"><small>WORLD</small><strong id="journeyWorldCount">0</strong><p>你已經理解的世界碎片。</p></article>
+  </section>
+  <section class="journey-list">
+    <div class="journey-list-row"><small>你的時印</small><div><span id="journeyTimeMark"></span><div class="journey-actions"><button class="time-mark-btn" id="journeyCopy">複製時印</button><button class="time-mark-btn" id="journeyCard">儲存時印卡</button></div></div></div>
+    <div id="journeyRecords"></div>
+  </section>
+</main>
+<footer class="footer">《時盡》YOUR JOURNEY · Core v0.17.0</footer>
+<script src="../app/loading.js?v=0.17.0" defer></script>
+<script src="../app/scrollbar.js?v=0.17.0" defer></script>
+<script src="../app/adventure.js?v=0.17.0" defer></script>
+<script src="../app/journey.js?v=0.17.0" defer></script>
+</body>
+</html>

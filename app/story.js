@@ -54,12 +54,32 @@ function paragraphs(text){
     .filter(Boolean);
 }
 
-function renderToc(story,copy){
+
+async function adventureProgress(){
+  try{
+    await window.EndOfTimeAdventure?.ensure?.();
+    return await window.EndOfTimeAdventure?.load?.();
+  }catch(_){ return null; }
+}
+
+function visibleStoryRows(rows, progress){
+  if(!progress?.exists) return rows.slice(0,1);
+  const read = new Set(progress.storyRead || []);
+  let nextAdded = false;
+  return rows.filter(item=>{
+    if(read.has(item.id)) return true;
+    if(!nextAdded && item.isReadable){ nextAdded=true; return true; }
+    return false;
+  });
+}
+
+function renderToc(story,copy,progress){
   const box = $('#storyToc');
   if(!box) return;
 
-  const rows = [...(story || [])]
+  const allRows = [...(story || [])]
     .sort((a,b)=>(Number(a.order)||9999)-(Number(b.order)||9999));
+  const rows = visibleStoryRows(allRows, progress);
 
   const chapters = new Map();
 
@@ -128,8 +148,9 @@ function renderReader(story,copy,id){
   const article = $('#readerArticle');
   if(!article) return;
 
-  const rows = [...(story || [])]
+  const allRows = [...(story || [])]
     .sort((a,b)=>(Number(a.order)||9999)-(Number(b.order)||9999));
+  const rows = visibleStoryRows(allRows, progress);
 
   const index = rows.findIndex(x=>x.id===id);
   const item = rows[index];
@@ -177,7 +198,40 @@ function renderReader(story,copy,id){
           return `<p>${p.replace(/\n/g,'<br>')}</p>`;
         }).join('')}
       </div>
+      <div class="reader-complete-wrap">
+        <button class="reader-complete-btn" id="completeStoryButton" type="button">繼續前行</button>
+        <div class="reader-complete-hint" id="completeStoryHint">讀完此節後，將這一刻留在時印中。</div>
+      </div>
     `;
+
+    const completeBtn = $('#completeStoryButton');
+    if(completeBtn){
+      completeBtn.addEventListener('click', async()=>{
+        completeBtn.disabled=true;
+        completeBtn.textContent='記錄此刻中……';
+        try{
+          const result = await window.EndOfTimeAdventure.completeStory(item.id,{lastUrl:location.href,lastScroll:window.scrollY});
+          completeBtn.textContent='此刻已被記下';
+          const hint=$('#completeStoryHint');
+          if(hint) hint.textContent = result?.unlocks?.length ? '你的旅程出現了新的變化。' : '時印已記下這段旅程。';
+          const nextReadable = rows.slice(index+1).find(x=>x.isReadable);
+          if(nextReadable){
+            setTimeout(()=>{ location.href=readerHref(nextReadable); },650);
+          }else{
+            setTimeout(()=>{ location.href='../journey/index.html'; },650);
+          }
+        }catch(err){
+          completeBtn.disabled=false;completeBtn.textContent='繼續前行';
+          const hint=$('#completeStoryHint');if(hint)hint.textContent=err.message||'這一刻暫時無法寫入時印。';
+        }
+      });
+    }
+
+    const resumeScroll = sessionStorage.getItem('theEndOfTime.resumeScroll');
+    if(resumeScroll){ sessionStorage.removeItem('theEndOfTime.resumeScroll'); requestAnimationFrame(()=>scrollTo({top:Number(resumeScroll)||0,behavior:'instant'})); }
+    let touchTimer;
+    const syncPos=()=>{clearTimeout(touchTimer);touchTimer=setTimeout(()=>window.EndOfTimeAdventure?.touchPosition?.(item.id),700)};
+    addEventListener('scroll',syncPos,{passive:true});
   }
 
   const prev = rows.slice(0,index).reverse().find(x=>x.isReadable);
@@ -207,13 +261,12 @@ async function initStory(){
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
-    const mode = window.EndOfTimeMode?.current?.() || 'public';
-    const data = await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`);
+    const data = await getJSON(`${endpoint}?type=public&_=${Date.now()}`);
     applyCopy(data.copy || {});
-    window.EndOfTimeMode?.bind?.(data.copy || {});
 
     if(document.body.classList.contains('story-index-page')){
-      renderToc(data.story || [],data.copy || {});
+      const progress = await adventureProgress();
+      renderToc(data.story || [],data.copy || {},progress);
       return;
     }
 

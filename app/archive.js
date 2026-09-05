@@ -76,17 +76,23 @@ function renderWorld(items){
 async function initArchive(){
   try{
     const config=await getJSON('../data/config.json');
-    const mode=window.EndOfTimeMode?.current?.() || 'public';
-    const data=await getJSON(`${config.gasApiEndpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`);
+    const data=await getJSON(`${config.gasApiEndpoint}?type=public&_=${Date.now()}`);
 
     applyCopy(data.copy || {});
-    window.EndOfTimeMode?.bind?.(data.copy || {});
+    let progress=null;
+    try{ progress=await window.EndOfTimeAdventure?.load?.(); }catch(_){}
 
     if(document.body.classList.contains('archive-characters')){
-      renderCharacters(data.characters || []);
+      const unlocked=new Set(progress?.charactersUnlocked||[]);
+      const chars=(data.characters||[]).filter(c=>unlocked.has(c.id));
+      renderCharacters(chars);
+      if(!chars.length){document.querySelector('#characterArchiveGrid').innerHTML='<div class="story-empty">你還沒有在旅途中真正認識任何人。</div>'}
     }
     if(document.body.classList.contains('archive-world')){
-      renderWorld(data.world || []);
+      const unlocked=new Set(progress?.worldUnlocked||[]);
+      const worlds=(data.world||[]).filter(w=>unlocked.has(w.id));
+      renderWorld(worlds);
+      if(!worlds.length){document.querySelector('#worldArchiveList').innerHTML='<div class="story-empty">你尚未理解這個世界留下的真相。</div>'}
     }
   }catch(err){
     console.error(err);

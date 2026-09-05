@@ -1,0 +1,158 @@
+
+/* ============================================================
+   《時盡》Adventure UI v0.17.0
+   時印 / 回到時間裂縫 / 旅程紀錄
+   ============================================================ */
+:root{
+  --adventure-panel: rgba(10,12,16,.96);
+  --adventure-line: rgba(255,255,255,.12);
+  --adventure-muted: rgba(238,240,244,.62);
+  --adventure-red: #7f1521;
+}
+
+.time-mark-toggle{
+  cursor:pointer;
+}
+
+.time-mark-overlay{
+  position:fixed;
+  inset:0;
+  z-index:12000;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(12px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease;
+}
+.time-mark-overlay.is-open{opacity:1;pointer-events:auto}
+.time-mark-panel{
+  width:min(560px,100%);
+  border:1px solid var(--adventure-line);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(127,21,33,.20),transparent 42%),
+    var(--adventure-panel);
+  box-shadow:0 32px 80px rgba(0,0,0,.55);
+  padding:34px;
+  position:relative;
+}
+.time-mark-panel::before{
+  content:"";
+  position:absolute;
+  left:34px;right:34px;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,38,53,.8),transparent);
+}
+.time-mark-kicker{
+  font-size:11px;
+  letter-spacing:.22em;
+  color:var(--adventure-muted);
+  text-transform:uppercase;
+}
+.time-mark-panel h2{
+  margin:10px 0 12px;
+  font-size:clamp(25px,4vw,34px);
+  font-weight:600;
+}
+.time-mark-panel p{color:var(--adventure-muted);line-height:1.85;margin:0}
+.time-mark-code{
+  margin:22px 0 8px;
+  padding:15px 16px;
+  border:1px solid rgba(255,255,255,.11);
+  background:rgba(255,255,255,.035);
+  font:600 16px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.08em;
+  word-break:break-all;
+  user-select:all;
+}
+.time-mark-note{font-size:12px;color:rgba(255,255,255,.44)!important}
+.time-mark-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.time-mark-btn{
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.04);
+  color:#f3f4f6;
+  padding:11px 15px;
+  cursor:pointer;
+  font:inherit;
+}
+.time-mark-btn:hover{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08)}
+.time-mark-btn.primary{background:#e9ebee;color:#101216;border-color:#e9ebee}
+.time-mark-btn.danger{border-color:rgba(168,38,53,.55);color:#f3d9dc}
+.time-mark-field{margin-top:18px}
+.time-mark-field label{display:block;margin-bottom:7px;font-size:12px;color:var(--adventure-muted)}
+.time-mark-field input{
+  width:100%;box-sizing:border-box;padding:13px 14px;
+  border:1px solid rgba(255,255,255,.15);background:#080a0d;color:#fff;
+  font:600 15px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.time-mark-status{min-height:1.5em;margin-top:10px!important;font-size:12px}
+
+.resume-place{
+  margin:20px 0 4px;
+  padding:18px 0 2px;
+  border-top:1px solid var(--adventure-line);
+}
+.resume-place small{display:block;color:var(--adventure-muted);margin-bottom:8px}
+.resume-place strong{display:block;font-size:20px;font-weight:550;line-height:1.55}
+.resume-place span{display:block;margin-top:4px;color:rgba(255,255,255,.58)}
+
+.adventure-toast{
+  position:fixed;right:24px;bottom:24px;z-index:13000;
+  padding:12px 16px;border:1px solid rgba(255,255,255,.13);
+  background:rgba(9,11,14,.94);color:#eef0f3;
+  box-shadow:0 16px 42px rgba(0,0,0,.42);
+  opacity:0;transform:translateY(8px);pointer-events:none;
+  transition:.2s ease;
+  font-size:13px;
+}
+.adventure-toast.is-visible{opacity:1;transform:none}
+
+.reader-complete-wrap{
+  margin:58px auto 10px;
+  padding-top:30px;
+  border-top:1px solid rgba(255,255,255,.08);
+  text-align:center;
+}
+.reader-complete-btn{
+  min-width:220px;padding:14px 24px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.045);color:#f4f5f6;
+  font:inherit;letter-spacing:.08em;cursor:pointer;
+}
+.reader-complete-btn:hover{background:#f1f2f4;color:#111318}
+.reader-complete-btn[disabled]{opacity:.45;cursor:default}
+.reader-complete-hint{margin-top:10px;font-size:12px;color:rgba(255,255,255,.42)}
+
+.journey-shell{width:min(1080px,calc(100% - 40px));margin:0 auto;padding:76px 0 90px}
+.journey-head{max-width:760px;margin-bottom:42px}
+.journey-head small{letter-spacing:.2em;color:rgba(255,255,255,.48)}
+.journey-head h1{font-size:clamp(38px,7vw,72px);margin:8px 0 12px;font-weight:500}
+.journey-head p{color:rgba(255,255,255,.60);line-height:1.9}
+.journey-current{
+  padding:26px;border:1px solid rgba(255,255,255,.1);
+  background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(127,21,33,.07));
+  margin-bottom:24px;
+}
+.journey-current small{color:rgba(255,255,255,.5)}
+.journey-current h2{margin:8px 0 4px;font-size:26px;font-weight:520}
+.journey-current p{margin:0;color:rgba(255,255,255,.58)}
+.journey-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.journey-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.journey-card{border:1px solid rgba(255,255,255,.09);padding:22px;min-height:160px;background:rgba(255,255,255,.02)}
+.journey-card small{color:rgba(255,255,255,.45);letter-spacing:.15em}
+.journey-card strong{display:block;font-size:34px;margin:10px 0}
+.journey-card p{margin:0;color:rgba(255,255,255,.55);line-height:1.7}
+.journey-list{margin-top:30px;border-top:1px solid rgba(255,255,255,.08)}
+.journey-list-row{display:grid;grid-template-columns:150px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.journey-list-row small{color:rgba(255,255,255,.42)}
+.journey-empty{padding:34px 0;color:rgba(255,255,255,.42)}
+.adventure-hidden{display:none!important}
+
+@media(max-width:720px){
+  .time-mark-panel{padding:26px 20px}
+  .journey-shell{width:min(100% - 28px,1080px);padding-top:52px}
+  .journey-grid{grid-template-columns:1fr}
+  .journey-list-row{grid-template-columns:1fr;gap:4px}
+  .adventure-toast{left:14px;right:14px;bottom:14px;text-align:center}
+}

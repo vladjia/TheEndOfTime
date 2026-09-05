@@ -450,7 +450,6 @@ async function initCharacterPage(){
     if(!char) throw new Error(`Character not found: ${id}`);
 
     applyCopy(data.copy || {});
-    window.EndOfTimeMode?.bind?.(data.copy || {});
     renderCharacter(char,id,data);
     window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
 

@@ -1,8 +1,8 @@
 {
   "siteTitle": "時盡",
-  "siteSubtitle": "WORLD / CHARACTER ARCHIVE",
-  "version": "0.16.10",
-  "defaultMode": "public",
+  "siteSubtitle": "INTERACTIVE STORY / JOURNEY",
+  "version": "0.17.0",
+  "defaultMode": "adventure",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
   "fonts": {
@@ -109,12 +109,6 @@
     "butterflyEffect": "assets/images/effects/black-butterflies.svg"
   },
   "features": {
-    "contentMode": {
-      "storageKey": "theEndOfTime.contentMode",
-      "public": "?type=public",
-      "full": "?type=full",
-      "confirmationRequired": true
-    },
     "customScrollbar": "wider + inset",
     "loadingOverlay": "126px + 3.85s smooth half-turn + 165ms frames",
     "scrollbarAvoidsTopbar": true,
@@ -137,6 +131,15 @@
       "height": "600px",
       "scale": 1.1
     },
-    "heroTuner": false
+    "heroTuner": false,
+    "adventureMode": {
+      "storageKey": "theEndOfTime.timeMark",
+      "name": "時印",
+      "crossDeviceRestore": true,
+      "resumePrompt": "回到上次停留的時間裂縫",
+      "journeyPage": "journey/index.html",
+      "spoilerToggle": false,
+      "unlockPrinciple": "讀到哪裡，世界就存在到哪裡。"
+    }
   }
 }
