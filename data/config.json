@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "INTERACTIVE STORY / JOURNEY",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "defaultMode": "adventure",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -142,7 +142,9 @@
       "unlockPrinciple": "讀到哪裡，世界就存在到哪裡。",
       "timeMarkLoading": true,
       "preventDoubleClick": true,
-      "ensureRequestDeduplication": true
+      "ensureRequestDeduplication": true,
+      "restoreSuccessEffect": true,
+      "noRiftFallbackPrompt": true
     }
   }
 }

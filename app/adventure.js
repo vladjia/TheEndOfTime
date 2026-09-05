@@ -233,7 +233,7 @@ window.EndOfTimeAdventure = (() => {
         try{
           const data=await restore(field.value);
           closeOverlay();
-          showResumePrompt(data,true);
+          showRestoreSuccess(data);
         }catch(err){
           status.textContent=err.message||'時印確認失敗。';
           restoreBtn.disabled=false;
@@ -252,6 +252,50 @@ window.EndOfTimeAdventure = (() => {
     }
   }
 
+  function showRestoreSuccess(data){
+    const hasLast = !!data?.player?.lastStoryId;
+    const o = overlay(`
+      <div class="time-mark-restore-scene" role="status" aria-live="polite">
+        <div class="time-rift" aria-hidden="true">
+          <span class="time-rift-ring r1"></span>
+          <span class="time-rift-ring r2"></span>
+          <span class="time-rift-ring r3"></span>
+          <span class="time-rift-core"></span>
+        </div>
+        <div class="time-mark-kicker">TIME MARK RESTORED</div>
+        <h2>時印已復歸。</h2>
+        <p>${hasLast ? '散落的時間痕跡正在重新聚合。' : '這枚時印的痕跡已經回到你的手中。'}</p>
+      </div>
+    `);
+
+    setTimeout(()=>{
+      if(!document.body.contains(o)) return;
+      if(hasLast){
+        showResumePrompt(data,true);
+      }else{
+        showNoRiftPrompt(data);
+      }
+    }, 1450);
+  }
+
+  function showNoRiftPrompt(data){
+    overlay(`
+      <div class="time-mark-kicker">TIME MARK VERIFIED</div>
+      <h2>時印已確認。</h2>
+      <p>這枚時印目前還沒有留下可返回的時間裂縫。</p>
+      <div class="resume-place no-rift">
+        <small>目前的旅程</small>
+        <strong>尚未完成第一段故事</strong>
+        <span>當你完成一節故事後，離開的位置就會被時印記下。</span>
+      </div>
+      <div class="time-mark-actions">
+        <a class="time-mark-btn primary" href="${rootPrefix()}journey/index.html">查看目前旅程</a>
+        <a class="time-mark-btn" href="${rootPrefix()}story/index.html">開始前行</a>
+        <button class="time-mark-btn" type="button" data-time-close>回到《時盡》入口</button>
+      </div>
+    `);
+  }
+
   function friendlyLast(data){
     const s=data?.lastStory || {};
     return {
@@ -268,7 +312,11 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function showResumePrompt(data, force=false){
-    if(!data?.exists || !data?.player?.lastStoryId) return;
+    if(!data?.exists) return;
+    if(!data?.player?.lastStoryId){
+      if(force) showNoRiftPrompt(data);
+      return;
+    }
     if(!force && sessionStorage.getItem(SESSION_PROMPT_KEY)==='1') return;
     sessionStorage.setItem(SESSION_PROMPT_KEY,'1');
     const last=friendlyLast(data);
@@ -318,5 +366,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, completeStory, touchPosition, openManager, showResumePrompt, copyToken, downloadTimeMarkCard};
+  return {token, ensure, load, restore, completeStory, touchPosition, openManager, showResumePrompt, showRestoreSuccess, copyToken, downloadTimeMarkCard};
 })();

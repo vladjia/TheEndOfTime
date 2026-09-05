@@ -205,3 +205,100 @@
 @media(prefers-reduced-motion:reduce){
   .time-mark-loading-ring{animation-duration:1.8s}
 }
+
+
+/* ============================================================
+   v0.17.2 · 時印復歸 / 時間裂縫演出
+   ============================================================ */
+.time-mark-restore-scene{
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.time-mark-restore-scene h2{
+  margin-top:14px;
+  animation:timeMarkTextIn .65s .28s both;
+}
+.time-mark-restore-scene p{
+  animation:timeMarkTextIn .65s .45s both;
+}
+
+.time-rift{
+  position:relative;
+  width:128px;
+  height:128px;
+  margin:0 auto 24px;
+  display:grid;
+  place-items:center;
+  filter:drop-shadow(0 0 22px rgba(127,21,33,.36));
+}
+.time-rift-ring,
+.time-rift-core{
+  position:absolute;
+  border-radius:50%;
+}
+.time-rift-ring{
+  inset:16px;
+  border:1px solid rgba(235,238,242,.58);
+  box-shadow:
+    0 0 14px rgba(255,255,255,.12),
+    inset 0 0 18px rgba(127,21,33,.22);
+}
+.time-rift-ring.r1{
+  animation:riftOpen1 1.15s cubic-bezier(.2,.8,.2,1) both;
+}
+.time-rift-ring.r2{
+  inset:26px 10px;
+  border-color:rgba(153,34,49,.72);
+  transform:rotate(28deg);
+  animation:riftOpen2 1.25s cubic-bezier(.2,.8,.2,1) both;
+}
+.time-rift-ring.r3{
+  inset:10px 30px;
+  border-color:rgba(255,255,255,.28);
+  transform:rotate(-36deg);
+  animation:riftOpen3 1.35s cubic-bezier(.2,.8,.2,1) both;
+}
+.time-rift-core{
+  width:10px;
+  height:10px;
+  background:#f0f1f3;
+  box-shadow:
+    0 0 18px rgba(255,255,255,.9),
+    0 0 42px rgba(127,21,33,.85);
+  animation:riftCore 1.15s ease-out both;
+}
+.resume-place.no-rift strong{
+  font-size:18px;
+}
+@keyframes riftOpen1{
+  0%{opacity:0;transform:scale(.15) rotate(0deg)}
+  35%{opacity:1}
+  100%{opacity:.9;transform:scale(1.08) rotate(190deg)}
+}
+@keyframes riftOpen2{
+  0%{opacity:0;transform:scale(.1) rotate(28deg)}
+  100%{opacity:.72;transform:scale(1) rotate(-240deg)}
+}
+@keyframes riftOpen3{
+  0%{opacity:0;transform:scale(.2) rotate(-36deg)}
+  100%{opacity:.6;transform:scale(1.12) rotate(255deg)}
+}
+@keyframes riftCore{
+  0%{opacity:0;transform:scale(.2)}
+  45%{opacity:1;transform:scale(2.8)}
+  100%{opacity:.75;transform:scale(1)}
+}
+@keyframes timeMarkTextIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .time-rift-ring,.time-rift-core,.time-mark-restore-scene h2,.time-mark-restore-scene p{
+    animation-duration:.01ms!important;
+    animation-delay:0s!important;
+  }
+}
