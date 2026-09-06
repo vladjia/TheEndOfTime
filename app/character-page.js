@@ -418,6 +418,58 @@ function renderWeapon(char,id,weapons,images){
   });
 }
 
+function parseZeroSteps(summary){
+  const raw=String(summary||'')
+    .replace(/[→＞>]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  const steps=[];
+  const rx=/([1-8])[\.．、]\s*([\s\S]*?)(?=(?:\s+[1-8][\.．、]\s*)|$)/g;
+  let m;
+  while((m=rx.exec(raw))){
+    const text=String(m[2]||'').trim();
+    if(text) steps.push({no:Number(m[1]),text});
+  }
+
+  if(steps.length>=4) return steps.slice(0,8);
+
+  // 舊資料若沒有完整編號，仍保留可讀性
+  return String(summary||'')
+    .split(/[→＞>]/)
+    .map(x=>x.trim())
+    .filter(Boolean)
+    .slice(0,8)
+    .map((text,i)=>({no:i+1,text}));
+}
+
+function zeroStepTitle(no,text){
+  const t=norm(text);
+  if(no===1 || t.includes('家皇歿式')) return '宣告';
+  if(no===2 || t.includes('彈指') || t.includes('停止')) return '止刻';
+  if(no===3 || t.includes('斷界移影') || t.includes('時空裂隙')) return '斷界移影';
+  if(no===4 || t.includes('髮色') || t.includes('白髮') || t.includes('銀白')) return '零式轉化';
+  if(no===5 || t.includes('再現') || t.includes('身後')) return '再現';
+  if(no===6 || t.includes('血迴') || t.includes('絕脈') || t.includes('取命')) return '取命';
+  if(no===7 || t.includes('收攏') || t.includes('收扇')) return '收扇';
+  if(no===8 || t.includes('時間恢復') || t.includes('恢復')) return '時間恢復';
+  return `第 ${String(no).padStart(2,'0')} 段`;
+}
+
+function zeroPhaseMarkup(summary){
+  const text=String(summary||'');
+  const known=['黑髮染霜','銀白向上蔓延','全髮化白'];
+  const found=known.filter(x=>text.includes(x));
+  if(!found.length) return '';
+  return `
+    <div class="zero-phase-strip" aria-label="零式髮色轉化">
+      ${found.map((x,i)=>`
+        ${i?'<i aria-hidden="true">→</i>':''}
+        <span>${x}</span>
+      `).join('')}
+    </div>`;
+}
+
 function renderSpecialVisual(char,id,skills,images){
   const section = $('#specialVisualSection');
   if(!section) return;
@@ -433,29 +485,92 @@ function renderSpecialVisual(char,id,skills,images){
     return;
   }
 
-  section.hidden = false;
-  setText('#specialVisualTitle',zero.name);
-  setText('#specialVisualDescription',zero.publicDescription);
+  const steps=parseZeroSteps(zero.effectSummary);
+  const image=bestCharacterImage(images,id,{zero:true});
+  const video=bestCharacterVideo(images,id,{zero:true});
 
-  const steps = String(zero.effectSummary || '')
-    .split(/[→＞>]/)
-    .map(x=>x.trim())
-    .filter(Boolean);
+  section.hidden=false;
+  section.classList.add('zero-dossier');
 
-  const stepBox = $('#specialVisualSteps');
-  if(stepBox){
-    stepBox.innerHTML = steps.map((step,i)=>
-      `${i ? '<i>→</i>' : ''}<span>${step}</span>`
-    ).join('');
-  }
+  section.innerHTML=`
+    <div class="zero-dossier-head">
+      <div class="character-section-title">
+        <small>04 / SIGNATURE</small>
+        <h2>${zero.name || '家皇歿式・零'}</h2>
+      </div>
+      <p class="zero-dossier-lead">${zero.publicDescription || ''}</p>
+      <div class="zero-four-laws" aria-label="零式四系">
+        <span>時字訣</span>
+        <span>空字訣</span>
+        <span>血字訣</span>
+        <span>弒字訣</span>
+      </div>
+    </div>
 
-  const image = bestCharacterImage(images,id,{zero:true});
-  const video = bestCharacterVideo(images,id,{zero:true});
-  const visual = $('#zeroVisual');
+    <div class="zero-dossier-grid">
+      <div class="zero-flow-panel">
+        <div class="zero-subhead">
+          <small>SEQUENCE</small>
+          <h3>施展流程</h3>
+        </div>
+        <ol class="zero-timeline">
+          ${steps.map(step=>`
+            <li class="zero-timeline-step ${step.no===4?'is-transform':''}">
+              <div class="zero-step-index">${String(step.no).padStart(2,'0')}</div>
+              <div class="zero-step-body">
+                <h4>${zeroStepTitle(step.no,step.text)}</h4>
+                <p>${step.text}</p>
+                ${step.no===4 ? zeroPhaseMarkup(zero.effectSummary) : ''}
+              </div>
+            </li>
+          `).join('')}
+        </ol>
+      </div>
 
+      <aside class="zero-observe-panel">
+        <div class="zero-subhead">
+          <small>COMBAT RECORD</small>
+          <h3>戰鬥影像</h3>
+        </div>
+        <div class="zero-media-frame" id="zeroVisual">
+          <div class="zero-label" id="zeroLabel">${video?'家皇歿式・零｜戰鬥影像':'零式・主視覺'}</div>
+          <div class="zero-glyph" aria-hidden="true">零</div>
+        </div>
+
+        <div class="zero-state-card">
+          <div class="zero-state-title">零式狀態</div>
+          <dl class="zero-state-grid">
+            <div><dt>狀態</dt><dd>零式</dd></div>
+            <div><dt>髮色</dt><dd>銀白</dd></div>
+            <div><dt>最長維持</dt><dd>半個時辰</dd></div>
+            <div><dt>解除後</dt><dd>時蝕</dd></div>
+          </dl>
+          <p>時蝕期間，時間、位移、極速、恢復與血族異能皆停止運作。</p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="zero-rule-panel">
+      <div class="zero-subhead">
+        <small>CORE RULE</small>
+        <h3>核心規則</h3>
+      </div>
+      <div class="zero-rule-grid">
+        <article>
+          <span>01</span>
+          <p>零式發動時，家式仍維持黑髮與深紅漸層。真正的白髮轉化，是在「斷界移影」穿越時空裂隙的過程中完成。</p>
+        </article>
+        <article>
+          <span>02</span>
+          <p>「血迴」與「絕脈」並非額外停頓施招，而是在斷喉之後完成零式最後的取命流程。</p>
+        </article>
+      </div>
+    </div>
+  `;
+
+  const visual=$('#zeroVisual');
   if(video){
-    setText('#zeroLabel','家皇歿式・零｜戰鬥影像');
-    const mounted = mountVideo(
+    const mounted=mountVideo(
       visual,
       video,
       `${char.fullName || char.name}｜家皇歿式・零`,
@@ -464,8 +579,7 @@ function renderSpecialVisual(char,id,skills,images){
     if(!mounted && image){
       mountImage(visual,image,`${char.fullName || char.name} 零式主視覺`);
     }
-  }else{
-    setText('#zeroLabel','零式・主視覺');
+  }else if(image){
     mountImage(visual,image,`${char.fullName || char.name} 零式主視覺`);
   }
 }
