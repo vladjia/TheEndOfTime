@@ -811,8 +811,11 @@ window.EndOfTimeAdventure = (() => {
         <span class="time-shard-light" aria-hidden="true"></span>
         <span class="time-shard-refraction refraction-a" aria-hidden="true"></span>
         <span class="time-shard-refraction refraction-b" aria-hidden="true"></span>
-        <span class="time-shard-orbit-glow orbit-a" aria-hidden="true"></span>
-        <span class="time-shard-orbit-glow orbit-b" aria-hidden="true"></span>
+        <span class="time-shard-orbit-field" aria-hidden="true">
+          <i class="time-shard-orbit-particle p1"></i>
+          <i class="time-shard-orbit-particle p2"></i>
+          <i class="time-shard-orbit-particle p3"></i>
+        </span>
         <span class="time-shard-crack crack-a" aria-hidden="true"></span>
         <span class="time-shard-crack crack-b" aria-hidden="true"></span>
         <div class="time-shard-inscription">

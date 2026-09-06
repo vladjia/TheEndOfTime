@@ -2155,3 +2155,141 @@ body:not(.pre-entry) .time-mark-orb{
     opacity:.14!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.28 · 母石環繞光點修正
+   v0.18.27 的 Alpha-mask 環繞層在部分瀏覽器會只留下暗色大輪廓，
+   本版改成真正獨立的微光點繞石片緩慢運行。
+   ============================================================ */
+
+/* 舊版 mask 環繞層完全停用，避免暗色巨大石片影子。 */
+.time-shard-orbit-glow{
+  display:none!important;
+}
+
+/* 光點軌道本身完全透明、沒有框。 */
+.time-shard-orbit-field{
+  position:absolute;
+  inset:-3%;
+  z-index:1;
+  pointer-events:none;
+  overflow:visible;
+  translate:var(--stone-shift-x,0%) var(--stone-shift-y,0%);
+}
+
+/* 每一層都是「透明整圈」，只有 ::before 是一顆小光點。 */
+.time-shard-orbit-particle{
+  position:absolute;
+  inset:0;
+  display:block;
+  transform-origin:50% 50%;
+  will-change:transform,opacity;
+}
+
+.time-shard-orbit-particle::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:2%;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.88) 0%,
+      color-mix(in srgb,var(--shard-light) 62%,white) 22%,
+      color-mix(in srgb,var(--shard-main) 54%,transparent) 52%,
+      transparent 76%
+    );
+  filter:blur(1.2px);
+  box-shadow:
+    0 0 8px color-mix(in srgb,var(--shard-light) 48%,white),
+    0 0 18px var(--shard-glow),
+    0 0 28px color-mix(in srgb,var(--shard-main) 20%,transparent);
+}
+
+/* 三顆光以不同速度、方向與大小運動；不會像規則跑馬燈。 */
+.time-shard-orbit-particle.p1{
+  animation:timeShardParticleOrbit1 12.8s linear infinite;
+}
+.time-shard-orbit-particle.p1::before{
+  width:13px;
+  height:13px;
+  opacity:.72;
+}
+
+.time-shard-orbit-particle.p2{
+  inset:7%;
+  animation:timeShardParticleOrbit2 17.6s linear infinite reverse;
+}
+.time-shard-orbit-particle.p2::before{
+  top:5%;
+  width:10px;
+  height:10px;
+  opacity:.52;
+}
+
+.time-shard-orbit-particle.p3{
+  inset:-7% 10% 5% -4%;
+  animation:timeShardParticleOrbit3 22s linear infinite;
+}
+.time-shard-orbit-particle.p3::before{
+  top:11%;
+  width:8px;
+  height:8px;
+  opacity:.38;
+}
+
+@keyframes timeShardParticleOrbit1{
+  0%   {transform:rotate(0deg)   scaleX(.90) scaleY(1.04); opacity:.58}
+  24%  {opacity:.88}
+  50%  {transform:rotate(180deg) scaleX(1.03) scaleY(.93); opacity:.62}
+  76%  {opacity:.84}
+  100% {transform:rotate(360deg) scaleX(.90) scaleY(1.04); opacity:.58}
+}
+
+@keyframes timeShardParticleOrbit2{
+  0%   {transform:rotate(42deg)  scaleX(.84) scaleY(1.08); opacity:.38}
+  45%  {opacity:.68}
+  100% {transform:rotate(402deg) scaleX(.84) scaleY(1.08); opacity:.38}
+}
+
+@keyframes timeShardParticleOrbit3{
+  0%   {transform:rotate(190deg) scaleX(1.06) scaleY(.82); opacity:.28}
+  52%  {opacity:.52}
+  100% {transform:rotate(550deg) scaleX(1.06) scaleY(.82); opacity:.28}
+}
+
+/* 選色預覽稍微明顯，正式石片則更克制。 */
+.time-forge-preview .time-shard-orbit-field{
+  opacity:.92;
+}
+.time-forge-reveal .time-shard-orbit-field,
+.timemark-shard-host .time-shard-orbit-field{
+  opacity:.72;
+}
+.time-mark-mini-shard .time-shard-orbit-field{
+  opacity:.38;
+}
+
+/* 小石片縮小光點，避免管理器預覽太亮。 */
+.time-mark-mini-shard .time-shard-orbit-particle::before{
+  width:5px!important;
+  height:5px!important;
+  box-shadow:
+    0 0 4px var(--shard-glow),
+    0 0 7px color-mix(in srgb,var(--shard-main) 20%,transparent);
+}
+
+/* 使用者偏好低動態時只保留三顆靜態微光。 */
+@media(prefers-reduced-motion:reduce){
+  .time-shard-orbit-particle{
+    animation:none!important;
+  }
+  .time-shard-orbit-particle.p1{transform:rotate(35deg)}
+  .time-shard-orbit-particle.p2{transform:rotate(170deg)}
+  .time-shard-orbit-particle.p3{transform:rotate(285deg)}
+}

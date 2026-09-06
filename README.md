@@ -11,7 +11,7 @@
 <br>
 
 [![Website](https://img.shields.io/badge/進入《時盡》-111318?style=for-the-badge)](https://vladjia.github.io/TheEndOfTime/)
-[![Frontend](https://img.shields.io/badge/Frontend-v0.18.27-7F1521?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
+[![Frontend](https://img.shields.io/badge/Frontend-v0.18.28-7F1521?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
 [![CORE](https://img.shields.io/badge/CORE-v2.6-4B515A?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
 
 </div>
@@ -23,9 +23,6 @@
 《時盡》是一套結合 **劇情閱讀、角色檔案、世界觀探索與個人旅程紀錄** 的互動式網站。
 
 > **讀到哪裡，世界就存在到哪裡。**
-
-未解鎖的內容不以鎖頭、`???` 或空白卡片提示存在。  
-在玩家尚未走到那個時間點以前，那些資訊就不應該出現在他的世界裡。
 
 ---
 
@@ -49,10 +46,9 @@
 - 世界觀逐步解鎖
 - 時印系統與個人旅程
 - 十二時辰母石
-- 單一光源色 → 琉璃折光與環繞微光
+- 單一光源色 → 琉璃折光、內部光流與環繞微光
 - 個人本命刻紋
 - 時印序與接力碼
-- 回到上次停留的時間裂縫
 - Google Drive 圖片／影片同步
 - DEV FULL 完整版預覽
 
@@ -60,17 +56,15 @@
 
 ## 時印
 
-時印用來記住玩家走過的時間。
+玩家只需要選擇一個自己的光源色。
 
-> **此刻，已被時印記下。**
+系統會自動讓母石產生：
 
-- 玩家不需要註冊帳號
-- 正式鑄印前，系統先回應一枚母石供預覽
-- 玩家只需選擇一個自己的光源色
-- 系統自動產生琉璃層次、內部折光與外緣流光
-- 正式鑄印後才產生本命刻紋
-- 同一名玩家的母石與刻紋永久固定
-- 後續故事、角色與世界觀逐步留下新的時痕
+- 琉璃層次
+- 內部折光
+- 輕微呼吸
+- 石片周圍緩慢運行的微光點
+- 正式鑄印後的個人本命刻紋
 
 > **個人時印刻紋 = 你是誰**  
 > **後續時痕 = 你走過什麼**
@@ -79,13 +73,9 @@
 
 ## Drive 媒體同步
 
-正式同步函式：
-
 ```javascript
 syncDriveMedia()
 ```
-
-`syncDriveImages()` 僅保留舊版相容。
 
 ---
 
@@ -100,21 +90,11 @@ setMyDevPreviewOff()
 
 ---
 
-## 技術
-
-- GitHub Pages
-- HTML / CSS / JavaScript
-- Google Apps Script
-- Google Sheets
-- Google Drive
-
----
-
 ## 目前版本
 
 | 系統 | 版本 |
 |---|---:|
-| Frontend | `v0.18.27` |
+| Frontend | `v0.18.28` |
 | CORE | `v2.6` |
 | 個人刻紋 | `v1` |
 
