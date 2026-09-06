@@ -63,14 +63,12 @@ async function adventureProgress(){
 }
 
 function visibleStoryRows(rows, progress){
-  if(!progress?.exists) return rows.slice(0,1);
+  const published=rows.filter(item=>item.isReadable);
+  if(!progress?.exists) return published.slice(0,1);
+
   const read = new Set(progress.storyRead || []);
-  let nextAdded = false;
-  return rows.filter(item=>{
-    if(read.has(item.id)) return true;
-    if(!nextAdded && item.isReadable){ nextAdded=true; return true; }
-    return false;
-  });
+  const next=published.find(item=>!read.has(item.id));
+  return published.filter(item=>read.has(item.id) || item.id===next?.id);
 }
 
 function renderToc(story,copy,progress){
@@ -118,10 +116,9 @@ function renderToc(story,copy,progress){
     list.className='toc-section-list';
 
     ch.items.forEach(item=>{
-      const el = document.createElement(item.isReadable ? 'a' : 'article');
+      const el = document.createElement('a');
       el.className='toc-section-item';
-      if(item.isReadable) el.href=readerHref(item);
-      else el.classList.add('is-locked');
+      el.href=readerHref(item);
 
       el.innerHTML=`
         <div class="toc-section-number">${sectionLabel(item) || '—'}</div>
@@ -131,9 +128,7 @@ function renderToc(story,copy,progress){
           ${item.publicSummary ? `<p>${item.publicSummary}</p>` : ''}
         </div>
         <div class="toc-section-status">
-          ${item.isReadable
-            ? copyText(copy,'site.story.read','閱讀本節 →')
-            : copyText(copy,'site.story.locked','尚未公開')}
+          ${copyText(copy,'site.story.read','閱讀本節 →')}
         </div>
       `;
       list.appendChild(el);
@@ -157,10 +152,9 @@ function renderReader(story,copy,id,progress){
 
   if(!item){
     article.innerHTML = `
-      <div class="reader-locked">
+      <div class="story-empty">
         <small>STORY</small>
-        <h1>找不到這一節</h1>
-        <p>這個章節識別碼不存在，或目前沒有公開。</p>
+        <p>這個章節目前不存在於你的旅程中。</p>
       </div>`;
     return;
   }
@@ -173,69 +167,60 @@ function renderReader(story,copy,id,progress){
       .join(' ');
   }
 
-  if(!item.isReadable){
-    article.innerHTML = `
-      <div class="reader-locked">
-        <small>${chapterLabel(item)}　${sectionLabel(item)}</small>
-        <h1>${copyText(copy,'site.reader.lockedTitle','本節尚未公開')}</h1>
-        <p>${copyText(copy,'site.reader.lockedDesc','這一節仍停留在尚未落下的沙粒之中。')}</p>
-      </div>`;
-  }else{
-    const body = paragraphs(item.body);
+  const body = paragraphs(item.body);
 
-    article.innerHTML = `
-      <header class="reader-head">
-        <div class="reader-chapter">${chapterLabel(item)}${item.chapterTitle ? `｜${item.chapterTitle}` : ''}</div>
-        <div class="reader-section">${sectionLabel(item)}</div>
-        <h1>${item.sectionTitle || '未命名篇章'}</h1>
-        ${item.subtitle ? `<div class="reader-subtitle">${item.subtitle}</div>` : ''}
-      </header>
-      <div class="reader-body">
-        ${body.map(p=>{
-          if(/^[-—－*＊]{3,}$/.test(p)){
-            return '<div class="scene-break" aria-hidden="true"><span></span></div>';
-          }
-          return `<p>${p.replace(/\n/g,'<br>')}</p>`;
-        }).join('')}
-      </div>
-      <div class="reader-complete-wrap">
-        <button class="reader-complete-btn" id="completeStoryButton" type="button">繼續前行</button>
-        <div class="reader-complete-hint" id="completeStoryHint">讀完此節後，將這一刻留在時印中。</div>
-      </div>
-    `;
-
-    const completeBtn = $('#completeStoryButton');
-    if(completeBtn){
-      completeBtn.addEventListener('click', async()=>{
-        completeBtn.disabled=true;
-        completeBtn.textContent='記錄此刻中……';
-        try{
-          const result = await window.EndOfTimeAdventure.completeStory(item.id,{lastUrl:location.href,lastScroll:window.scrollY});
-          completeBtn.textContent='此刻已被記下';
-          const hint=$('#completeStoryHint');
-          if(hint) hint.textContent = result?.unlocks?.length ? '你的旅程出現了新的變化。' : '時印已記下這段旅程。';
-          const nextReadable = rows.slice(index+1).find(x=>x.isReadable);
-          if(nextReadable){
-            setTimeout(()=>{ location.href=readerHref(nextReadable); },650);
-          }else{
-            setTimeout(()=>{ location.href='../journey/index.html'; },650);
-          }
-        }catch(err){
-          completeBtn.disabled=false;completeBtn.textContent='繼續前行';
-          const hint=$('#completeStoryHint');if(hint)hint.textContent=err.message||'這一刻暫時無法寫入時印。';
+  article.innerHTML = `
+    <header class="reader-head">
+      <div class="reader-chapter">${chapterLabel(item)}${item.chapterTitle ? `｜${item.chapterTitle}` : ''}</div>
+      <div class="reader-section">${sectionLabel(item)}</div>
+      <h1>${item.sectionTitle || '未命名篇章'}</h1>
+      ${item.subtitle ? `<div class="reader-subtitle">${item.subtitle}</div>` : ''}
+    </header>
+    <div class="reader-body">
+      ${body.map(p=>{
+        if(/^[-—－*＊]{3,}$/.test(p)){
+          return '<div class="scene-break" aria-hidden="true"><span></span></div>';
         }
-      });
-    }
+        return `<p>${p.replace(/\n/g,'<br>')}</p>`;
+      }).join('')}
+    </div>
+    <div class="reader-complete-wrap">
+      <button class="reader-complete-btn" id="completeStoryButton" type="button">繼續前行</button>
+      <div class="reader-complete-hint" id="completeStoryHint">讀完此節後，將這一刻留在時印中。</div>
+    </div>
+  `;
 
-    const resumeScroll = sessionStorage.getItem('theEndOfTime.resumeScroll');
-    if(resumeScroll){ sessionStorage.removeItem('theEndOfTime.resumeScroll'); requestAnimationFrame(()=>scrollTo({top:Number(resumeScroll)||0,behavior:'instant'})); }
-    let touchTimer;
-    const syncPos=()=>{clearTimeout(touchTimer);touchTimer=setTimeout(()=>window.EndOfTimeAdventure?.touchPosition?.(item.id),700)};
-    addEventListener('scroll',syncPos,{passive:true});
+  const completeBtn = $('#completeStoryButton');
+  if(completeBtn){
+    completeBtn.addEventListener('click', async()=>{
+      completeBtn.disabled=true;
+      completeBtn.textContent='記錄此刻中……';
+      try{
+        const result = await window.EndOfTimeAdventure.completeStory(item.id,{lastUrl:location.href,lastScroll:window.scrollY});
+        completeBtn.textContent='此刻已被記下';
+        const hint=$('#completeStoryHint');
+        if(hint) hint.textContent = result?.unlocks?.length ? '你的旅程出現了新的變化。' : '時印已記下這段旅程。';
+        const nextReadable = rows.slice(index+1)[0];
+        if(nextReadable){
+          setTimeout(()=>{ location.href=readerHref(nextReadable); },650);
+        }else{
+          setTimeout(()=>{ location.href='../journey/index.html'; },650);
+        }
+      }catch(err){
+        completeBtn.disabled=false;completeBtn.textContent='繼續前行';
+        const hint=$('#completeStoryHint');if(hint)hint.textContent=err.message||'這一刻暫時無法寫入時印。';
+      }
+    });
   }
 
-  const prev = rows.slice(0,index).reverse().find(x=>x.isReadable);
-  const next = rows.slice(index+1).find(x=>x.isReadable);
+  const resumeScroll = sessionStorage.getItem('theEndOfTime.resumeScroll');
+  if(resumeScroll){ sessionStorage.removeItem('theEndOfTime.resumeScroll'); requestAnimationFrame(()=>scrollTo({top:Number(resumeScroll)||0,behavior:'instant'})); }
+  let touchTimer;
+  const syncPos=()=>{clearTimeout(touchTimer);touchTimer=setTimeout(()=>window.EndOfTimeAdventure?.touchPosition?.(item.id),700)};
+  addEventListener('scroll',syncPos,{passive:true});
+
+  const prev = rows.slice(0,index).reverse()[0];
+  const next = rows.slice(index+1)[0];
 
   const prevEl = $('#prevStory');
   const nextEl = $('#nextStory');

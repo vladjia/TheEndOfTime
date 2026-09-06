@@ -7,7 +7,10 @@ async function getJSON(path){
 }
 
 function copyText(copy,key,fallback=''){
-  return window.EndOfTimeMode?.copyText?.(copy,key,fallback) ?? fallback;
+  const item=copy?.[key];
+  if(item == null) return fallback;
+  if(typeof item === 'string') return item || fallback;
+  return item.text || fallback;
 }
 
 function applyCopy(copy){
@@ -53,7 +56,6 @@ function renderCharacters(chars){
         <small>${c.role || ''}</small>
         <h2>${c.fullName || c.name || ''}</h2>
         <p>${c.publicIntro || ''}</p>
-        ${c.spoilerIntro ? `<div class="archive-spoiler">${c.spoilerIntro}</div>` : ''}
         <span>VIEW FILE →</span>`;
       box.appendChild(a);
     });
@@ -78,7 +80,6 @@ function renderWorld(items){
           <small>${item.category || 'WORLD'}</small>
           <h2>${item.title || ''}</h2>
           <p>${item.publicContent || ''}</p>
-          ${item.spoilerContent ? `<div class="archive-spoiler">${item.spoilerContent}</div>` : ''}
         </div>`;
       box.appendChild(article);
     });

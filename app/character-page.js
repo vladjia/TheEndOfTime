@@ -10,7 +10,7 @@ async function getJSON(path,{cache='default'}={}){
 const CHARACTER_API_CACHE_TTL = 3 * 60 * 1000;
 
 function characterApiCacheKey(mode){
-  return `tet:character-api:v01834:${mode}`;
+  return `tet:character-api:v01840:${mode}`;
 }
 
 function readCharacterApiCache(mode){
@@ -651,7 +651,6 @@ function renderSpecialVisual(char,id,skills,images){
 
 function applyCopy(copy){
   setText('#siteSubtitle',copyText(copy,'site.brand.subtitle','WORLD / CHARACTER ARCHIVE'));
-  setText('#publicMode',copyText(copy,'site.mode.public','PUBLIC · 無雷'));
   setText('#backCharacters',copyText(copy,'site.back.characters','← 返回角色'));
   setText('#coreLabel',copyText(copy,'site.character.core_label','CORE LINE'));
   setText('#profileTitle',copyText(copy,'site.character.profile_title','角色簡介'));
@@ -659,37 +658,36 @@ function applyCopy(copy){
   setText('#skillsTitle',copyText(copy,'site.character.skills_title','招式／能力'));
   setText('#relationsTitle',copyText(copy,'site.character.relation_title','關係'));
   setText('#poemTitle',copyText(copy,'site.character.poem_title','詩號'));
-  setText('#fullArchiveLabel',copyText(copy,'site.character.full_archive','FULL ARCHIVE'));
-  setText('#fullArchiveTitle',copyText(copy,'site.character.full_title','完整設定'));
-  setText('#fullArchiveDesc',copyText(copy,'site.character.full_desc','完整身世、關係與劇情內容屬於防雷區。公開頁目前僅展示無雷資料。'));
-  setText('#fullArchiveButton',copyText(copy,'site.character.full_button','防雷模式・建置中'));
 }
 
+function galleryMedia(items,id,adventureData){
+  const field=adventureData?.characterContent?.[id]?.gallery;
+  const records=Array.isArray(field) ? field : (field ? [field] : []);
 
-function galleryMedia(items,id,adventureData,mode){
-  const devFull =
-    mode === 'full'
-    || String(adventureData?.player?.devPreviewMode || '')
-      .trim()
-      .toUpperCase() === 'FULL';
+  return records
+    .map(record=>{
+      const imageId=String(record?.imageId || record?.imageID || '').trim();
+      if(!imageId) return null;
 
-  const unlockedImageIds = new Set(
-    (adventureData?.progress || [])
-      .filter(row => String(row?.type || '').trim().toUpperCase() === 'IMAGE')
-      .map(row => String(row?.targetId || '').trim())
-      .filter(Boolean)
-  );
+      const asset=(items || []).find(item=>[
+        item?.id,item?.assetId,item?.assetID,item?.driveId,item?.driveID,item?.fileId,item?.fileID
+      ].some(value=>String(value || '').trim()===imageId));
 
-  return (items || [])
-    .filter(item => item.targetId === id)
-    .filter(item => {
-      const cat = norm(item.category || '');
-      const path = norm(item.path || '');
-      return cat.includes('圖誌') || path.includes('圖誌');
+      return {
+        ...(asset || {}),
+        id:imageId,
+        imageId,
+        url:asset?.url || `https://drive.google.com/thumbnail?id=${encodeURIComponent(imageId)}&sz=w2000`,
+        caption:String(record?.value || '').trim(),
+        stageId:String(record?.stageId || '').trim(),
+        versionId:String(record?.versionId || '').trim(),
+        sortOrder:Number(record?.sortOrder || 0)
+      };
     })
-    .filter(item => devFull || unlockedImageIds.has(String(item.id || '').trim()))
+    .filter(Boolean)
     .sort((a,b)=>
-      String(a.name||'').localeCompare(String(b.name||''),'zh-Hant',{
+      Number(a.sortOrder || 0)-Number(b.sortOrder || 0)
+      || String(a.name || '').localeCompare(String(b.name || ''),'zh-Hant',{
         numeric:true,
         sensitivity:'base'
       })
@@ -697,6 +695,9 @@ function galleryMedia(items,id,adventureData,mode){
 }
 
 function galleryCaption(item){
+  const caption=String(item?.caption || '').trim();
+  if(caption) return caption;
+
   let name=String(item?.name||'').trim();
   if(!name) return '';
   name=name.replace(/\.[^.]+$/,'');
@@ -705,7 +706,7 @@ function galleryCaption(item){
   return name.replace(/_/g,' ').trim();
 }
 
-function ensureGallerySection(){
+function ensureGallerySection(copy){
   let section=document.getElementById('gallerySection');
   if(section) return section;
 
@@ -715,8 +716,8 @@ function ensureGallerySection(){
   section.hidden=true;
   section.innerHTML=`
     <div class="character-section-title character-gallery-heading">
-      <small>VISUAL JOURNAL</small>
-      <h2>角色圖誌</h2>
+      <small>${copyText(copy,'site.character.gallery_kicker','VISUAL JOURNAL')}</small>
+      <h2>${copyText(copy,'site.character.gallery_title','角色圖誌')}</h2>
     </div>
     <div class="character-gallery-grid" id="characterGalleryGrid"></div>
   `;
@@ -730,9 +731,9 @@ function ensureGallerySection(){
   return section;
 }
 
-function renderCharacterGallery(items,id,char,adventureData,mode){
-  const media=galleryMedia(items,id,adventureData,mode);
-  const section=ensureGallerySection();
+function renderCharacterGallery(items,id,char,adventureData,copy){
+  const media=galleryMedia(items,id,adventureData);
+  const section=ensureGallerySection(copy);
   const grid=section.querySelector('#characterGalleryGrid');
 
   if(!media.length){
@@ -808,13 +809,13 @@ const CHARACTER_SECTION_IDS = [
   'poem'
 ];
 
-function characterKnowledgeSet(adventureData,characterId,mode){
+function characterKnowledgeSet(adventureData,characterId){
   const devFull =
     String(adventureData?.player?.devPreviewMode || '')
       .trim()
       .toUpperCase() === 'FULL';
 
-  if(mode === 'full' || devFull){
+  if(devFull){
     return new Set(CHARACTER_SECTION_IDS);
   }
 
@@ -869,13 +870,9 @@ function applyCharacterKnowledge(characterId,knowledge){
   setKnowledgeVisible(document.getElementById('relationsSection'),has('relations'));
   setKnowledgeVisible(document.getElementById('poemSection'),has('poem'));
 
-  // 舊的 FULL ARCHIVE 防雷卡不再另外暗示「還有什麼」。
-  // 未解鎖資訊應直接不存在。
-  const spoilerGate=document.querySelector('.spoiler-gate');
-  if(spoilerGate) spoilerGate.remove();
 }
 
-function renderCharacter(char,id,data,adventureData,mode){
+function renderCharacter(char,id,data,adventureData){
   if(!char) return;
 
   document.body.dataset.character = id || char.id || '';
@@ -895,7 +892,7 @@ function renderCharacter(char,id,data,adventureData,mode){
   renderMeta(char);
   renderStrip(char);
   renderParagraphs($('#profileContent'),char.publicDetail || char.publicIntro);
-  renderCharacterGallery(data.images || [],id,char,adventureData,mode);
+  renderCharacterGallery(data.images || [],id,char,adventureData,data.copy || {});
   renderWeapon(char,id,data.weapons || [],data.images || []);
   renderSkills(data.skills || [],id);
   renderSpecialVisual(char,id,data.skills || [],data.images || []);
@@ -928,11 +925,11 @@ async function initCharacterPage(){
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
-    const mode = window.EndOfTimeMode?.current?.() || 'public';
+    const apiType = 'public';
 
     // 角色頁的「資料內容」與「玩家目前理解到哪裡」分開讀。
     const [data,adventureData] = await Promise.all([
-      loadCharacterApi(endpoint,mode),
+      loadCharacterApi(endpoint,apiType),
       (async()=>{
         const A=window.EndOfTimeAdventure;
         if(!A) return null;
@@ -945,7 +942,12 @@ async function initCharacterPage(){
 
     // 正常玩家若尚未遇見這個角色，直接回角色索引。
     // DEV FULL 不受此限制。
-    if(mode !== 'full'){
+    const devFull =
+      String(adventureData?.player?.devPreviewMode || '')
+        .trim()
+        .toUpperCase() === 'FULL';
+
+    if(!devFull){
       const unlocked=Array.isArray(adventureData?.charactersUnlocked)
         ? adventureData.charactersUnlocked
         : [];
@@ -960,9 +962,9 @@ async function initCharacterPage(){
 
     applyCharacterContent(char,id,adventureData);
     applyCopy(data.copy || {});
-    renderCharacter(char,id,data,adventureData,mode);
+    renderCharacter(char,id,data,adventureData);
 
-    const knowledge=characterKnowledgeSet(adventureData,id,mode);
+    const knowledge=characterKnowledgeSet(adventureData,id);
     applyCharacterKnowledge(id,knowledge);
 
     window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
@@ -973,7 +975,7 @@ async function initCharacterPage(){
 
     console.info(
       `《時盡》角色認知：${id} →`,
-      mode==='full' ? 'DEV FULL' : [...knowledge]
+      devFull ? 'DEV FULL' : [...knowledge]
     );
   }catch(err){
     console.warn('角色頁 GAS / 認知資料載入失敗，保留 HTML SEO / fallback。',err);

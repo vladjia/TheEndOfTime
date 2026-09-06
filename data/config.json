@@ -138,7 +138,6 @@
       "crossDeviceRestore": true,
       "resumePrompt": "回到上次停留的時間裂縫",
       "journeyPage": "journey/index.html",
-      "spoilerToggle": false,
       "unlockPrinciple": "讀到哪裡，世界就存在到哪裡。",
       "timeMarkLoading": true,
       "preventDoubleClick": true,

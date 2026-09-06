@@ -144,6 +144,7 @@ function renderStoryPreview(items,copy){
   if(!box) return;
 
   const rows = [...(items || [])]
+    .filter(item=>item.isReadable)
     .sort((a,b)=>(Number(a.order)||9999)-(Number(b.order)||9999))
     .slice(0,3);
 
@@ -158,14 +159,9 @@ function renderStoryPreview(items,copy){
   }
 
   rows.forEach(item=>{
-    const el = document.createElement(item.isReadable ? 'a' : 'article');
+    const el = document.createElement('a');
     el.className = 'story-preview-item';
-
-    if(item.isReadable){
-      el.href = storyReaderHref(item,'');
-    }else{
-      el.classList.add('is-locked');
-    }
+    el.href = storyReaderHref(item,'');
 
     el.innerHTML = `
       <div class="story-preview-index">${storyLabel(item)}</div>
@@ -175,7 +171,7 @@ function renderStoryPreview(items,copy){
         <p>${item.publicSummary || ''}</p>
       </div>
       <div class="story-preview-status">
-        ${item.isReadable ? 'READ →' : copyText(copy,'site.story.locked','尚未公開')}
+        READ →
       </div>
     `;
 

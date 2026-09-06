@@ -172,23 +172,12 @@ a.toc-section-item:hover{
   height:1px;
   background:linear-gradient(90deg,transparent,#6d2834,transparent);
 }
-.reader-locked,
 .story-empty{
   padding:60px 26px;
   border:1px solid var(--line-soft);
   background:#090c11;
   text-align:center;
   color:#7f8995;
-}
-.reader-locked small{
-  color:#8f2737;
-  letter-spacing:.22em;
-}
-.reader-locked h1{
-  font-family:var(--font-title);
-  color:#d8dce2;
-  font-weight:500;
-  font-size:36px;
 }
 .reader-nav{
   margin-top:80px;
