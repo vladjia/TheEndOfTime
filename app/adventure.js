@@ -1111,6 +1111,14 @@ window.EndOfTimeAdventure = (() => {
           <button class="time-mark-btn" type="button" data-time-close>關閉</button>
         </div>
       `);
+
+      // v0.18.29：管理器縮圖必須顯示玩家真正的本命石片主色，
+      // 不能只顯示母石原始 PNG。
+      const managerShard=o.querySelector('.time-mark-mini-shard [data-shard-preview]');
+      if(managerShard){
+        applyShardPalette(managerShard,color);
+      }
+
       o.querySelector('[data-copy-time]').onclick=copyToken;
       const forgeBtn=o.querySelector('[data-forge-open]');
       if(forgeBtn) forgeBtn.onclick=()=>openForge();
