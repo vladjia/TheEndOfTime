@@ -1838,3 +1838,36 @@ body:not(.pre-entry) .time-mark-orb{
 .time-mark-orb[data-time-mark-state="unknown"] .time-mark-orb-label{
   opacity:.58;
 }
+
+
+/* ============================================================
+   v0.18.24 · 旅程頁：時印狀態 / Loading / 舊時印卡移除
+   ============================================================ */
+.journey-token{
+  display:block;
+  color:rgba(238,240,244,.88);
+  font:600 16px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.045em;
+  overflow-wrap:anywhere;
+}
+
+.journey-mark-state{
+  margin:7px 0 0!important;
+  color:rgba(238,240,244,.48);
+  font-size:12px;
+  line-height:1.7;
+}
+
+.journey-record-row strong{
+  display:block;
+  color:rgba(238,240,244,.76);
+  font-size:13px;
+  font-weight:500;
+}
+
+.journey-record-row span{
+  display:block;
+  margin-top:4px;
+  color:rgba(238,240,244,.34);
+  font-size:10px;
+}

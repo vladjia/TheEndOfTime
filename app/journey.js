@@ -1,38 +1,146 @@
+document.addEventListener('DOMContentLoaded', async()=>{
+  const A=window.EndOfTimeAdventure;
+  const L=window.SiteLoading;
 
-const $ = s => document.querySelector(s);
-async function getJSON(path){const r=await fetch(path,{cache:'no-store'});if(!r.ok)throw new Error(path);return r.json()}
-function chinese(n){n=Number(n);const d=['零','一','二','三','四','五','六','七','八','九','十'];if(n<=10)return d[n]||String(n);if(n<20)return '十'+d[n-10];if(n<100){const t=Math.floor(n/10),o=n%10;return d[t]+'十'+(o?d[o]:'')}return String(n)}
-function storyLabel(s){if(!s)return '';const a=s.chapterNumber?`第${chinese(s.chapterNumber)}章${s.chapterTitle?`｜${s.chapterTitle}`:''}`:'';const b=s.sectionNumber?`第${chinese(s.sectionNumber)}節${s.sectionTitle?`｜${s.sectionTitle}`:''}`:'';return [a,b].filter(Boolean).join('　')}
-async function init(){
+  const $=s=>document.querySelector(s);
+  const title=$('#journeyCurrentTitle');
+  const desc=$('#journeyCurrentDesc');
+  const resume=$('#journeyResume');
+  const storyCount=$('#journeyStoryCount');
+  const charCount=$('#journeyCharCount');
+  const worldCount=$('#journeyWorldCount');
+  const tokenEl=$('#journeyTimeMark');
+  const stateEl=$('#journeyMarkState');
+  const copyBtn=$('#journeyCopy');
+  const openBtn=$('#journeyOpenMark');
+  const records=$('#journeyRecords');
+
+  const setLoadingText=text=>{ try{ L?.setText(text); }catch(_){} };
+
+  function safeCount(value){
+    return Array.isArray(value) ? value.length : 0;
+  }
+
+  function renderRecords(data){
+    if(!records) return;
+    const items=Array.isArray(data?.progress) ? data.progress : [];
+
+    if(!items.length){
+      records.innerHTML='<div class="journey-empty">你的旅程尚未留下第一道時痕。</div>';
+      return;
+    }
+
+    const labelFor=type=>{
+      if(type==='STORY') return '故事';
+      if(type==='CHARACTER') return '角色';
+      if(type==='WORLD') return '世界';
+      return '時痕';
+    };
+
+    records.innerHTML=items
+      .filter(x=>['STORY','CHARACTER','WORLD'].includes(String(x?.type||'')))
+      .slice()
+      .reverse()
+      .map(item=>`
+        <div class="journey-list-row journey-record-row">
+          <small>${labelFor(String(item.type||''))}</small>
+          <div>
+            <strong>${String(item.targetId||'').replace(/[<>&"]/g,'')}</strong>
+            ${item.recordedAt ? `<span>${new Date(item.recordedAt).toLocaleString('zh-TW')}</span>` : ''}
+          </div>
+        </div>
+      `).join('') || '<div class="journey-empty">你的旅程尚未留下第一道時痕。</div>';
+  }
+
   try{
-    await window.EndOfTimeAdventure.ensure();
-    const [progress,config]=await Promise.all([window.EndOfTimeAdventure.load(true),getJSON('../data/config.json')]);
-    const publicData=await getJSON(`${config.gasApiEndpoint}?type=public&_=${Date.now()}`);
-    const storyMap=new Map((publicData.story||[]).map(x=>[x.id,x]));
-    const charMap=new Map((publicData.characters||[]).map(x=>[x.id,x]));
-    const worldMap=new Map((publicData.world||[]).map(x=>[x.id,x]));
-    const current=progress?.lastStory || (progress?.player?.lastStoryId?storyMap.get(progress.player.lastStoryId):null);
-    $('#journeyTimeMark').textContent=progress?.token||window.EndOfTimeAdventure.token();
-    $('#journeyCurrentTitle').textContent=current?storyLabel(current):'旅程尚未開始';
-    $('#journeyCurrentDesc').textContent=current?'你可以回到這段時間裂縫，繼續往前。':'從故事開始，你所看見的世界才會逐漸出現。';
-    const resume=$('#journeyResume');
-    if(current){resume.hidden=false;resume.href=progress?.player?.lastUrl||`../story/read.html?id=${encodeURIComponent(current.id)}`}
-    const storyRead=progress?.storyRead||[];
-    const chars=progress?.charactersUnlocked||[];
-    const worlds=progress?.worldUnlocked||[];
-    $('#journeyStoryCount').textContent=String(storyRead.length);
-    $('#journeyCharCount').textContent=String(chars.length);
-    $('#journeyWorldCount').textContent=String(worlds.length);
-    const list=$('#journeyRecords');
-    const records=[];
-    storyRead.forEach(id=>{const s=storyMap.get(id);if(s)records.push(['已讀故事',storyLabel(s)])});
-    chars.forEach(id=>{const c=charMap.get(id);if(c)records.push(['已知人物',c.fullName||c.name||id])});
-    worlds.forEach(id=>{const w=worldMap.get(id);if(w)records.push(['已知世界',w.title||id])});
-    if(!records.length){list.innerHTML='<div class="journey-empty">你尚未在這個世界留下足夠的痕跡。</div>'}
-    else list.innerHTML=records.map(r=>`<div class="journey-list-row"><small>${r[0]}</small><div>${r[1]}</div></div>`).join('');
-    $('#journeyCopy').onclick=()=>window.EndOfTimeAdventure.copyToken();
-    $('#journeyCard').onclick=()=>window.EndOfTimeAdventure.downloadTimeMarkCard();
-  }catch(err){console.error(err);$('#journeyRecords').innerHTML='<div class="journey-empty">目前無法讀取你的旅程。</div>'}
-  finally{window.SiteLoading?.hide?.()}
-}
-init();
+    if(!A) throw new Error('時印系統尚未載入。');
+
+    setLoadingText('確認你的時印……');
+    await A.ensure();
+
+    setLoadingText('尋回旅程中……');
+    const data=await A.load(true);
+
+    if(!data || data.ok===false){
+      throw new Error('旅程暫時無法讀取。');
+    }
+
+    const storyN=safeCount(data.storyRead);
+    const charN=safeCount(data.charactersUnlocked);
+    const worldN=safeCount(data.worldUnlocked);
+
+    if(storyCount) storyCount.textContent=String(storyN);
+    if(charCount) charCount.textContent=String(charN);
+    if(worldCount) worldCount.textContent=String(worldN);
+
+    const last=data.lastStory;
+    if(last){
+      const chapter=last.chapterNumber ? `第 ${last.chapterNumber} 章` : '';
+      const section=last.sectionNumber ? `第 ${last.sectionNumber} 節` : '';
+      const main=[chapter,last.chapterTitle,section,last.sectionTitle].filter(Boolean).join('｜');
+      if(title) title.textContent=main || '上一次留下的時間裂縫';
+      if(desc) desc.textContent='這裡記著你上一次停下的位置。';
+
+      if(resume && data.player?.lastUrl){
+        resume.hidden=false;
+        resume.href=data.player.lastUrl;
+        resume.onclick=e=>{
+          e.preventDefault();
+          const target=data.player.lastUrl;
+          const started=A.playTimeRiftTransition({
+            mode:'resume',
+            onDone:()=>{ location.href=target; }
+          });
+          if(!started) location.href=target;
+        };
+      }
+    }else{
+      if(title) title.textContent='旅程尚未開始';
+      if(desc) desc.textContent='從故事開始，你所看見的世界才會逐漸出現。';
+    }
+
+    const t=A.token();
+    if(tokenEl) tokenEl.textContent=t || '尚未建立';
+    if(copyBtn){
+      copyBtn.disabled=!t;
+      copyBtn.onclick=()=>A.copyToken();
+    }
+
+    const stone=data.stone||{};
+    const forged=!!stone.forged;
+
+    if(stateEl){
+      stateEl.textContent=forged
+        ? `時印已完成鑄印｜目前留下 ${storyN+charN+worldN} 道時痕`
+        : '你的旅程已被記住，但時印石片尚未完成時空鑄印。';
+    }
+
+    if(openBtn){
+      openBtn.disabled=false;
+      openBtn.textContent=forged ? '進入時印幻境' : '查看時印';
+      openBtn.onclick=()=>{
+        if(forged && stone.relayCode){
+          location.href=`../timemark/index.html?r=${encodeURIComponent(stone.relayCode)}`;
+        }else{
+          // 不再像舊「儲存時印卡」那樣直接呼叫 openForge。
+          // 先開啟時印管理器，讓玩家自己決定是否進行時空鑄印。
+          A.openManager();
+        }
+      };
+    }
+
+    renderRecords(data);
+    setLoadingText('旅程已尋回。');
+  }catch(err){
+    console.error('Journey load failed:',err);
+    if(title) title.textContent='旅程暫時無法讀取';
+    if(desc) desc.textContent=err?.message||'請稍後再試。';
+    if(tokenEl) tokenEl.textContent='—';
+    if(stateEl) stateEl.textContent='目前無法確認時印狀態。';
+    if(records) records.innerHTML='<div class="journey-empty">旅程資料讀取失敗。</div>';
+  }finally{
+    // Loading 由 journey.js 明確控制：
+    // 等 ensure + load + 畫面完成後才關閉，不再靠 12 秒 fail-safe。
+    setTimeout(()=>{ try{ L?.hide(); }catch(_){} },180);
+  }
+});
