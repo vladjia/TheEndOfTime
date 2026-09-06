@@ -80,7 +80,11 @@ window.EndOfTimeAdventure = (() => {
   function stoneAssetUrl(type){
     const n=stoneTypeNumber(type);
     if(!n) return '';
-    return `${rootPrefix()}assets/images/timemark/stones/stone-${String(n).padStart(2,'0')}.png?v=0.18.6`;
+    // 一律先用「頁面網址」解析成絕對 URL。
+    // 不能把 assets/... 相對路徑直接丟進 CSS mask，
+    // 否則瀏覽器會以 /app/adventure.css 為基準，錯誤變成 /app/assets/...。
+    const rel = `${rootPrefix()}assets/images/timemark/stones/stone-${String(n).padStart(2,'0')}.png?v=0.18.10`;
+    return new URL(rel, document.baseURI).href;
   }
 
   function rgbToHsl({r,g,b}){
