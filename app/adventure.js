@@ -838,12 +838,31 @@ window.EndOfTimeAdventure = (() => {
     };
   }
 
-  function hasSeenFirstGuide(){
+  function boolish(value){
+    if(value===true || value===1) return true;
+    const s=String(value??'').trim().toUpperCase();
+    return s==='TRUE' || s==='1' || s==='YES' || s==='Y';
+  }
+
+  function hasSeenFirstGuide(data){
+    // 只要後端回傳了這個欄位，就以試算表為唯一真相。
+    if(data?.player && Object.prototype.hasOwnProperty.call(data.player,'firstGuideSeen')){
+      return boolish(data.player.firstGuideSeen);
+    }
+    // 舊後端 / 暫時離線時才退回 localStorage。
     return localStorage.getItem(FIRST_GUIDE_KEY)==='1';
   }
 
   function markFirstGuideSeen(){
     localStorage.setItem(FIRST_GUIDE_KEY,'1');
+    const t=token();
+    if(progressCache?.player){
+      progressCache.player.firstGuideSeen=true;
+    }
+    if(t){
+      api('adventureGuideSeen',{token:t})
+        .catch(err=>console.warn('首次導覽狀態未同步',err));
+    }
   }
 
   function showTimeMarkEntryCoach(){
@@ -874,8 +893,8 @@ window.EndOfTimeAdventure = (() => {
     setTimeout(close,9000);
   }
 
-  function showFirstTimeGuide(){
-    if(hasSeenFirstGuide()) return;
+  function showFirstTimeGuide(data){
+    if(hasSeenFirstGuide(data)) return;
     if(document.getElementById('timeMarkFirstGuide')) return;
 
     const guide=document.createElement('div');
@@ -956,8 +975,12 @@ window.EndOfTimeAdventure = (() => {
     maybePromptReturning();
 
     if(document.body.classList.contains('home-page')){
+      let guideData=null;
+      try{ guideData=await load(true); }catch(_){}
       const showGuide=()=>{
-        if(!hasSeenFirstGuide()) setTimeout(showFirstTimeGuide,700);
+        if(!hasSeenFirstGuide(guideData)){
+          setTimeout(()=>showFirstTimeGuide(guideData),700);
+        }
       };
       if(document.body.classList.contains('pre-entry')){
         const ob=new MutationObserver(()=>{

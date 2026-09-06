@@ -11,14 +11,23 @@ window.SiteLoading = (() => {
   }
 
   function framePath(base,index){
-    return `${base}loading-${String(index).padStart(2,'0')}.png`;
+    return `${base}loading-${String(index).padStart(2,'0')}.png?v=0.18.9`;
   }
 
   function startFrames(){
     const img = document.querySelector('#siteLoading .loading-frame-image');
     if(!img) return;
 
-    const base = img.dataset.loadingBase || 'assets/images/loading/';
+    // 不再相信相對路徑字串本身，直接從目前 HTML 中已存在的第一幀 src
+    // 推導出正確資料夾。這可避免 /app/assets/... 之類的錯誤組路徑。
+    let base = '';
+    try{
+      const firstSrc = img.getAttribute('src') || img.src;
+      const firstUrl = new URL(firstSrc, document.baseURI);
+      base = new URL('./', firstUrl).href;
+    }catch(_){
+      base = img.dataset.loadingBase || 'assets/images/loading/';
+    }
 
     // 先預載全部 8 幀，避免切換時閃黑。
     for(let i=1;i<=FRAME_COUNT;i++){
