@@ -777,12 +777,21 @@ const CHARACTER_SECTION_IDS = [
 ];
 
 function characterKnowledgeSet(adventureData,characterId,mode){
-  if(mode === 'full'){
+  const devFull =
+    String(adventureData?.player?.devPreviewMode || '')
+      .trim()
+      .toUpperCase() === 'FULL';
+
+  if(mode === 'full' || devFull){
     return new Set(CHARACTER_SECTION_IDS);
   }
 
   const map=adventureData?.characterSectionUnlocks || {};
-  return new Set(Array.isArray(map?.[characterId]) ? map[characterId] : []);
+  return new Set(
+    Array.isArray(map?.[characterId])
+      ? map[characterId]
+      : []
+  );
 }
 
 function setKnowledgeVisible(target,visible){
