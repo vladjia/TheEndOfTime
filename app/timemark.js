@@ -16,18 +16,13 @@ document.addEventListener('DOMContentLoaded', async()=>{
     }
 
     const shard=document.createElement('div');
-    shard.innerHTML=`
-      <div class="time-shard resonance-${Math.max(0,Math.min(5,Number(stone.resonanceLevel||0)))}">
-        <span class="time-shard-reflection"></span>
-        <span class="time-shard-mist"></span>
-        <span class="time-shard-crack crack-a"></span>
-        <span class="time-shard-crack crack-b"></span>
-        <span class="time-shard-sigil" aria-hidden="true">⌛</span>
-        <div class="time-shard-inscription">
-          <small>時印序 ${A.serialLabel(stone.serial)}</small>
-          <span>${stone.relayCode||''}</span>
-        </div>
-      </div>`;
+    shard.innerHTML=A.shardPreviewMarkup({
+      color:stone.color||'#7F1521',
+      serial:A.serialLabel(stone.serial),
+      relay:stone.relayCode||'',
+      level:stone.resonanceLevel||0,
+      stoneType:stone.stoneType
+    });
     const el=shard.firstElementChild;
     A.applyShardPalette(el,stone.color||'#7F1521');
     host.replaceChildren(el);

@@ -46,3 +46,11 @@
   .timemark-profile{text-align:center}
   .timemark-records{grid-template-columns:1fr}
 }
+
+
+/* v0.18.6 · 時印幻境改用十二時辰母石 */
+.timemark-shard-host .time-shard-asset{width:min(390px,78vw)}
+.timemark-shard-host .time-shard-asset .time-shard-inscription{bottom:-12px}
+@media(max-width:760px){
+  .timemark-shard-host .time-shard-asset{width:min(300px,82vw)}
+}

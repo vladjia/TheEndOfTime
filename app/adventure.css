@@ -1037,3 +1037,179 @@ html.time-mark-guide-open{
     height:86px!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.6 · 十二時辰母石 / 真實母圖 / HEX + RGB
+   ============================================================ */
+.time-color-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+.time-color-field span{
+  display:block;
+  margin-bottom:6px;
+  color:rgba(238,240,244,.52);
+  font-size:11px;
+  letter-spacing:.08em;
+}
+.time-color-text{
+  width:100%;
+  box-sizing:border-box;
+  padding:11px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  background:#080a0d;
+  color:#f1f2f4;
+  outline:none;
+  font:600 13px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.time-color-text:focus{border-color:rgba(255,255,255,.34)}
+.time-color-text.is-invalid{
+  border-color:rgba(196,72,87,.78);
+  box-shadow:0 0 0 2px rgba(196,72,87,.08);
+}
+.time-color-help{
+  margin-top:10px!important;
+  color:rgba(238,240,244,.44)!important;
+  font-size:11px!important;
+  line-height:1.7!important;
+}
+
+.time-shard-awaiting{
+  position:relative;
+  width:220px;
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.time-shard-awaiting-core{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 48% 46%,rgba(255,255,255,.94),rgba(255,255,255,.18) 27%,transparent 61%),
+    radial-gradient(circle, var(--shard-glow,rgba(255,255,255,.22)), transparent 68%);
+  filter:drop-shadow(0 0 20px var(--shard-glow,rgba(255,255,255,.18)));
+  animation:timeShardWaiting 3.2s ease-in-out infinite;
+}
+.time-shard-awaiting strong{
+  margin-top:20px;
+  color:rgba(255,255,255,.78);
+  font-size:14px;
+  font-weight:500;
+}
+.time-shard-awaiting small{
+  max-width:210px;
+  margin-top:7px;
+  color:rgba(255,255,255,.38);
+  font-size:11px;
+  line-height:1.7;
+}
+@keyframes timeShardWaiting{
+  50%{transform:scale(1.08);opacity:.78}
+}
+
+.time-shard-asset{
+  --shard-main:#7F1521;
+  --shard-glow:rgba(239,154,164,.56);
+  position:relative;
+  width:260px;
+  aspect-ratio:1/1.08;
+  display:grid;
+  place-items:center;
+  isolation:isolate;
+  overflow:visible;
+  transform:translateZ(0);
+}
+.time-shard-image{
+  position:relative;
+  z-index:2;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:
+    drop-shadow(0 22px 34px rgba(0,0,0,.28))
+    drop-shadow(0 0 14px var(--shard-glow));
+}
+.time-shard-colorwash{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 45% 48%,rgba(255,255,255,.18),transparent 33%),
+    linear-gradient(145deg,var(--shard-main),var(--shard-edge));
+  -webkit-mask-image:var(--stone-image);
+  mask-image:var(--stone-image);
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+  mix-blend-mode:color;
+  opacity:.54;
+}
+.time-shard-light{
+  position:absolute;
+  inset:7% 8%;
+  z-index:4;
+  pointer-events:none;
+  background:radial-gradient(circle at 50% 48%,var(--shard-glow),transparent 48%);
+  -webkit-mask-image:var(--stone-image);
+  mask-image:var(--stone-image);
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+  mix-blend-mode:screen;
+  opacity:.42;
+  animation:timeShardLightBreath 3.8s ease-in-out infinite;
+}
+@keyframes timeShardLightBreath{
+  50%{opacity:.72;transform:scale(1.025)}
+}
+.time-shard-asset .time-shard-inscription{
+  left:50%;
+  right:auto;
+  bottom:-18px;
+  width:100%;
+  transform:translateX(-50%);
+  z-index:6;
+  text-align:center;
+  pointer-events:none;
+}
+.time-shard-asset .time-shard-crack{
+  z-index:5;
+}
+.time-shard-asset.resonance-4 .time-shard-image{filter:brightness(1.03) saturate(1.06) drop-shadow(0 22px 34px rgba(0,0,0,.28)) drop-shadow(0 0 16px var(--shard-glow))}
+.time-shard-asset.resonance-5{animation:shardAssetResonance 3.2s ease-in-out infinite}
+@keyframes shardAssetResonance{50%{transform:scale(1.018)}}
+
+.time-mark-mini-shard .time-shard-asset{
+  width:82px;
+  flex:0 0 82px;
+}
+.time-mark-mini-shard .time-shard-asset .time-shard-inscription{display:none}
+
+.time-forge-reveal{
+  min-height:380px;
+  display:grid;
+  place-items:center;
+  margin:18px 0 8px;
+}
+.time-forge-reveal .time-shard-asset{width:min(310px,74vw)}
+
+@media(max-width:680px){
+  .time-color-fields{grid-template-columns:1fr}
+  .time-shard-asset{width:220px}
+  .time-forge-reveal{min-height:330px}
+}

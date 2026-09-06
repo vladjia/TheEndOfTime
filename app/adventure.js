@@ -49,6 +49,40 @@ window.EndOfTimeAdventure = (() => {
     return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
   }
 
+  function clampRgb(n){
+    n=Number(n);
+    return Number.isFinite(n) ? Math.max(0,Math.min(255,Math.round(n))) : 0;
+  }
+
+  function rgbToHex(r,g,b){
+    const part=n=>clampRgb(n).toString(16).padStart(2,'0');
+    return `#${part(r)}${part(g)}${part(b)}`.toUpperCase();
+  }
+
+  function parseRgbInput(value){
+    const m=String(value||'').trim().match(/^\s*(\d{1,3})\s*[,，]\s*(\d{1,3})\s*[,，]\s*(\d{1,3})\s*$/);
+    if(!m) return null;
+    const rgb={r:Number(m[1]),g:Number(m[2]),b:Number(m[3])};
+    if(Object.values(rgb).some(v=>v<0||v>255)) return null;
+    return rgb;
+  }
+
+  function formatRgb(hex){
+    const {r,g,b}=hexToRgb(hex);
+    return `${r}, ${g}, ${b}`;
+  }
+
+  function stoneTypeNumber(value){
+    const n=Number(value||0);
+    return Number.isInteger(n) && n>=1 && n<=12 ? n : 0;
+  }
+
+  function stoneAssetUrl(type){
+    const n=stoneTypeNumber(type);
+    if(!n) return '';
+    return `${rootPrefix()}assets/images/timemark/stones/stone-${String(n).padStart(2,'0')}.png?v=0.18.6`;
+  }
+
   function rgbToHsl({r,g,b}){
     r/=255;g/=255;b/=255;
     const max=Math.max(r,g,b),min=Math.min(r,g,b);
@@ -284,20 +318,58 @@ window.EndOfTimeAdventure = (() => {
     `,{lockClose:true});
   }
 
-  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0}={}){
+  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,awaiting=false}={}){
+    const type=stoneTypeNumber(stoneType);
+    if(awaiting || !type){
+      return `
+        <div class="time-shard-awaiting" data-shard-preview>
+          <span class="time-shard-awaiting-core" aria-hidden="true"></span>
+          <strong>等待時印回應</strong>
+          <small>石片會在時空鑄印完成後顯現。</small>
+        </div>`;
+    }
     const levelClass=`resonance-${Math.max(0,Math.min(5,Number(level||0)))}`;
+    const url=stoneAssetUrl(type);
     return `
-      <div class="time-shard ${levelClass}" data-shard-preview>
-        <span class="time-shard-reflection"></span>
-        <span class="time-shard-mist"></span>
-        <span class="time-shard-crack crack-a"></span>
-        <span class="time-shard-crack crack-b"></span>
-        <span class="time-shard-sigil" aria-hidden="true">⌛</span>
+      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" style="--stone-image:url('${url}')">
+        <img class="time-shard-image" src="${url}" alt="你的時印石片">
+        <span class="time-shard-colorwash" aria-hidden="true"></span>
+        <span class="time-shard-light" aria-hidden="true"></span>
+        <span class="time-shard-crack crack-a" aria-hidden="true"></span>
+        <span class="time-shard-crack crack-b" aria-hidden="true"></span>
         <div class="time-shard-inscription">
-          ${serial ? `<small>時印序 ${serial}</small>` : '<small>等待鑄印</small>'}
+          ${serial ? `<small>時印序 ${serial}</small>` : ''}
           ${relay ? `<span>${relay}</span>` : ''}
         </div>
       </div>`;
+  }
+
+  function showForgeSuccess(result){
+    const stone=result?.stone||{};
+    const serial=stone.serial?serialLabel(stone.serial):'';
+    const color=normalizeHexColor(stone.color||'#7F1521');
+    const o=overlay(`
+      <div class="time-mark-kicker">TIME FORGING</div>
+      <h2>時印已成。</h2>
+      <p>時之沙漏的殘片已回應你的存在。從此，它會記住你走過的時間。</p>
+      <div class="time-forge-reveal">
+        ${shardPreviewMarkup({
+          color,
+          serial,
+          relay:stone.relayCode||'',
+          level:stone.resonanceLevel||0,
+          stoneType:stone.stoneType
+        })}
+      </div>
+      <div class="time-mark-actions">
+        <button class="time-mark-btn primary" type="button" data-forge-view>查看我的時印</button>
+        <button class="time-mark-btn" type="button" data-time-close>繼續前行</button>
+      </div>
+    `);
+    const shard=o.querySelector('[data-shard-preview]');
+    applyShardPalette(shard,color);
+    const view=o.querySelector('[data-forge-view]');
+    if(view) view.onclick=()=>{ closeOverlay(true); openManager(); };
   }
 
   async function openForge(){
@@ -306,61 +378,128 @@ window.EndOfTimeAdventure = (() => {
     const existing=data?.stone||{};
     const initial=normalizeHexColor(existing.color||'#7F1521');
     const isForged=!!existing.forged;
+    const existingType=stoneTypeNumber(existing.stoneType);
     const o=overlay(`
       <div class="time-mark-kicker">TIME FORGING</div>
-      <h2>${isForged ? '調整你的時印石片' : '時空鑄印專屬石片'}</h2>
-      <p>只要選擇一個你喜歡的顏色。其餘漸層、折光與琉璃層次，交給時印自行生成。</p>
+      <h2>${isForged ? '調整你的光源色' : '時空鑄印專屬石片'}</h2>
+      <p>進入時空裂縫前，選擇一個代表自己的光源色。那道顏色會成為你與現實世界之間的微弱連結。時印會依循這道光，在石片中折射出屬於你的琉璃層次。</p>
       <div class="time-forge-layout">
         <div class="time-forge-preview">
           ${shardPreviewMarkup({
             color:initial,
             serial:existing.serial ? serialLabel(existing.serial) : '',
             relay:existing.relayCode||'',
-            level:existing.resonanceLevel||0
+            level:existing.resonanceLevel||0,
+            stoneType:existingType,
+            awaiting:!isForged
           })}
         </div>
         <div class="time-forge-controls">
-          <label class="time-color-label" for="timeShardColor">選擇你的時印主色</label>
+          <label class="time-color-label" for="timeShardColor">選擇你的光源色</label>
           <input id="timeShardColor" class="time-color-picker" type="color" value="${initial}">
-          <div class="time-color-value" data-color-value>${initial}</div>
-          <p class="time-mark-note">你只需要決定一個顏色。系統會依它自動生成完整漸層。</p>
+
+          <div class="time-color-fields">
+            <label class="time-color-field">
+              <span>HEX 色碼</span>
+              <input id="timeShardHex" class="time-color-text" type="text" inputmode="text" autocomplete="off" spellcheck="false" value="${initial}" maxlength="7">
+            </label>
+            <label class="time-color-field">
+              <span>RGB</span>
+              <input id="timeShardRgb" class="time-color-text" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="${formatRgb(initial)}">
+            </label>
+          </div>
+          <p class="time-color-help">可直接使用色盤，也可以輸入 HEX 或 RGB。三者會彼此同步。</p>
         </div>
       </div>
       <div class="time-mark-actions">
-        <button class="time-mark-btn primary" type="button" data-forge-confirm>${isForged ? '重新鑄印石片色彩' : '時空鑄印專屬石片'}</button>
+        <button class="time-mark-btn primary" type="button" data-forge-confirm>${isForged ? '重新定下光源色' : '開始時空鑄印'}</button>
         <button class="time-mark-btn" type="button" data-time-close>稍後再決定</button>
       </div>
       <p class="time-mark-status" data-forge-status></p>
     `);
+
     const picker=o.querySelector('#timeShardColor');
+    const hexInput=o.querySelector('#timeShardHex');
+    const rgbInput=o.querySelector('#timeShardRgb');
     const shard=o.querySelector('[data-shard-preview]');
-    const colorText=o.querySelector('[data-color-value]');
     const status=o.querySelector('[data-forge-status]');
     const confirmBtn=o.querySelector('[data-forge-confirm]');
-    applyShardPalette(shard,initial);
-    picker.addEventListener('input',()=>{
-      const c=normalizeHexColor(picker.value);
-      colorText.textContent=c;
-      applyShardPalette(shard,c);
+    let current=initial;
+
+    const commitColor=(hex,source)=>{
+      current=normalizeHexColor(hex);
+      if(source!=='picker') picker.value=current;
+      if(source!=='hex') hexInput.value=current;
+      if(source!=='rgb') rgbInput.value=formatRgb(current);
+      applyShardPalette(shard,current);
+      hexInput.classList.remove('is-invalid');
+      rgbInput.classList.remove('is-invalid');
+      status.textContent='';
+    };
+
+    applyShardPalette(shard,current);
+
+    picker.addEventListener('input',()=>commitColor(picker.value,'picker'));
+
+    hexInput.addEventListener('input',()=>{
+      let raw=String(hexInput.value||'').trim().toUpperCase();
+      if(raw && !raw.startsWith('#')) raw='#'+raw;
+      if(/^#[0-9A-F]{6}$/.test(raw)){
+        hexInput.value=raw;
+        commitColor(raw,'hex');
+      }else{
+        hexInput.classList.add('is-invalid');
+      }
     });
+
+    rgbInput.addEventListener('input',()=>{
+      const rgb=parseRgbInput(rgbInput.value);
+      if(rgb){
+        commitColor(rgbToHex(rgb.r,rgb.g,rgb.b),'rgb');
+      }else{
+        rgbInput.classList.add('is-invalid');
+      }
+    });
+
     confirmBtn.onclick=async()=>{
       if(confirmBtn.disabled || isCritical()) return;
-      if(!beginCritical('time-shard-forge',15000)) return;
+      const hexRaw=String(hexInput.value||'').trim().toUpperCase();
+      const rgbRaw=parseRgbInput(rgbInput.value);
+      let chosen='';
+      if(/^#[0-9A-F]{6}$/.test(hexRaw)) chosen=hexRaw;
+      else if(rgbRaw) chosen=rgbToHex(rgbRaw.r,rgbRaw.g,rgbRaw.b);
+      else{
+        status.textContent='請確認色碼格式。HEX 需為 #RRGGBB，RGB 需為 0～255 的三組數值。';
+        return;
+      }
+
+      if(!beginCritical('time-shard-forge',18000)) return;
       confirmBtn.disabled=true;
       confirmBtn.setAttribute('aria-busy','true');
       confirmBtn.textContent='鑄印中……';
-      status.textContent='正在讓這枚石片記住你的時間。';
+      status.textContent=isForged?'正在重新凝聚你的光源色。':'時空正在回應你的存在……';
+
       try{
-        const result=await forgeShard(picker.value);
+        const result=await forgeShard(chosen);
+        progressCache=result;
         endCritical();
         closeOverlay(true);
-        toast('時空鑄印完成。');
-        openManager();
+
+        if(isForged){
+          toast('光源色已重新留下。');
+          openManager();
+        }else{
+          const started=playTimeRiftTransition({
+            mode:'forge',
+            onDone:()=>showForgeSuccess(result)
+          });
+          if(!started) showForgeSuccess(result);
+        }
       }catch(err){
         endCritical();
         confirmBtn.disabled=false;
         confirmBtn.removeAttribute('aria-busy');
-        confirmBtn.textContent=isForged?'重新鑄印石片色彩':'時空鑄印專屬石片';
+        confirmBtn.textContent=isForged?'重新定下光源色':'開始時空鑄印';
         status.textContent=err?.message||'鑄印暫時失敗，請稍後再試。';
       }
     };
@@ -495,7 +634,9 @@ window.EndOfTimeAdventure = (() => {
     beginCritical(`time-rift-${mode}`,7000);
     const copy = mode==='resume'
       ? {kicker:'TIME RIFT', title:'正在回到時間裂縫……', text:'時間正在重新接合。'}
-      : {kicker:'TIME MARK RESTORED', title:'正在尋回你的時間痕跡……', text:'散落的時間正在重新聚合。'};
+      : mode==='forge'
+        ? {kicker:'TIME FORGING', title:'時空正在回應你的存在……', text:'一枚沙漏殘片正在穿過裂縫，尋找與你共鳴的位置。'}
+        : {kicker:'TIME MARK RESTORED', title:'正在尋回你的時間痕跡……', text:'散落的時間正在重新聚合。'};
 
     const o=overlay(`
       <div class="time-rift-video-scene" role="status" aria-live="polite">
@@ -749,5 +890,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, completeStory, touchPosition, openManager, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard};
+  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, serialLabel, shardPreviewMarkup, stoneAssetUrl, normalizeHexColor};
 })();
