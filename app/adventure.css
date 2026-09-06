@@ -1276,3 +1276,46 @@ html.time-mark-guide-open{
 .time-forge-preview .time-shard-inscription:empty{
   display:none;
 }
+
+
+/* ============================================================
+   v0.18.8 · 石片本體像素級真實變色
+   不再只改外圍光暈
+   ============================================================ */
+.time-shard-canvas{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:0;
+  pointer-events:none;
+  filter:
+    drop-shadow(0 22px 34px rgba(0,0,0,.28))
+    drop-shadow(0 0 14px var(--shard-glow));
+  transition:opacity .12s ease;
+}
+.time-shard-image{
+  transition:opacity .12s ease;
+}
+
+/* Canvas 已經把主色真正寫進母石像素，不需要再用 multiply 假染一次 */
+.time-shard-asset .time-shard-colorwash{
+  opacity:.12!important;
+  mix-blend-mode:soft-light!important;
+}
+
+/* 外光只做輔助，不再負責「看起來有變色」 */
+.time-shard-asset .time-shard-light{
+  opacity:.30!important;
+}
+.time-shard-asset::after{
+  opacity:.10!important;
+}
+
+/* 選色畫面稍微放大，方便直接比較 HEX / RGB 的效果 */
+.time-forge-preview .time-shard-asset{
+  width:min(330px,76vw);
+}

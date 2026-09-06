@@ -116,6 +116,84 @@ window.EndOfTimeAdventure = (() => {
     };
   }
 
+  function recolorShardCanvas(el,hex){
+    if(!el || !el.classList?.contains('time-shard-asset')) return;
+    const img=el.querySelector('.time-shard-image');
+    const canvas=el.querySelector('.time-shard-canvas');
+    if(!img || !canvas) return;
+
+    const run=()=>{
+      try{
+        const w=img.naturalWidth||0, h=img.naturalHeight||0;
+        if(!w || !h) return;
+
+        // Work at source resolution only once per loaded stone for clean edges.
+        if(canvas.width!==w || canvas.height!==h){
+          canvas.width=w;
+          canvas.height=h;
+        }
+
+        const ctx=canvas.getContext('2d',{willReadFrequently:true});
+        ctx.clearRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+
+        const data=ctx.getImageData(0,0,w,h);
+        const px=data.data;
+        const chosen=hexToRgb(hex);
+
+        // Preserve about 15% of the original prismatic hue,
+        // but make the player's chosen light-source color dominate the glass body.
+        for(let i=0;i<px.length;i+=4){
+          const a=px[i+3];
+          if(a===0) continue;
+
+          const or=px[i], og=px[i+1], ob=px[i+2];
+          const lum=(0.2126*or + 0.7152*og + 0.0722*ob)/255;
+
+          // Base tinted glass: dark facets stay deep, bright facets retain brilliance.
+          const shade=0.22 + Math.pow(lum,0.78)*0.98;
+          let tr=chosen.r*shade;
+          let tg=chosen.g*shade;
+          let tb=chosen.b*shade;
+
+          // Keep a small amount of the mother stone's original rainbow refraction.
+          const keepOriginal = 0.14;
+          tr=tr*(1-keepOriginal)+or*keepOriginal;
+          tg=tg*(1-keepOriginal)+og*keepOriginal;
+          tb=tb*(1-keepOriginal)+ob*keepOriginal;
+
+          // Bright glass highlights should become pale versions of the chosen color,
+          // not remain plain white.
+          if(lum>0.72){
+            const t=Math.min(1,(lum-0.72)/0.28)*0.60;
+            const hr=chosen.r + (255-chosen.r)*0.72;
+            const hg=chosen.g + (255-chosen.g)*0.72;
+            const hb=chosen.b + (255-chosen.b)*0.72;
+            tr=tr*(1-t)+hr*t;
+            tg=tg*(1-t)+hg*t;
+            tb=tb*(1-t)+hb*t;
+          }
+
+          px[i]=Math.max(0,Math.min(255,Math.round(tr)));
+          px[i+1]=Math.max(0,Math.min(255,Math.round(tg)));
+          px[i+2]=Math.max(0,Math.min(255,Math.round(tb)));
+        }
+
+        ctx.putImageData(data,0,0);
+        canvas.dataset.tinted=normalizeHexColor(hex);
+        canvas.style.opacity='1';
+        img.style.opacity='0';
+      }catch(err){
+        console.warn('時印石片本體上色失敗，保留原圖顯示。',err);
+        canvas.style.opacity='0';
+        img.style.opacity='1';
+      }
+    };
+
+    if(img.complete && img.naturalWidth) run();
+    else img.addEventListener('load',run,{once:true});
+  }
+
   function applyShardPalette(el,hex){
     if(!el) return;
     const p=shardPalette(hex);
@@ -126,6 +204,7 @@ window.EndOfTimeAdventure = (() => {
     el.style.setProperty('--shard-edge',p.edge);
     el.style.setProperty('--shard-glow',p.glow);
     el.style.setProperty('--shard-mist',p.mist);
+    recolorShardCanvas(el,p.base);
   }
 
   function serialLabel(value){
@@ -332,7 +411,8 @@ window.EndOfTimeAdventure = (() => {
     const url=stoneAssetUrl(type);
     return `
       <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" style="--stone-image:url('${url}')">
-        <img class="time-shard-image" src="${url}" alt="你的時印石片">
+        <img class="time-shard-image" src="${url}" alt="你的時印石片" crossorigin="anonymous">
+        <canvas class="time-shard-canvas" aria-hidden="true"></canvas>
         <span class="time-shard-colorwash" aria-hidden="true"></span>
         <span class="time-shard-light" aria-hidden="true"></span>
         <span class="time-shard-crack crack-a" aria-hidden="true"></span>
