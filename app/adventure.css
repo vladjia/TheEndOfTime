@@ -1589,3 +1589,130 @@ body:not(.pre-entry) .time-mark-orb{
     height:92px!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.21 · 時印入口視覺修正
+   1) 導覽卡跟著右上角時印定位
+   2) 呼吸只作用在石片本身，不再出現長方形外框
+   ============================================================ */
+
+/* 導覽卡不再寫死 top/right，改由 JS 依實際按鈕位置定位。 */
+.time-mark-entry-coach{
+  position:fixed!important;
+  z-index:14500!important;
+  width:min(360px,calc(100vw - 24px));
+  opacity:0;
+  transform:translateY(-6px);
+  pointer-events:none;
+  transition:opacity .22s ease, transform .22s ease;
+}
+
+.time-mark-entry-coach.is-visible{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+}
+
+.time-mark-entry-coach-card{
+  position:relative;
+  border:1px solid rgba(20,22,26,.12)!important;
+  background:rgba(248,247,243,.98)!important;
+  color:#17191d!important;
+  box-shadow:0 20px 55px rgba(0,0,0,.18)!important;
+}
+
+/* 小箭頭指向右上時印 */
+.time-mark-entry-coach-card::before{
+  content:"";
+  position:absolute;
+  top:-7px;
+  left:var(--coach-arrow-x,80%);
+  width:12px;
+  height:12px;
+  transform:translateX(-50%) rotate(45deg);
+  background:rgba(248,247,243,.98);
+  border-left:1px solid rgba(20,22,26,.12);
+  border-top:1px solid rgba(20,22,26,.12);
+}
+
+.time-mark-entry-coach.is-above .time-mark-entry-coach-card::before{
+  top:auto;
+  bottom:-7px;
+  transform:translateX(-50%) rotate(225deg);
+}
+
+.time-mark-entry-coach-card strong{
+  color:#17191d!important;
+}
+
+.time-mark-entry-coach-card p{
+  color:rgba(23,25,29,.66)!important;
+}
+
+/* 取消舊版 coach pulse 的整框呼吸。 */
+.time-mark-orb.is-coach-highlight{
+  box-shadow:none!important;
+  outline:none!important;
+  animation:none!important;
+  filter:none!important;
+}
+
+/* 未鑄印狀態也不要在 media 外圍畫框。 */
+.time-mark-orb.is-unforged,
+.time-mark-orb.is-unforged .time-mark-orb-media{
+  box-shadow:none!important;
+  outline:none!important;
+  border-color:transparent!important;
+  background:transparent!important;
+}
+
+/* 只讓石片影片本身呼吸。 */
+.time-mark-orb-video{
+  animation:timeMarkShardBreath 3.8s ease-in-out infinite!important;
+  transform-origin:50% 50%!important;
+}
+
+.time-mark-orb.is-coach-highlight .time-mark-orb-video{
+  animation:timeMarkShardCoachBreath 2.4s ease-in-out infinite!important;
+}
+
+@keyframes timeMarkShardBreath{
+  0%,100%{
+    opacity:.90;
+    transform:translate(-50%,-50%) scale(.985);
+    filter:
+      brightness(.98)
+      saturate(.98)
+      drop-shadow(0 0 4px rgba(255,255,255,.12))
+      drop-shadow(0 0 8px rgba(166,122,255,.12));
+  }
+  50%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.035);
+    filter:
+      brightness(1.08)
+      saturate(1.04)
+      drop-shadow(0 0 7px rgba(255,255,255,.20))
+      drop-shadow(0 0 13px rgba(166,122,255,.18));
+  }
+}
+
+@keyframes timeMarkShardCoachBreath{
+  0%,100%{
+    opacity:.92;
+    transform:translate(-50%,-50%) scale(1);
+    filter:
+      brightness(1)
+      saturate(1)
+      drop-shadow(0 0 5px rgba(127,21,33,.14));
+  }
+  50%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.06);
+    filter:
+      brightness(1.10)
+      saturate(1.06)
+      drop-shadow(0 0 10px rgba(127,21,33,.22));
+  }
+}

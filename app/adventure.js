@@ -1189,13 +1189,49 @@ window.EndOfTimeAdventure = (() => {
     `;
     document.body.appendChild(coach);
     btn.classList.add('is-coach-highlight');
-    requestAnimationFrame(()=>coach.classList.add('is-visible'));
+
+    const place=()=>{
+      const rect=btn.getBoundingClientRect();
+      const gap=10;
+      const margin=12;
+      const width=Math.min(360,window.innerWidth-margin*2);
+
+      let left=rect.right-width;
+      left=Math.max(margin,Math.min(left,window.innerWidth-width-margin));
+
+      let top=rect.bottom+gap;
+      const estimatedH=coach.offsetHeight||170;
+      if(top+estimatedH>window.innerHeight-margin){
+        top=Math.max(margin,rect.top-estimatedH-gap);
+        coach.classList.add('is-above');
+      }else{
+        coach.classList.remove('is-above');
+      }
+
+      coach.style.width=`${width}px`;
+      coach.style.left=`${Math.round(left)}px`;
+      coach.style.top=`${Math.round(top)}px`;
+
+      const arrowX=Math.max(24,Math.min(width-24,rect.left+rect.width/2-left));
+      coach.style.setProperty('--coach-arrow-x',`${Math.round(arrowX)}px`);
+    };
+
+    place();
+    requestAnimationFrame(()=>{
+      place();
+      coach.classList.add('is-visible');
+    });
 
     const close=()=>{
       btn.classList.remove('is-coach-highlight');
       coach.classList.remove('is-visible');
+      window.removeEventListener('resize',place);
+      window.removeEventListener('scroll',place,true);
       setTimeout(()=>coach.remove(),220);
     };
+
+    window.addEventListener('resize',place,{passive:true});
+    window.addEventListener('scroll',place,{passive:true,capture:true});
     coach.querySelector('[data-entry-coach-close]').onclick=close;
     setTimeout(close,9000);
   }
