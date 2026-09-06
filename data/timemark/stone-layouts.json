@@ -1,0 +1,121 @@
+{
+  "version": "1.0",
+  "coordinateSystem": "normalized 0..1 against original PNG canvas",
+  "purpose": "personal time-mark engraving safe zone",
+  "notes": [
+    "centerX/centerY are normalized engraving centers.",
+    "width/height are normalized safe-zone ellipse bounds.",
+    "rotation is degrees.",
+    "Final engraving rendering must still be clipped by the actual PNG alpha mask."
+  ],
+  "stones": {
+    "stone-01": {
+      "centerX": 0.5327,
+      "centerY": 0.4777,
+      "width": 0.22,
+      "height": 0.3439,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-02": {
+      "centerX": 0.5526,
+      "centerY": 0.4811,
+      "width": 0.2508,
+      "height": 0.3529,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-03": {
+      "centerX": 0.5694,
+      "centerY": 0.4654,
+      "width": 0.1959,
+      "height": 0.2822,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-04": {
+      "centerX": 0.5583,
+      "centerY": 0.4858,
+      "width": 0.2337,
+      "height": 0.3249,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-05": {
+      "centerX": 0.4968,
+      "centerY": 0.5047,
+      "width": 0.2077,
+      "height": 0.3151,
+      "rotation": 22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-06": {
+      "centerX": 0.5766,
+      "centerY": 0.4912,
+      "width": 0.2584,
+      "height": 0.3514,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-07": {
+      "centerX": 0.5602,
+      "centerY": 0.5046,
+      "width": 0.2944,
+      "height": 0.3542,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-08": {
+      "centerX": 0.5546,
+      "centerY": 0.477,
+      "width": 0.2814,
+      "height": 0.3324,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-09": {
+      "centerX": 0.5259,
+      "centerY": 0.4898,
+      "width": 0.2352,
+      "height": 0.3422,
+      "rotation": 22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-10": {
+      "centerX": 0.565,
+      "centerY": 0.5023,
+      "width": 0.229,
+      "height": 0.3513,
+      "rotation": -22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-11": {
+      "centerX": 0.5136,
+      "centerY": 0.4785,
+      "width": 0.2706,
+      "height": 0.3385,
+      "rotation": 22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    },
+    "stone-12": {
+      "centerX": 0.5167,
+      "centerY": 0.492,
+      "width": 0.2656,
+      "height": 0.3416,
+      "rotation": 22.0,
+      "padding": 0.1,
+      "maskAlphaThreshold": 24
+    }
+  }
+}

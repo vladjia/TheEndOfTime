@@ -1339,3 +1339,59 @@ html.time-mark-guide-open{
   pointer-events:none;
   user-select:none;
 }
+
+
+/* ============================================================
+   v0.18.12 · 迎賓頁期間封鎖右上角時印入口
+   ============================================================ */
+body.pre-entry .time-mark-toggle,
+body.pre-entry .time-mark-orb{
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translateY(-6px)!important;
+}
+
+/* 真正進入網站後才讓時印入口出現 */
+body:not(.pre-entry) .time-mark-toggle,
+body:not(.pre-entry) .time-mark-orb{
+  transition:
+    opacity .24s ease,
+    transform .24s ease,
+    visibility 0s linear 0s;
+}
+
+
+/* ============================================================
+   v0.18.16 · 個人時印刻紋 v1
+   ============================================================ */
+.time-shard-engraving{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:0;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  filter:
+    drop-shadow(0 0 2px rgba(255,255,255,.28))
+    drop-shadow(0 0 5px var(--shard-glow));
+  transition:opacity .28s ease;
+}
+
+/* 小型右上角 / 管理器預覽不要讓細線糊成一團 */
+.time-mark-mini-shard .time-shard-engraving{
+  opacity:.82;
+  filter:drop-shadow(0 0 3px var(--shard-glow));
+}
+
+/* 正式鑄印揭示時稍微加強刻痕亮度 */
+.time-forge-reveal .time-shard-engraving,
+.timemark-shard-stage .time-shard-engraving{
+  filter:
+    drop-shadow(0 0 2px rgba(255,255,255,.36))
+    drop-shadow(0 0 8px var(--shard-glow));
+}

@@ -7,6 +7,8 @@ window.EndOfTimeAdventure = (() => {
   const ENTRY_COACH_KEY = 'theEndOfTime.timeMark.entryCoachSeen';
   let configCache = null;
   let progressCache = null;
+  let stoneLayoutsCache = null;
+  let stoneLayoutsPromise = null;
   let ensurePromise = null;
   let timeMarkBusy = false;
   let criticalAction = '';
@@ -120,6 +122,254 @@ window.EndOfTimeAdventure = (() => {
     };
   }
 
+
+  async function loadStoneLayouts(){
+    if(stoneLayoutsCache) return stoneLayoutsCache;
+    if(stoneLayoutsPromise) return stoneLayoutsPromise;
+
+    stoneLayoutsPromise=(async()=>{
+      try{
+        const url=new URL(`${rootPrefix()}data/timemark/stone-layouts.json?v=0.18.16`,document.baseURI).href;
+        const r=await fetch(url,{cache:'force-cache'});
+        if(!r.ok) throw new Error(`stone layouts ${r.status}`);
+        const data=await r.json();
+        stoneLayoutsCache=data?.stones||{};
+      }catch(err){
+        console.warn('母石刻紋座標載入失敗，使用中央安全區。',err);
+        stoneLayoutsCache={};
+      }finally{
+        stoneLayoutsPromise=null;
+      }
+      return stoneLayoutsCache;
+    })();
+
+    return stoneLayoutsPromise;
+  }
+
+  function seedHash32(text){
+    let h=2166136261>>>0;
+    const s=String(text||'');
+    for(let i=0;i<s.length;i++){
+      h^=s.charCodeAt(i);
+      h=Math.imul(h,16777619);
+    }
+    h^=h>>>16;
+    h=Math.imul(h,0x7feb352d);
+    h^=h>>>15;
+    h=Math.imul(h,0x846ca68b);
+    h^=h>>>16;
+    return h>>>0;
+  }
+
+  function seededRandom(seed){
+    let a=seedHash32(seed)||0x6d2b79f5;
+    return ()=>{
+      a|=0;
+      a=(a+0x6D2B79F5)|0;
+      let t=a;
+      t=Math.imul(t^(t>>>15),1|t);
+      t^=t+Math.imul(t^(t>>>7),61|t);
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  }
+
+  function engravingLayoutFor(layouts,type){
+    const key=`stone-${String(stoneTypeNumber(type)||1).padStart(2,'0')}`;
+    return layouts?.[key] || {
+      centerX:.50,
+      centerY:.50,
+      width:.38,
+      height:.34,
+      rotation:0,
+      padding:.10,
+      maskAlphaThreshold:24
+    };
+  }
+
+  function drawBrokenEllipse(ctx,cx,cy,rx,ry,start,end,rotation){
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(rotation);
+    ctx.scale(1,ry/rx);
+    ctx.beginPath();
+    ctx.arc(0,0,rx,start,end);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPersonalEngravingGeometry(ctx,w,h,layout,seed,hex){
+    const rand=seededRandom(seed);
+    const cx=Number(layout.centerX||.5)*w;
+    const cy=Number(layout.centerY||.5)*h;
+    const safeW=Number(layout.width||.38)*w;
+    const safeH=Number(layout.height||.34)*h;
+    const rotation=(Number(layout.rotation||0)*Math.PI)/180;
+
+    const baseR=Math.min(safeW,safeH)*.42;
+    const sx=safeW/(baseR*2);
+    const sy=safeH/(baseR*2);
+
+    const chosen=hexToRgb(hex);
+    const pale={
+      r:Math.round(chosen.r+(255-chosen.r)*.68),
+      g:Math.round(chosen.g+(255-chosen.g)*.68),
+      b:Math.round(chosen.b+(255-chosen.b)*.68)
+    };
+
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(rotation);
+    ctx.scale(sx,sy);
+
+    const line=Math.max(1.25,Math.min(w,h)*.00165/Math.max(sx,sy));
+    ctx.lineWidth=line;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+
+    const stroke=`rgba(${pale.r},${pale.g},${pale.b},0.82)`;
+    const strokeSoft=`rgba(${pale.r},${pale.g},${pale.b},0.44)`;
+    ctx.shadowColor=`rgba(${chosen.r},${chosen.g},${chosen.b},0.62)`;
+    ctx.shadowBlur=line*4.5;
+
+    // 每個人的「骨架」固定：3～6 軸，但不做完全對稱的制式徽章。
+    const axes=3+Math.floor(rand()*4);
+    const phase=rand()*Math.PI*2;
+    const hubR=baseR*(.12+rand()*.05);
+    const ringCount=2+Math.floor(rand()*3);
+
+    // 中央核心：不閉合，保留「時間裂縫」感。
+    ctx.strokeStyle=stroke;
+    ctx.beginPath();
+    ctx.arc(0,0,hubR,phase+.32,phase+Math.PI*1.72);
+    ctx.stroke();
+
+    // 內外環：每環缺口位置、長度皆由 seed 決定。
+    for(let r=0;r<ringCount;r++){
+      const rr=baseR*(.34+r*(.16+rand()*.035));
+      const gap=.28+rand()*.55;
+      const start=phase+rand()*Math.PI*2;
+      ctx.strokeStyle=r%2?strokeSoft:stroke;
+      ctx.beginPath();
+      ctx.arc(0,0,rr,start+gap,start+Math.PI*2-gap*.42);
+      ctx.stroke();
+
+      if(rand()>.42){
+        const a=start-gap*.10;
+        const len=baseR*(.045+rand()*.055);
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*(rr-len),Math.sin(a)*(rr-len));
+        ctx.lineTo(Math.cos(a)*(rr+len),Math.sin(a)*(rr+len));
+        ctx.stroke();
+      }
+    }
+
+    // 放射骨線：長度不一，部分線段被刻意截斷。
+    for(let i=0;i<axes;i++){
+      const a=phase+(i/axes)*Math.PI*2+(rand()-.5)*.14;
+      const inner=hubR*(1.15+rand()*.55);
+      const outer=baseR*(.62+rand()*.28);
+      ctx.strokeStyle=rand()>.30?stroke:strokeSoft;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);
+      ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);
+      ctx.stroke();
+
+      // 分支
+      if(rand()>.38){
+        const anchor=inner+(outer-inner)*(.42+rand()*.30);
+        const side=rand()>.5?1:-1;
+        const branchA=a+side*(.45+rand()*.34);
+        const branchL=baseR*(.11+rand()*.10);
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*anchor,Math.sin(a)*anchor);
+        ctx.lineTo(
+          Math.cos(a)*anchor+Math.cos(branchA)*branchL,
+          Math.sin(a)*anchor+Math.sin(branchA)*branchL
+        );
+        ctx.stroke();
+      }
+    }
+
+    // 個人節點：數量與位置固定於 seed。
+    const nodes=2+Math.floor(rand()*5);
+    ctx.fillStyle=`rgba(${pale.r},${pale.g},${pale.b},0.88)`;
+    for(let i=0;i<nodes;i++){
+      const a=phase+rand()*Math.PI*2;
+      const rr=baseR*(.30+rand()*.56);
+      const nr=Math.max(line*1.15,baseR*(.010+rand()*.010));
+      ctx.beginPath();
+      ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,nr,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // 一條偏離對稱軸的「本命時痕」，避免每枚看起來只像普通魔法陣。
+    const scarA=phase+(rand()-.5)*1.15;
+    const scarR=baseR*(.28+rand()*.12);
+    const scarL=baseR*(.32+rand()*.16);
+    ctx.strokeStyle=stroke;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(scarA)*scarR,Math.sin(scarA)*scarR);
+    ctx.quadraticCurveTo(
+      Math.cos(scarA+.55)*scarR*.55,
+      Math.sin(scarA+.55)*scarR*.55,
+      Math.cos(scarA+.18)*scarL,
+      Math.sin(scarA+.18)*scarL
+    );
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  async function renderShardEngraving(el,hex){
+    if(!el || !el.classList?.contains('time-shard-asset')) return;
+
+    const seed=String(el.dataset.engraveSeed||'').trim();
+    const type=stoneTypeNumber(el.dataset.stoneType);
+    const img=el.querySelector('.time-shard-image');
+    const canvas=el.querySelector('.time-shard-engraving');
+
+    if(!seed || !type || !img || !canvas){
+      if(canvas) canvas.style.opacity='0';
+      return;
+    }
+
+    const run=async()=>{
+      try{
+        const w=img.naturalWidth||0;
+        const h=img.naturalHeight||0;
+        if(!w || !h) return;
+
+        if(canvas.width!==w || canvas.height!==h){
+          canvas.width=w;
+          canvas.height=h;
+        }
+
+        const ctx=canvas.getContext('2d');
+        ctx.clearRect(0,0,w,h);
+
+        const layouts=await loadStoneLayouts();
+        const layout=engravingLayoutFor(layouts,type);
+        drawPersonalEngravingGeometry(ctx,w,h,layout,seed,normalizeHexColor(hex));
+
+        // 最後一道保護：真正以母石透明區域裁切。
+        // 即使將來刻紋演算法變得更複雜，也絕不會畫到石片之外。
+        ctx.globalCompositeOperation='destination-in';
+        ctx.drawImage(img,0,0,w,h);
+        ctx.globalCompositeOperation='source-over';
+
+        canvas.dataset.seed=seed;
+        canvas.dataset.stoneType=String(type);
+        canvas.style.opacity='1';
+      }catch(err){
+        console.warn('個人時印刻紋繪製失敗。',err);
+        canvas.style.opacity='0';
+      }
+    };
+
+    if(img.complete && img.naturalWidth) run();
+    else img.addEventListener('load',run,{once:true});
+  }
+
   function recolorShardCanvas(el,hex){
     if(!el || !el.classList?.contains('time-shard-asset')) return;
     const img=el.querySelector('.time-shard-image');
@@ -209,6 +459,7 @@ window.EndOfTimeAdventure = (() => {
     el.style.setProperty('--shard-glow',p.glow);
     el.style.setProperty('--shard-mist',p.mist);
     recolorShardCanvas(el,p.base);
+    renderShardEngraving(el,p.base);
   }
 
   function serialLabel(value){
@@ -418,7 +669,7 @@ window.EndOfTimeAdventure = (() => {
     `,{lockClose:true});
   }
 
-  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,awaiting=false}={}){
+  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,engraveSeed='',awaiting=false}={}){
     const type=stoneTypeNumber(stoneType);
     if(awaiting || !type){
       return `
@@ -431,9 +682,10 @@ window.EndOfTimeAdventure = (() => {
     const levelClass=`resonance-${Math.max(0,Math.min(5,Number(level||0)))}`;
     const url=stoneAssetUrl(type);
     return `
-      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" style="--stone-image:url('${url}')">
+      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${String(engraveSeed||'').replace(/"/g,'&quot;')}" style="--stone-image:url('${url}')">
         <img class="time-shard-image" src="${url}" alt="你的時印石片" crossorigin="anonymous">
         <canvas class="time-shard-canvas" aria-hidden="true"></canvas>
+        <canvas class="time-shard-engraving" aria-hidden="true"></canvas>
         <span class="time-shard-colorwash" aria-hidden="true"></span>
         <span class="time-shard-light" aria-hidden="true"></span>
         <span class="time-shard-crack crack-a" aria-hidden="true"></span>
@@ -459,7 +711,8 @@ window.EndOfTimeAdventure = (() => {
           serial,
           relay:stone.relayCode||'',
           level:stone.resonanceLevel||0,
-          stoneType:stone.stoneType
+          stoneType:stone.stoneType,
+          engraveSeed:stone.engraveSeed||''
         })}
       </div>
       <div class="time-mark-actions">
@@ -474,6 +727,7 @@ window.EndOfTimeAdventure = (() => {
   }
 
   async function openForge(){
+    if(document.body.classList.contains('pre-entry')) return;
     if(isCritical()) return;
     const data=await load(true);
     let existing=data?.stone||{};
@@ -496,6 +750,7 @@ window.EndOfTimeAdventure = (() => {
             relay:existing.relayCode||'',
             level:existing.resonanceLevel||0,
             stoneType:existingType,
+            engraveSeed:existing.engraveSeed||'',
             awaiting:!existingType
           })}
         </div>
@@ -668,6 +923,7 @@ window.EndOfTimeAdventure = (() => {
   }
 
   async function openManager(){
+    if(document.body.classList.contains('pre-entry')) return;
     if(timeMarkBusy || isCritical()) return;
     timeMarkBusy=true;
     beginCritical('time-mark-open',10000);
@@ -690,7 +946,14 @@ window.EndOfTimeAdventure = (() => {
 
         ${forged ? `
           <div class="time-mark-mini-shard">
-            ${shardPreviewMarkup({color,serial,relay,level:stone.resonanceLevel||0})}
+            ${shardPreviewMarkup({
+              color,
+              serial,
+              relay,
+              level:stone.resonanceLevel||0,
+              stoneType:stone.stoneType,
+              engraveSeed:stone.engraveSeed||''
+            })}
             <div class="time-mark-mini-copy">
               <small>時印序</small>
               <strong>${serial}</strong>
@@ -1018,5 +1281,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, serialLabel, shardPreviewMarkup, stoneAssetUrl, normalizeHexColor};
+  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, normalizeHexColor};
 })();

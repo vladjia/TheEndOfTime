@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', async()=>{
       serial:A.serialLabel(stone.serial),
       relay:stone.relayCode||'',
       level:stone.resonanceLevel||0,
-      stoneType:stone.stoneType
+      stoneType:stone.stoneType,
+      engraveSeed:stone.engraveSeed||''
     });
     const el=shard.firstElementChild;
     A.applyShardPalette(el,stone.color||'#7F1521');
