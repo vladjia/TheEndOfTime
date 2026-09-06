@@ -8,7 +8,7 @@ window.EndOfTimeAdventure = (() => {
   let configCache = null;
   let progressCache = null;
   let progressRefreshPromise = null;
-  const PROGRESS_SESSION_PREFIX = 'tet:progress:v01833:';
+  const PROGRESS_SESSION_PREFIX = 'tet:progress:v01837:';
   const PROGRESS_SESSION_TTL = 3 * 60 * 1000;
   let stoneLayoutsCache = null;
   let stoneLayoutsPromise = null;
@@ -1550,22 +1550,11 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function visibleTimeTraceCount(data){
-  const allowed=new Set(['STORY','CHARACTER','WORLD']);
-  const seen=new Set();
-
-  return (Array.isArray(data?.progress) ? data.progress : [])
-    .filter(row=>allowed.has(String(row?.type || '').trim().toUpperCase()))
-    .reduce((count,row)=>{
-      const type=String(row?.type || '').trim().toUpperCase();
-      const targetId=String(row?.targetId || '').trim();
-      const key=`${type}|${targetId}`;
-
-      if(!targetId || seen.has(key)) return count;
-
-      seen.add(key);
-      return count+1;
-    },0);
-}
+    const story=Array.isArray(data?.storyRead) ? data.storyRead.length : 0;
+    const chars=Array.isArray(data?.charactersUnlocked) ? data.charactersUnlocked.length : 0;
+    const world=Array.isArray(data?.worldUnlocked) ? data.worldUnlocked.length : 0;
+    return story + chars + world;
+  }
 
   async function refreshTimeMarkEntryState(){
     try{
