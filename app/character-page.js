@@ -804,6 +804,28 @@ function characterKnowledgeSet(adventureData,characterId,mode){
   return new Set(Array.isArray(map?.[characterId]) ? map[characterId] : []);
 }
 
+function applyCharacterContent(char,characterId,adventureData){
+  const fields=adventureData?.characterContent?.[characterId] || {};
+  const value=fieldId=>String(fields?.[fieldId]?.value || '').trim();
+
+  const publicIntro=value('publicIntro');
+  const coreLine=value('coreLine');
+  const publicDetail=value('publicDetail');
+
+  if(publicIntro) char.publicIntro=publicIntro;
+  if(coreLine) char.coreLine=coreLine;
+  if(publicDetail) char.publicDetail=publicDetail;
+
+  [1,2,3].forEach(index=>{
+    const title=value(`introField${index}Title`);
+    const content=value(`introField${index}`);
+    if(!Array.isArray(char.introFields)) char.introFields=[];
+    if(title || content){
+      char.introFields[index-1]={title:title,value:content};
+    }
+  });
+}
+
 function setKnowledgeVisible(target,visible){
   if(!target) return;
   target.classList.toggle('character-knowledge-hidden',!visible);
@@ -918,6 +940,7 @@ async function initCharacterPage(){
     const char = (data.characters || []).find(x=>x.id===id);
     if(!char) throw new Error(`Character not found: ${id}`);
 
+    applyCharacterContent(char,id,adventureData);
     applyCopy(data.copy || {});
     renderCharacter(char,id,data,adventureData,mode);
 

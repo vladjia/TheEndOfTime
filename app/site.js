@@ -25,6 +25,31 @@ function copyText(copy,key,fallback=''){
   return item.text || fallback;
 }
 
+async function loadAdventureForCharacterContent(){
+  for(let i=0;i<40;i++){
+    const A=window.EndOfTimeAdventure;
+    if(A?.load){
+      try{return await A.load(false);}catch(_){return null;}
+    }
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+  return null;
+}
+
+function applyCharacterContent(chars,adventureData){
+  const map=adventureData?.characterContent || {};
+  (chars || []).forEach(char=>{
+    const fields=map[char.id] || {};
+    Object.keys(fields).forEach(fieldId=>{
+      const value=String(fields[fieldId]?.value || '').trim();
+      if(!value) return;
+      if(fieldId==='publicIntro') char.publicIntro=value;
+      if(fieldId==='coreLine') char.coreLine=value;
+      if(fieldId==='publicDetail') char.publicDetail=value;
+    });
+  });
+}
+
 function applyCopy(copy){
   document.querySelectorAll('[data-copy]').forEach(el=>{
     const key = el.dataset.copy;
@@ -298,6 +323,9 @@ async function init(){
     console.warn('GAS 載入失敗，改用 GitHub 本機備援資料。', e);
     data = await loadFallback();
   }
+
+  const adventureData=await loadAdventureForCharacterContent();
+  applyCharacterContent(data.characters,adventureData);
 
   renderHero(data.site,data.copy || {});
   renderStoryPreview(data.story || [],data.copy || {});

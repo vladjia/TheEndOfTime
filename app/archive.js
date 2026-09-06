@@ -17,6 +17,17 @@ function applyCopy(copy){
   });
 }
 
+function applyCharacterContent(chars,progress){
+  const map=progress?.characterContent || {};
+  (chars || []).forEach(char=>{
+    const fields=map[char.id] || {};
+    ['publicIntro','coreLine','publicDetail'].forEach(fieldId=>{
+      const value=String(fields[fieldId]?.value || '').trim();
+      if(value) char[fieldId]=value;
+    });
+  });
+}
+
 function renderCharacters(chars){
   const box = $('#characterArchiveGrid');
   if(!box) return;
@@ -85,6 +96,7 @@ async function initArchive(){
     if(document.body.classList.contains('archive-characters')){
       const unlocked=new Set(progress?.charactersUnlocked||[]);
       const chars=(data.characters||[]).filter(c=>unlocked.has(c.id));
+      applyCharacterContent(chars,progress);
       renderCharacters(chars);
       if(!chars.length){document.querySelector('#characterArchiveGrid').innerHTML='<div class="story-empty">你還沒有在旅途中真正認識任何人。</div>'}
     }
