@@ -11,7 +11,7 @@
 <br>
 
 [![Website](https://img.shields.io/badge/進入《時盡》-111318?style=for-the-badge)](https://vladjia.github.io/TheEndOfTime/)
-[![Frontend](https://img.shields.io/badge/Frontend-v0.18.24-7F1521?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
+[![Frontend](https://img.shields.io/badge/Frontend-v0.18.27-7F1521?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
 [![CORE](https://img.shields.io/badge/CORE-v2.6-4B515A?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
 
 </div>
@@ -22,11 +22,9 @@
 
 《時盡》是一套結合 **劇情閱讀、角色檔案、世界觀探索與個人旅程紀錄** 的互動式網站。
 
-核心設計：
-
 > **讀到哪裡，世界就存在到哪裡。**
 
-未解鎖的內容不會以鎖頭、`???` 或空白卡片提示存在。  
+未解鎖的內容不以鎖頭、`???` 或空白卡片提示存在。  
 在玩家尚未走到那個時間點以前，那些資訊就不應該出現在他的世界裡。
 
 ---
@@ -47,16 +45,14 @@
 ## 目前功能
 
 - 劇情閱讀與閱讀進度
-- 角色檔案
-- 角色圖誌
+- 角色檔案與角色圖誌
 - 世界觀逐步解鎖
-- 時印系統
+- 時印系統與個人旅程
 - 十二時辰母石
-- 光源色設定
+- 單一光源色 → 琉璃折光與環繞微光
 - 個人本命刻紋
 - 時印序與接力碼
 - 回到上次停留的時間裂縫
-- 個人旅程紀錄
 - Google Drive 圖片／影片同步
 - DEV FULL 完整版預覽
 
@@ -68,40 +64,16 @@
 
 > **此刻，已被時印記下。**
 
-目前規則：
-
 - 玩家不需要註冊帳號
-- 首次進入會自動建立旅程識別
-- 正式時空鑄印前，系統會先回應一枚母石供玩家預覽
-- 玩家可以選擇自己的光源色
+- 正式鑄印前，系統先回應一枚母石供預覽
+- 玩家只需選擇一個自己的光源色
+- 系統自動產生琉璃層次、內部折光與外緣流光
 - 正式鑄印後才產生本命刻紋
-- 同一名玩家的母石與刻紋會永久固定
-- 後續故事、角色與世界觀會逐步留下新的時痕
-
-核心定義：
+- 同一名玩家的母石與刻紋永久固定
+- 後續故事、角色與世界觀逐步留下新的時痕
 
 > **個人時印刻紋 = 你是誰**  
 > **後續時痕 = 你走過什麼**
-
----
-
-## 角色圖誌
-
-角色頁內建「角色圖誌」，不另設獨立圖庫。
-
-Drive 建議分類：
-
-```text
-人物
-└─ 角色名稱
-   ├─ 01-主視覺
-   ├─ 02-圖誌
-   ├─ 03-招式
-   ├─ 04-細節
-   └─ 05-其他
-```
-
-沒有素材時，該區塊不顯示。
 
 ---
 
@@ -113,42 +85,17 @@ Drive 建議分類：
 syncDriveMedia()
 ```
 
-可同步：
-
-- 圖片
-- 影片
-
-`syncDriveImages()` 僅保留舊版相容。  
-後續正式操作一律使用 `syncDriveMedia()`。
+`syncDriveImages()` 僅保留舊版相容。
 
 ---
 
 ## DEV 工具
-
-目前正式 CORE 已整合常用測試工具：
 
 ```javascript
 markDeveloperTimeMark()
 resetMyDevTimeMarkCompletely()
 setMyDevPreviewFull()
 setMyDevPreviewOff()
-```
-
----
-
-## 專案結構
-
-```text
-TheEndOfTime/
-├─ index.html
-├─ app/
-├─ assets/
-├─ characters/
-├─ story/
-├─ world/
-├─ journey/
-├─ timemark/
-└─ data/
 ```
 
 ---
@@ -167,15 +114,13 @@ TheEndOfTime/
 
 | 系統 | 版本 |
 |---|---:|
-| Frontend | `v0.18.24` |
+| Frontend | `v0.18.27` |
 | CORE | `v2.6` |
 | 個人刻紋 | `v1` |
 
 ---
 
 <div align="center">
-
-### 《時盡》 · THE END OF TIME
 
 [首頁](https://vladjia.github.io/TheEndOfTime/) ·
 [故事](https://vladjia.github.io/TheEndOfTime/story/) ·

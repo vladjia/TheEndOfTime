@@ -2021,3 +2021,137 @@ body:not(.pre-entry) .time-mark-orb{
     animation:none!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.27 · 母石環繞微光
+   PNG 本體不動；用 Alpha mask + blur 製造「沿石片外緣慢慢流動」的活光。
+   ============================================================ */
+
+/*
+  這兩層位於石片本體下方。
+  conic-gradient 會旋轉，但先被母石 Alpha mask 裁成石片形狀，
+  再經 blur / drop-shadow 向外擴散，所以肉眼看到的是沿外緣游走的微光，
+  而不是一個圓形光圈。
+*/
+.time-shard-orbit-glow{
+  position:absolute;
+  inset:-7%;
+  z-index:1;
+  pointer-events:none;
+
+  -webkit-mask-image:var(--stone-image);
+  mask-image:var(--stone-image);
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+
+  translate:var(--stone-shift-x,0%) var(--stone-shift-y,0%);
+  transform-origin:50% 50%;
+  mix-blend-mode:screen;
+  will-change:transform,opacity,filter;
+}
+
+.time-shard-orbit-glow.orbit-a{
+  background:
+    conic-gradient(
+      from 18deg,
+      transparent 0deg 44deg,
+      color-mix(in srgb,var(--shard-light) 58%,white) 62deg,
+      transparent 88deg 168deg,
+      color-mix(in srgb,var(--shard-main) 50%,white) 194deg,
+      transparent 222deg 300deg,
+      color-mix(in srgb,var(--shard-edge) 42%,#c9b7ff) 324deg,
+      transparent 348deg 360deg
+    );
+  opacity:.24;
+  filter:
+    blur(11px)
+    drop-shadow(0 0 7px var(--shard-glow))
+    drop-shadow(0 0 15px color-mix(in srgb,var(--shard-main) 20%,transparent));
+  animation:timeShardOrbitA 14.5s linear infinite;
+}
+
+.time-shard-orbit-glow.orbit-b{
+  inset:-4%;
+  background:
+    conic-gradient(
+      from 210deg,
+      transparent 0deg 96deg,
+      rgba(255,255,255,.34) 112deg,
+      transparent 132deg 248deg,
+      color-mix(in srgb,var(--shard-light) 36%,white) 266deg,
+      transparent 286deg 360deg
+    );
+  opacity:.14;
+  filter:
+    blur(7px)
+    drop-shadow(0 0 5px rgba(255,255,255,.10));
+  animation:timeShardOrbitB 19s linear infinite reverse;
+}
+
+/* 偶爾輕微增亮，避免只是機械式等速旋轉。 */
+.time-shard-asset{
+  --orbit-breath:1;
+}
+.time-shard-asset .time-shard-orbit-glow{
+  animation-timing-function:linear;
+}
+
+@keyframes timeShardOrbitA{
+  0%{
+    transform:rotate(0deg) scale(1.015);
+    opacity:.17;
+  }
+  25%{opacity:.27}
+  50%{
+    transform:rotate(180deg) scale(1.035);
+    opacity:.21;
+  }
+  75%{opacity:.29}
+  100%{
+    transform:rotate(360deg) scale(1.015);
+    opacity:.17;
+  }
+}
+
+@keyframes timeShardOrbitB{
+  0%{
+    transform:rotate(0deg) scale(1.00);
+    opacity:.10;
+  }
+  50%{
+    transform:rotate(180deg) scale(1.025);
+    opacity:.18;
+  }
+  100%{
+    transform:rotate(360deg) scale(1.00);
+    opacity:.10;
+  }
+}
+
+/* 正式鑄印後微光稍微更穩，未鑄印預覽則保留一點「正在回應」的感覺。 */
+.time-forge-preview .time-shard-orbit-glow.orbit-a{
+  opacity:.27;
+}
+.time-forge-reveal .time-shard-orbit-glow.orbit-a,
+.timemark-shard-host .time-shard-orbit-glow.orbit-a{
+  opacity:.22;
+}
+
+/* 小型管理器預覽不要糊成一團。 */
+.time-mark-mini-shard .time-shard-orbit-glow{
+  filter:blur(5px) drop-shadow(0 0 5px var(--shard-glow));
+  opacity:.12!important;
+}
+
+/* 低動態偏好：保留柔光，不旋轉。 */
+@media(prefers-reduced-motion:reduce){
+  .time-shard-orbit-glow{
+    animation:none!important;
+    opacity:.14!important;
+  }
+}
