@@ -1908,3 +1908,116 @@ body:not(.pre-entry) .time-mark-orb{
 .time-forge-preview .time-shard-asset{
   margin-inline:auto!important;
 }
+
+
+/* ============================================================
+   v0.18.26 · 時印琉璃活化
+   單一光源色 → 多層折射 + 緩慢內部光流
+   ============================================================ */
+
+/* 玩家仍只選一個光源色，系統自動延伸琉璃層次。 */
+.time-shard-refraction{
+  position:absolute;
+  inset:-14%;
+  z-index:4;
+  pointer-events:none;
+  -webkit-mask-image:var(--stone-image);
+  mask-image:var(--stone-image);
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+  mix-blend-mode:screen;
+  opacity:.30;
+  translate:var(--stone-shift-x,0%) var(--stone-shift-y,0%);
+}
+
+.time-shard-refraction.refraction-a{
+  background:
+    linear-gradient(
+      118deg,
+      transparent 10%,
+      color-mix(in srgb,var(--shard-main) 32%,white) 34%,
+      rgba(255,255,255,.38) 48%,
+      color-mix(in srgb,var(--shard-edge) 46%,#bca7ff) 60%,
+      transparent 82%
+    );
+  filter:blur(8px);
+  animation:timeShardRefractionA 8.6s ease-in-out infinite alternate;
+}
+
+.time-shard-refraction.refraction-b{
+  background:
+    radial-gradient(
+      ellipse at 38% 54%,
+      color-mix(in srgb,var(--shard-light) 36%,white) 0%,
+      color-mix(in srgb,var(--shard-main) 22%,transparent) 26%,
+      transparent 58%
+    );
+  filter:blur(12px);
+  opacity:.22;
+  animation:timeShardRefractionB 11.8s ease-in-out infinite alternate;
+}
+
+/* 母石本體只做非常輕微的亮度呼吸，不縮放版面。 */
+.time-shard-canvas{
+  animation:timeShardGlassBreath 6.8s ease-in-out infinite;
+}
+
+@keyframes timeShardRefractionA{
+  0%{
+    transform:translate3d(-8%,-3%,0) rotate(-4deg) scale(1.02);
+    opacity:.18;
+  }
+  48%{
+    transform:translate3d(3%,2%,0) rotate(2deg) scale(1.07);
+    opacity:.36;
+  }
+  100%{
+    transform:translate3d(9%,-1%,0) rotate(5deg) scale(1.03);
+    opacity:.24;
+  }
+}
+
+@keyframes timeShardRefractionB{
+  0%{
+    transform:translate3d(5%,6%,0) scale(.98);
+    opacity:.14;
+  }
+  55%{
+    transform:translate3d(-2%,-1%,0) scale(1.08);
+    opacity:.28;
+  }
+  100%{
+    transform:translate3d(-7%,4%,0) scale(1.02);
+    opacity:.18;
+  }
+}
+
+@keyframes timeShardGlassBreath{
+  0%,100%{
+    filter:
+      brightness(.98)
+      contrast(1.03)
+      saturate(1.02)
+      drop-shadow(0 22px 34px rgba(0,0,0,.28))
+      drop-shadow(0 0 12px var(--shard-glow));
+  }
+  50%{
+    filter:
+      brightness(1.06)
+      contrast(1.02)
+      saturate(1.10)
+      drop-shadow(0 22px 34px rgba(0,0,0,.28))
+      drop-shadow(0 0 18px var(--shard-glow));
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .time-shard-refraction,
+  .time-shard-canvas{
+    animation:none!important;
+  }
+}

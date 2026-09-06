@@ -420,7 +420,6 @@ window.EndOfTimeAdventure = (() => {
         const w=img.naturalWidth||0, h=img.naturalHeight||0;
         if(!w || !h) return;
 
-        // Work at source resolution only once per loaded stone for clean edges.
         if(canvas.width!==w || canvas.height!==h){
           canvas.width=w;
           canvas.height=h;
@@ -433,46 +432,126 @@ window.EndOfTimeAdventure = (() => {
         const data=ctx.getImageData(0,0,w,h);
         const px=data.data;
         const chosen=hexToRgb(hex);
+        const baseHsl=rgbToHsl(chosen);
 
-        // Preserve about 15% of the original prismatic hue,
-        // but make the player's chosen light-source color dominate the glass body.
+        const clamp=(n,a,b)=>Math.min(Math.max(n,a),b);
+        const hwrap=n=>((n%360)+360)%360;
+        const hslToRgb=(h,s,l)=>{
+          h=hwrap(h)/360; s=clamp(s,0,100)/100; l=clamp(l,0,100)/100;
+          if(s===0){
+            const v=Math.round(l*255);
+            return {r:v,g:v,b:v};
+          }
+          const hue2rgb=(p,q,t)=>{
+            if(t<0)t+=1;if(t>1)t-=1;
+            if(t<1/6)return p+(q-p)*6*t;
+            if(t<1/2)return q;
+            if(t<2/3)return p+(q-p)*(2/3-t)*6;
+            return p;
+          };
+          const q=l<.5?l*(1+s):l+s-l*s;
+          const p=2*l-q;
+          return {
+            r:Math.round(hue2rgb(p,q,h+1/3)*255),
+            g:Math.round(hue2rgb(p,q,h)*255),
+            b:Math.round(hue2rgb(p,q,h-1/3)*255)
+          };
+        };
+
+        const nearCool=hslToRgb(baseHsl.h+24, clamp(baseHsl.s+6,28,92), clamp(baseHsl.l+10,34,74));
+        const nearWarm=hslToRgb(baseHsl.h-18, clamp(baseHsl.s+10,32,96), clamp(baseHsl.l+8,32,72));
+        const pale=hslToRgb(baseHsl.h+5, clamp(baseHsl.s-34,8,46), 88);
+        const deep=hslToRgb(baseHsl.h-6, clamp(baseHsl.s+8,28,96), clamp(baseHsl.l-25,7,30));
+
+        const mix=(a,b,t)=>({
+          r:a.r*(1-t)+b.r*t,
+          g:a.g*(1-t)+b.g*t,
+          b:a.b*(1-t)+b.b*t
+        });
+
+        const mix3=(a,b,c,t1,t2)=>{
+          const base=mix(a,b,t1);
+          return mix(base,c,t2);
+        };
+
         for(let i=0;i<px.length;i+=4){
           const a=px[i+3];
           if(a===0) continue;
 
+          const pIndex=i/4;
+          const x=(pIndex%w)/Math.max(1,w-1);
+          const y=Math.floor(pIndex/w)/Math.max(1,h-1);
+
           const or=px[i], og=px[i+1], ob=px[i+2];
           const lum=(0.2126*or + 0.7152*og + 0.0722*ob)/255;
 
-          // Base tinted glass: dark facets stay deep, bright facets retain brilliance.
-          const shade=0.22 + Math.pow(lum,0.78)*0.98;
-          let tr=chosen.r*shade;
-          let tg=chosen.g*shade;
-          let tb=chosen.b*shade;
+          // 主色仍是核心，但增加兩組鄰近色折射，不需要玩家多選顏色。
+          const diagonal=clamp((x*.72 + (1-y)*.28),0,1);
+          const facetWave=(Math.sin((x*2.4+y*1.7)*Math.PI)+1)/2;
+          const coolAmt=clamp((diagonal-.48)*1.25,0,.42) * (.55+.45*facetWave);
+          const warmAmt=clamp((.56-diagonal)*1.15,0,.34) * (.55+.45*(1-facetWave));
 
-          // Keep a small amount of the mother stone's original rainbow refraction.
-          const keepOriginal = 0.14;
-          tr=tr*(1-keepOriginal)+or*keepOriginal;
-          tg=tg*(1-keepOriginal)+og*keepOriginal;
-          tb=tb*(1-keepOriginal)+ob*keepOriginal;
+          let col={
+            r:chosen.r,
+            g:chosen.g,
+            b:chosen.b
+          };
 
-          // Bright glass highlights should become pale versions of the chosen color,
-          // not remain plain white.
-          if(lum>0.72){
-            const t=Math.min(1,(lum-0.72)/0.28)*0.60;
-            const hr=chosen.r + (255-chosen.r)*0.72;
-            const hg=chosen.g + (255-chosen.g)*0.72;
-            const hb=chosen.b + (255-chosen.b)*0.72;
-            tr=tr*(1-t)+hr*t;
-            tg=tg*(1-t)+hg*t;
-            tb=tb*(1-t)+hb*t;
+          // 深部先壓暗，保持玻璃厚度。
+          const depth=Math.pow(1-lum,1.15);
+          col=mix(col,deep,depth*.48);
+
+          // 切面折色。
+          col=mix3(col,nearCool,nearWarm,coolAmt,warmAmt);
+
+          // 保留一點原母石虹彩與材質資訊。
+          const original={r:or,g:og,b:ob};
+          col=mix(col,original,.18);
+
+          // 亮面往銀白 / 淡色高光走。
+          if(lum>.58){
+            const hi=clamp((lum-.58)/.42,0,1);
+            col=mix(col,pale,hi*.68);
           }
 
-          px[i]=Math.max(0,Math.min(255,Math.round(tr)));
-          px[i+1]=Math.max(0,Math.min(255,Math.round(tg)));
-          px[i+2]=Math.max(0,Math.min(255,Math.round(tb)));
+          // 不讓暗部整片死黑，保留通透感。
+          const glassLift=.22 + lum*.90;
+          col.r*=glassLift;
+          col.g*=glassLift;
+          col.b*=glassLift;
+
+          px[i]=clamp(Math.round(col.r),0,255);
+          px[i+1]=clamp(Math.round(col.g),0,255);
+          px[i+2]=clamp(Math.round(col.b),0,255);
         }
 
         ctx.putImageData(data,0,0);
+
+        // 靜態折射層：不改母圖，只在 Canvas 上增加柔和亮帶。
+        ctx.save();
+        ctx.globalCompositeOperation='screen';
+
+        const g1=ctx.createLinearGradient(w*.12,h*.85,w*.86,h*.08);
+        g1.addColorStop(0,'rgba(255,255,255,0)');
+        g1.addColorStop(.42,`rgba(${nearWarm.r},${nearWarm.g},${nearWarm.b},0.08)`);
+        g1.addColorStop(.56,`rgba(${pale.r},${pale.g},${pale.b},0.20)`);
+        g1.addColorStop(.70,`rgba(${nearCool.r},${nearCool.g},${nearCool.b},0.10)`);
+        g1.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=g1;
+        ctx.fillRect(0,0,w,h);
+
+        const rg=ctx.createRadialGradient(w*.47,h*.44,0,w*.47,h*.44,Math.max(w,h)*.45);
+        rg.addColorStop(0,`rgba(${pale.r},${pale.g},${pale.b},0.12)`);
+        rg.addColorStop(.38,`rgba(${chosen.r},${chosen.g},${chosen.b},0.05)`);
+        rg.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=rg;
+        ctx.fillRect(0,0,w,h);
+
+        // 仍然以原 PNG alpha 裁切，所有折光都留在石片裡。
+        ctx.globalCompositeOperation='destination-in';
+        ctx.drawImage(img,0,0,w,h);
+        ctx.restore();
+
         canvas.dataset.tinted=normalizeHexColor(hex);
         canvas.style.opacity='1';
         img.style.opacity='0';
@@ -730,6 +809,8 @@ window.EndOfTimeAdventure = (() => {
         <canvas class="time-shard-engraving" aria-hidden="true"></canvas>
         <span class="time-shard-colorwash" aria-hidden="true"></span>
         <span class="time-shard-light" aria-hidden="true"></span>
+        <span class="time-shard-refraction refraction-a" aria-hidden="true"></span>
+        <span class="time-shard-refraction refraction-b" aria-hidden="true"></span>
         <span class="time-shard-crack crack-a" aria-hidden="true"></span>
         <span class="time-shard-crack crack-b" aria-hidden="true"></span>
         <div class="time-shard-inscription">
