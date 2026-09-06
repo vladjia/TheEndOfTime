@@ -1298,17 +1298,49 @@ window.EndOfTimeAdventure = (() => {
     }catch(_){ }
   }
 
+  function visibleTimeTraceCount(data){
+    const story=Array.isArray(data?.storyRead) ? data.storyRead.length : 0;
+    const chars=Array.isArray(data?.charactersUnlocked) ? data.charactersUnlocked.length : 0;
+    const world=Array.isArray(data?.worldUnlocked) ? data.worldUnlocked.length : 0;
+    return story + chars + world;
+  }
+
   async function refreshTimeMarkEntryState(){
     try{
-      const data=await load(true);
-      const forged=!!data?.stone?.forged;
       document.querySelectorAll('[data-time-mark]').forEach(btn=>{
         const label=btn.querySelector('.time-mark-orb-label');
-        if(label) label.textContent=forged?'時印':'留下時印';
-        btn.setAttribute('aria-label',forged?'開啟時印':'留下我的時印');
-        btn.classList.toggle('is-unforged',!forged);
+        if(label) label.textContent='讀取時印…';
       });
-    }catch(_){}
+
+      const data=await load(true);
+      const stone=data?.stone||{};
+      const forged=!!stone.forged;
+      const traceCount=visibleTimeTraceCount(data);
+
+      document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+        const label=btn.querySelector('.time-mark-orb-label');
+
+        if(!forged){
+          if(label) label.textContent='時印在此';
+          btn.setAttribute('aria-label','時印在此，留下我的時印');
+          btn.dataset.timeMarkState='unforged';
+        }else{
+          if(label) label.textContent=`時痕・${traceCount}`;
+          btn.setAttribute('aria-label',`開啟時印，目前留下 ${traceCount} 道時痕`);
+          btn.dataset.timeMarkState=traceCount>0?'traced':'forged';
+        }
+
+        btn.classList.toggle('is-unforged',!forged);
+        btn.classList.toggle('has-time-traces',forged && traceCount>0);
+      });
+    }catch(_){
+      document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+        const label=btn.querySelector('.time-mark-orb-label');
+        if(label) label.textContent='時印';
+        btn.setAttribute('aria-label','開啟時印');
+        btn.dataset.timeMarkState='unknown';
+      });
+    }
   }
 
   async function init(){

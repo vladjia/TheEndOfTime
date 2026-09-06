@@ -1813,3 +1813,28 @@ body:not(.pre-entry) .time-mark-orb{
     filter:brightness(1.08) drop-shadow(0 0 12px rgba(127,21,33,.20));
   }
 }
+
+
+/* ============================================================
+   v0.18.23 · 右上角時印狀態文字
+   呼吸規則沿用 v0.18.22，不在本版更動。
+   ============================================================ */
+.time-mark-orb-label{
+  min-width:4.8em;
+  text-align:left;
+  transition:opacity .2s ease, color .2s ease;
+}
+
+.time-mark-orb[data-time-mark-state="unforged"] .time-mark-orb-label{
+  color:rgba(70,45,50,.78)!important;
+}
+
+.time-mark-orb[data-time-mark-state="forged"] .time-mark-orb-label,
+.time-mark-orb[data-time-mark-state="traced"] .time-mark-orb-label{
+  color:rgba(20,22,26,.72)!important;
+  font-variant-numeric:tabular-nums;
+}
+
+.time-mark-orb[data-time-mark-state="unknown"] .time-mark-orb-label{
+  opacity:.58;
+}
