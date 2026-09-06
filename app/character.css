@@ -1334,3 +1334,57 @@ body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark{
     font-size:clamp(52px,16vw,86px)!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.13 · 角色招式影片
+   ============================================================ */
+.zero-visual.has-video{
+  min-height:0!important;
+  height:auto!important;
+  aspect-ratio:16 / 9;
+  background:#05070a;
+}
+
+.zero-visual .character-video,
+.zero-visual .character-video-drive{
+  position:relative!important;
+  inset:auto!important;
+  z-index:1;
+  display:block;
+  width:100%!important;
+  height:auto!important;
+  min-height:0;
+  max-width:100%;
+  border:0;
+  background:#000;
+  object-fit:contain;
+}
+
+.zero-visual .character-video-drive{
+  aspect-ratio:16 / 9;
+  height:100%!important;
+}
+
+.zero-visual.has-video .zero-label{
+  z-index:3;
+  background:rgba(5,7,10,.72);
+  padding:5px 8px;
+  backdrop-filter:blur(5px);
+}
+
+.zero-visual.has-video .zero-glyph{
+  z-index:2;
+  pointer-events:none;
+}
+
+/* 有影片時不要再套圖片骨架高度 */
+.zero-visual:not(:has(img)):not(:has(video)):not(:has(iframe)){
+  min-height:420px!important;
+}
+
+@media(max-width:620px){
+  .zero-visual:not(:has(img)):not(:has(video)):not(:has(iframe)){
+    min-height:320px!important;
+  }
+}

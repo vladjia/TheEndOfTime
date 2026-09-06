@@ -40,6 +40,16 @@ function hasAny(text, words){
   return words.some(w => n.includes(norm(w)));
 }
 
+
+function isVideoMedia(item){
+  return String(item?.mediaType || '').toLowerCase() === 'video'
+    || String(item?.mimeType || '').toLowerCase().startsWith('video/');
+}
+
+function isImageMedia(item){
+  return !isVideoMedia(item);
+}
+
 function scoreCharacterImage(img, id, opts={}){
   const text = haystack(img);
   const aliases = CHARACTER_ALIASES[id] || [];
@@ -62,6 +72,7 @@ function scoreCharacterImage(img, id, opts={}){
 
 function bestCharacterImage(images,id,opts={}){
   const ranked = (images || [])
+    .filter(isImageMedia)
     .map(img => ({img, score:scoreCharacterImage(img,id,opts)}))
     .filter(x => x.score > 0)
     .sort((a,b)=>b.score-a.score);
@@ -74,7 +85,7 @@ function bestCharacterImage(images,id,opts={}){
 
 function getWeaponImages(images, weaponId){
   return (images || [])
-    .filter(img => img.targetId === weaponId)
+    .filter(img => isImageMedia(img) && img.targetId === weaponId)
     .sort((a,b) => {
       const aName = String(a.name || '');
       const bName = String(b.name || '');
@@ -97,6 +108,78 @@ function weaponImageLabel(img){
   }
 
   return img.category || '';
+}
+
+
+function scoreCharacterVideo(item,id,opts={}){
+  if(!isVideoMedia(item)) return -999;
+  const text=haystack(item);
+  const aliases=CHARACTER_ALIASES[id] || [];
+  let score=0;
+
+  if(item.targetId === id) score += 30;
+  if(hasAny(text,aliases)) score += 18;
+  if(hasAny(text,['人物'])) score += 4;
+
+  if(opts.zero){
+    if(hasAny(text,['零式','殺體','杀体','家皇歿式零','家皇歿式・零'])) score += 40;
+    if(hasAny(text,['招式'])) score += 12;
+  }
+
+  return score;
+}
+
+function bestCharacterVideo(items,id,opts={}){
+  const ranked=(items || [])
+    .filter(isVideoMedia)
+    .map(item=>({item,score:scoreCharacterVideo(item,id,opts)}))
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score);
+
+  const picked=ranked[0]?.item || null;
+  if(picked) console.info(`[影片配對] ${id} →`,picked.name || picked.url);
+  return picked;
+}
+
+function mountVideo(target,item,title,poster=''){
+  if(!target || !item) return false;
+
+  target.querySelectorAll('img,video,iframe').forEach(el=>el.remove());
+  target.classList.add('has-video','media-natural-fit');
+
+  const video=document.createElement('video');
+  video.className='character-video';
+  video.controls=true;
+  video.playsInline=true;
+  video.preload='metadata';
+  video.src=item.url || '';
+  if(poster) video.poster=poster;
+  video.setAttribute('aria-label',title || '角色招式影片');
+
+  video.addEventListener('loadedmetadata',()=>{
+    if(video.videoWidth && video.videoHeight){
+      target.style.aspectRatio=`${video.videoWidth} / ${video.videoHeight}`;
+      target.style.setProperty('--media-ratio',`${video.videoWidth} / ${video.videoHeight}`);
+    }
+  },{once:true});
+
+  const fallbackToDrivePreview=()=>{
+    if(!item.previewUrl) return;
+    video.remove();
+
+    const iframe=document.createElement('iframe');
+    iframe.className='character-video-drive';
+    iframe.src=item.previewUrl;
+    iframe.title=title || '角色招式影片';
+    iframe.allow='autoplay; fullscreen';
+    iframe.allowFullscreen=true;
+    iframe.loading='lazy';
+    target.appendChild(iframe);
+  };
+
+  video.addEventListener('error',fallbackToDrivePreview,{once:true});
+  target.appendChild(video);
+  return true;
 }
 
 function mountImage(target, item, alt){
@@ -367,7 +450,24 @@ function renderSpecialVisual(char,id,skills,images){
   }
 
   const image = bestCharacterImage(images,id,{zero:true});
-  mountImage($('#zeroVisual'), image, `${char.fullName || char.name} 零式主視覺`);
+  const video = bestCharacterVideo(images,id,{zero:true});
+  const visual = $('#zeroVisual');
+
+  if(video){
+    setText('#zeroLabel','家皇歿式・零｜戰鬥影像');
+    const mounted = mountVideo(
+      visual,
+      video,
+      `${char.fullName || char.name}｜家皇歿式・零`,
+      image?.url || ''
+    );
+    if(!mounted && image){
+      mountImage(visual,image,`${char.fullName || char.name} 零式主視覺`);
+    }
+  }else{
+    setText('#zeroLabel','零式・主視覺');
+    mountImage(visual,image,`${char.fullName || char.name} 零式主視覺`);
+  }
 }
 
 function applyCopy(copy){
