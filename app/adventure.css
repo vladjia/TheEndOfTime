@@ -1319,3 +1319,23 @@ html.time-mark-guide-open{
 .time-forge-preview .time-shard-asset{
   width:min(330px,76vw);
 }
+
+
+/* ============================================================
+   v0.18.11 · DEV 完整版預覽提示
+   ============================================================ */
+.dev-preview-badge{
+  position:fixed;
+  right:12px;
+  bottom:12px;
+  z-index:2147482500;
+  padding:6px 9px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(7,9,12,.88);
+  color:rgba(255,255,255,.72);
+  font:600 10px/1 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.12em;
+  box-shadow:0 8px 24px rgba(0,0,0,.24);
+  pointer-events:none;
+  user-select:none;
+}

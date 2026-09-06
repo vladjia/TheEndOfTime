@@ -275,12 +275,29 @@ window.EndOfTimeAdventure = (() => {
     }
   }
 
+
+  function renderDevPreviewBadge(data){
+    const old=document.getElementById('devPreviewBadge');
+    if(old) old.remove();
+
+    const mode=String(data?.player?.devPreviewMode||'OFF').trim().toUpperCase();
+    if(mode!=='FULL') return;
+
+    const badge=document.createElement('div');
+    badge.id='devPreviewBadge';
+    badge.className='dev-preview-badge';
+    badge.textContent='DEV · FULL';
+    badge.title='目前為 DEV 完整版預覽，不代表真實玩家進度';
+    document.body.appendChild(badge);
+  }
+
   async function load(force=false){
     const t = token();
     if(!t) return null;
     if(progressCache && !force) return progressCache;
     try{
       progressCache = await api('adventureLoad',{token:t});
+      renderDevPreviewBadge(progressCache);
       return progressCache;
     }catch(err){
       console.warn('旅程讀取失敗',err);
