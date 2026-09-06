@@ -486,6 +486,123 @@ function applyCopy(copy){
   setText('#fullArchiveButton',copyText(copy,'site.character.full_button','防雷模式・建置中'));
 }
 
+
+function galleryMedia(items,id){
+  return (items || [])
+    .filter(item => item.targetId === id)
+    .filter(item => {
+      const cat = norm(item.category || '');
+      const path = norm(item.path || '');
+      return cat.includes('圖誌') || path.includes('圖誌');
+    })
+    .sort((a,b)=>
+      String(a.name||'').localeCompare(String(b.name||''),'zh-Hant',{
+        numeric:true,
+        sensitivity:'base'
+      })
+    );
+}
+
+function galleryCaption(item){
+  let name=String(item?.name||'').trim();
+  if(!name) return '';
+  name=name.replace(/\.[^.]+$/,'');
+  name=name.replace(/[_-]\d+$/,'');
+  name=name.replace(/^(?:時盡[・\-_\s]*)?/,'');
+  return name.replace(/_/g,' ').trim();
+}
+
+function ensureGallerySection(){
+  let section=document.getElementById('gallerySection');
+  if(section) return section;
+
+  section=document.createElement('section');
+  section.className='character-section character-gallery-section';
+  section.id='gallerySection';
+  section.hidden=true;
+  section.innerHTML=`
+    <div class="character-section-title character-gallery-heading">
+      <small>VISUAL JOURNAL</small>
+      <h2>角色圖誌</h2>
+    </div>
+    <div class="character-gallery-grid" id="characterGalleryGrid"></div>
+  `;
+
+  const profile=document.getElementById('profileSection');
+  if(profile){
+    profile.insertAdjacentElement('afterend',section);
+  }else{
+    document.querySelector('.character-main')?.appendChild(section);
+  }
+  return section;
+}
+
+function renderCharacterGallery(items,id,char){
+  const media=galleryMedia(items,id);
+  const section=ensureGallerySection();
+  const grid=section.querySelector('#characterGalleryGrid');
+
+  if(!media.length){
+    section.hidden=true;
+    grid.replaceChildren();
+    return;
+  }
+
+  const frag=document.createDocumentFragment();
+
+  media.forEach((item,index)=>{
+    const figure=document.createElement('figure');
+    figure.className='character-gallery-item';
+    if(index===0 && media.length>=3) figure.classList.add('is-featured');
+
+    const label=galleryCaption(item) || `${char.fullName || char.name} 圖誌`;
+
+    if(isVideoMedia(item)){
+      figure.classList.add('is-video');
+
+      const video=document.createElement('video');
+      video.className='character-gallery-video';
+      video.controls=true;
+      video.playsInline=true;
+      video.preload='metadata';
+      video.src=item.url || '';
+      video.setAttribute('aria-label',label);
+
+      video.addEventListener('error',()=>{
+        if(!item.previewUrl) return;
+        const iframe=document.createElement('iframe');
+        iframe.className='character-gallery-video character-gallery-drive';
+        iframe.src=item.previewUrl;
+        iframe.title=label;
+        iframe.allow='autoplay; fullscreen';
+        iframe.allowFullscreen=true;
+        iframe.loading='lazy';
+        video.replaceWith(iframe);
+      },{once:true});
+
+      figure.appendChild(video);
+    }else{
+      const img=document.createElement('img');
+      img.className='character-gallery-image';
+      img.src=item.url || '';
+      img.alt=label;
+      img.loading='lazy';
+      img.decoding='async';
+      img.dataset.viewer='true';
+      img.dataset.viewerLabel=label;
+      figure.appendChild(img);
+    }
+
+    const caption=document.createElement('figcaption');
+    caption.textContent=label;
+    figure.appendChild(caption);
+    frag.appendChild(figure);
+  });
+
+  grid.replaceChildren(frag);
+  section.hidden=false;
+}
+
 function renderCharacter(char,id,data){
   if(!char) return;
 
@@ -506,6 +623,7 @@ function renderCharacter(char,id,data){
   renderMeta(char);
   renderStrip(char);
   renderParagraphs($('#profileContent'),char.publicDetail || char.publicIntro);
+  renderCharacterGallery(data.images || [],id,char);
   renderWeapon(char,id,data.weapons || [],data.images || []);
   renderSkills(data.skills || [],id);
   renderSpecialVisual(char,id,data.skills || [],data.images || []);
