@@ -333,7 +333,7 @@ async function init(){
   const dataVersion = data.site?.data_version || '';
   const footer = document.querySelector('.footer');
   if(footer && (version || dataVersion)){
-    footer.textContent = `《時盡》WORLD / CHARACTER ARCHIVE · Core ${version ? 'v'+version : ''}${dataVersion ? ' · Data '+dataVersion : ''}`;
+    footer.textContent = `《時盡》STORY / CHARACTER / WORLD${version ? ' · Site v'+version : ''}${dataVersion ? ' · Data '+dataVersion : ''}`;
   }
 
   }finally{

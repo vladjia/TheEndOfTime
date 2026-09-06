@@ -901,9 +901,9 @@ function renderCharacter(char,id,data,adventureData){
 
   const footer = $('#characterFooter');
   if(footer){
-    const version = data.site?.site_version || '0.14.0';
+    const version = data.site?.site_version || '';
     const dataVersion = data.site?.data_version || '';
-    footer.textContent = `《時盡》CHARACTER FILE · ${char.fullName || char.name} · Core v${version}${dataVersion ? ` · Data ${dataVersion}` : ''}`;
+    footer.textContent = `《時盡》CHARACTER FILE · ${char.fullName || char.name}${version ? ` · Site v${version}` : ''}${dataVersion ? ` · Data ${dataVersion}` : ''}`;
   }
 
   document.title = `${char.fullName || char.name}｜《時盡》角色檔案`;
