@@ -375,14 +375,18 @@ window.EndOfTimeAdventure = (() => {
   async function openForge(){
     if(isCritical()) return;
     const data=await load(true);
-    const existing=data?.stone||{};
+    let existing=data?.stone||{};
+    if(!stoneTypeNumber(existing.stoneType)){
+      const retry=await load(true);
+      existing=retry?.stone||existing;
+    }
     const initial=normalizeHexColor(existing.color||'#7F1521');
     const isForged=!!existing.forged;
     const existingType=stoneTypeNumber(existing.stoneType);
     const o=overlay(`
       <div class="time-mark-kicker">TIME FORGING</div>
       <h2>${isForged ? '調整你的光源色' : '時空鑄印專屬石片'}</h2>
-      <p>進入時空裂縫前，選擇一個代表自己的光源色。那道顏色會成為你與現實世界之間的微弱連結。時印會依循這道光，在石片中折射出屬於你的琉璃層次。</p>
+      <p>進入時空裂縫前，選擇一個代表自己的光源色。眼前的石片已回應你的存在；你所選的光，會即時在它的琉璃切面中留下折光。</p>
       <div class="time-forge-layout">
         <div class="time-forge-preview">
           ${shardPreviewMarkup({
@@ -391,7 +395,7 @@ window.EndOfTimeAdventure = (() => {
             relay:existing.relayCode||'',
             level:existing.resonanceLevel||0,
             stoneType:existingType,
-            awaiting:!isForged
+            awaiting:!existingType
           })}
         </div>
         <div class="time-forge-controls">

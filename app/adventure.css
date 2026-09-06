@@ -1213,3 +1213,66 @@ html.time-mark-guide-open{
   .time-shard-asset{width:220px}
   .time-forge-reveal{min-height:330px}
 }
+
+
+/* ============================================================
+   v0.18.7 · 鑄印前就看得到本命石片 / 即時上色強化
+   ============================================================ */
+.time-forge-preview .time-shard-asset{
+  width:min(300px,72vw);
+}
+
+.time-shard-asset .time-shard-image{
+  opacity:.96;
+  filter:
+    brightness(.96)
+    contrast(1.05)
+    saturate(1.04)
+    drop-shadow(0 22px 34px rgba(0,0,0,.28))
+    drop-shadow(0 0 16px var(--shard-glow));
+}
+
+/* 主色直接進入母石，不再只有外圍光暈 */
+.time-shard-asset .time-shard-colorwash{
+  background:
+    radial-gradient(circle at 48% 43%,
+      var(--shard-light) 0%,
+      var(--shard-main) 43%,
+      var(--shard-deep) 100%);
+  mix-blend-mode:multiply;
+  opacity:.74;
+}
+
+/* 保留母石原本虹彩與玻璃高光 */
+.time-shard-asset .time-shard-light{
+  background:
+    radial-gradient(circle at 48% 42%,rgba(255,255,255,.30),transparent 32%),
+    linear-gradient(145deg,transparent 18%,var(--shard-glow) 47%,transparent 72%);
+  mix-blend-mode:screen;
+  opacity:.48;
+}
+
+/* 深色玩家主色時也能明確看到染色，不會只剩白石 */
+.time-shard-asset::after{
+  content:"";
+  position:absolute;
+  inset:4%;
+  z-index:3;
+  pointer-events:none;
+  background:linear-gradient(155deg,var(--shard-main),var(--shard-deep));
+  -webkit-mask-image:var(--stone-image);
+  mask-image:var(--stone-image);
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+  mix-blend-mode:color;
+  opacity:.38;
+}
+
+/* 鑄印前已經能看到本命石片，只有序號/接力碼等資料仍待正式鑄印後出現 */
+.time-forge-preview .time-shard-inscription:empty{
+  display:none;
+}

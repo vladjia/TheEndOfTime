@@ -1,7 +1,7 @@
 {
   "siteTitle": "時盡",
   "siteSubtitle": "INTERACTIVE STORY / JOURNEY",
-  "version": "0.18.6",
+  "version": "0.18.7",
   "defaultMode": "adventure",
   "publicBaseUrl": "https://vladjia.github.io/TheEndOfTime/",
   "driveGalleryEndpoint": "https://script.google.com/macros/s/AKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA/exec",
@@ -160,6 +160,8 @@
     "twelveTimeShardMothers": true,
     "randomShardBinding": true,
     "hexRgbLightSource": true,
-    "engraveSeed": true
+    "engraveSeed": true,
+    "preForgeStonePreview": true,
+    "strongLiveShardTint": true
   }
 }
