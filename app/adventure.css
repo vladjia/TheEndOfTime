@@ -87,6 +87,26 @@
   font:600 15px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
 }
 .time-mark-status{min-height:1.5em;margin-top:10px!important;font-size:12px}
+.time-mark-restore-confirm[hidden]{display:none!important}
+.time-mark-restore-confirm{
+  animation:timeMarkConfirmIn .2s ease both;
+}
+.time-mark-confirm-code{
+  margin:20px 0 0;
+  padding:13px 14px;
+  border:1px solid rgba(168,38,53,.38);
+  background:rgba(127,21,33,.10);
+  color:#f3f4f6;
+  font:600 14px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.07em;
+  word-break:break-all;
+}
+.time-mark-restore-confirm .time-mark-device-state{margin-top:14px}
+.time-mark-confirm-note{margin-top:14px!important;font-size:12px}
+@keyframes timeMarkConfirmIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
 
 .resume-place{
   margin:20px 0 4px;

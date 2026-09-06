@@ -3555,3 +3555,14 @@ body.site-entered .hero-art.hero-art-reveal{
   transform:scale(var(--home-hero-scale))!important;
   transform-origin:center center!important;
 }
+
+/* ============================================================
+   v0.18.43 · 首頁手機專屬主視覺
+   桌機維持橫式主視覺；手機有專屬直式圖時才解除放大裁切。
+   ============================================================ */
+@media(max-width:640px){
+  .hero.hero-cover .hero-art.has-mobile-hero-image .hero-main-image{
+    object-position:center center!important;
+    transform:scale(1)!important;
+  }
+}

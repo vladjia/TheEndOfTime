@@ -1133,23 +1133,96 @@ window.EndOfTimeAdventure = (() => {
   function openRestoreDialog(){
     if(isCritical()) return;
     const o=overlay(`
-      <div class="time-mark-kicker">RESTORE TIME MARK</div>
-      <h2>取回其他時印</h2>
-      <p>只有需要切換另一段旅程時，才需要在這裡輸入時印。</p>
-      <div class="time-mark-field">
-        <label for="restoreTimeMark">輸入另一枚時印</label>
-        <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
+      <div data-restore-form>
+        <div class="time-mark-kicker">RESTORE TIME MARK</div>
+        <h2>取回其他時印</h2>
+        <p>只有需要切換另一段旅程時，才需要在這裡輸入時印。</p>
+        <div class="time-mark-field">
+          <label for="restoreTimeMark">輸入另一枚時印</label>
+          <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
+        </div>
+        <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
+        <div class="time-mark-actions">
+          <button class="time-mark-btn primary" type="button" data-restore-time>取回時印</button>
+          <button class="time-mark-btn" type="button" data-time-close>返回</button>
+        </div>
       </div>
-      <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
-      <div class="time-mark-actions">
-        <button class="time-mark-btn primary" type="button" data-restore-time>取回時印</button>
-        <button class="time-mark-btn" type="button" data-time-close>返回</button>
+
+      <div class="time-mark-restore-confirm" data-restore-confirmation hidden aria-live="polite">
+        <div class="time-mark-kicker">CONFIRM RESTORE</div>
+        <h2>切換這段旅程？</h2>
+        <p>取回另一枚時印後，這台裝置會切換到另一段旅程。</p>
+        <div class="time-mark-confirm-code" data-restore-confirm-code></div>
+        <div class="time-mark-device-state">
+          <span class="time-mark-device-dot" aria-hidden="true"></span>
+          <div>
+            <strong>目前的時印會被保留。</strong>
+            <span>它不會被刪除；之後仍可隨時再取回。</span>
+          </div>
+        </div>
+        <p class="time-mark-confirm-note">確定後，這台裝置會暫時切換至上方這枚時印的旅程。</p>
+        <p class="time-mark-status" data-restore-confirm-status></p>
+        <div class="time-mark-actions">
+          <button class="time-mark-btn primary" type="button" data-restore-confirm>確認取回</button>
+          <button class="time-mark-btn" type="button" data-restore-back>返回修改</button>
+        </div>
       </div>
     `);
+    const form=o.querySelector('[data-restore-form]');
+    const confirmation=o.querySelector('[data-restore-confirmation]');
     const field=o.querySelector('#restoreTimeMark');
     const status=o.querySelector('#restoreTimeMarkStatus');
     const restoreBtn=o.querySelector('[data-restore-time]');
-    restoreBtn.onclick=async()=>{
+    const confirmCode=o.querySelector('[data-restore-confirm-code]');
+    const confirmStatus=o.querySelector('[data-restore-confirm-status]');
+    const confirmBtn=o.querySelector('[data-restore-confirm]');
+    const backBtn=o.querySelector('[data-restore-back]');
+
+    const showForm=()=>{
+      confirmation.hidden=true;
+      form.hidden=false;
+      requestAnimationFrame(()=>field.focus());
+    };
+
+    const showConfirmation=(wanted)=>{
+      confirmCode.textContent=wanted;
+      confirmStatus.textContent='';
+      form.hidden=true;
+      confirmation.hidden=false;
+      requestAnimationFrame(()=>confirmBtn.focus());
+    };
+
+    const startRestore=async(wanted)=>{
+      if(!beginCritical('time-mark-restore',15000)) return;
+      restoreBtn.disabled=true;
+      restoreBtn.setAttribute('aria-busy','true');
+      restoreBtn.textContent='確認中……';
+      confirmBtn.disabled=true;
+      confirmBtn.setAttribute('aria-busy','true');
+      confirmBtn.textContent='確認中……';
+      field.disabled=true;
+      status.textContent='確認時印中……';
+      confirmStatus.textContent='確認時印中……';
+      try{
+        const data=await restore(wanted);
+        closeOverlay(true);
+        endCritical();
+        showRestoreSuccess(data);
+      }catch(err){
+        endCritical();
+        restoreBtn.disabled=false;
+        restoreBtn.removeAttribute('aria-busy');
+        restoreBtn.textContent='取回時印';
+        confirmBtn.disabled=false;
+        confirmBtn.removeAttribute('aria-busy');
+        confirmBtn.textContent='確認取回';
+        field.disabled=false;
+        showForm();
+        status.textContent=err?.message||'時印確認失敗。';
+      }
+    };
+
+    restoreBtn.onclick=()=>{
       if(restoreBtn.disabled || isCritical()) return;
       const wanted=String(field.value||'').trim().toUpperCase();
       if(wanted && wanted===token()){
@@ -1162,29 +1235,17 @@ window.EndOfTimeAdventure = (() => {
       }
       const current=token();
       if(current && current!==wanted){
-        const ok=confirm('取回另一枚時印後，這台裝置會切換到另一段旅程。\\n\\n目前的時印不會被刪除。\\n\\n確定要取回嗎？');
-        if(!ok) return;
+        showConfirmation(wanted);
+        return;
       }
-      if(!beginCritical('time-mark-restore',15000)) return;
-      restoreBtn.disabled=true;
-      restoreBtn.setAttribute('aria-busy','true');
-      restoreBtn.textContent='確認中……';
-      field.disabled=true;
-      status.textContent='確認時印中……';
-      try{
-        const data=await restore(wanted);
-        closeOverlay(true);
-        endCritical();
-        showRestoreSuccess(data);
-      }catch(err){
-        endCritical();
-        status.textContent=err.message||'時印確認失敗。';
-        restoreBtn.disabled=false;
-        restoreBtn.removeAttribute('aria-busy');
-        restoreBtn.textContent='取回時印';
-        field.disabled=false;field.focus();
-      }
+      startRestore(wanted);
     };
+
+    confirmBtn.onclick=()=>{
+      if(confirmBtn.disabled || isCritical()) return;
+      startRestore(confirmCode.textContent);
+    };
+    backBtn.onclick=()=>showForm();
   }
 
   async function openManager(){

@@ -234,8 +234,14 @@ function renderImages(images){
     return norm(name) === norm('首頁_封面_主視覺_01.png');
   });
 
-  hero.querySelectorAll('img').forEach(el=>el.remove());
+  const mobileSource = list.find(x => {
+    const name = getValue(x, ['name','fileName','檔名']);
+    return norm(name) === norm('首頁_封面_手機_01.png');
+  });
+
+  hero.querySelectorAll('picture, img').forEach(el=>el.remove());
   hero.classList.remove('image-loaded','image-error');
+  hero.classList.remove('has-mobile-hero-image');
 
   if(!source){
     hero.dataset.imageState = 'missing';
@@ -252,6 +258,19 @@ function renderImages(images){
     return;
   }
 
+  const mobileSrc = mobileSource ? imageUrl(mobileSource) : '';
+  hero.classList.toggle('has-mobile-hero-image',!!mobileSrc);
+
+  const picture = document.createElement('picture');
+  picture.className = 'hero-main-picture';
+
+  if(mobileSrc){
+    const mobile = document.createElement('source');
+    mobile.media = '(max-width: 640px)';
+    mobile.srcset = mobileSrc;
+    picture.appendChild(mobile);
+  }
+
   const img = document.createElement('img');
   img.className = 'hero-main-image';
   img.src = src;
@@ -261,6 +280,8 @@ function renderImages(images){
   img.dataset.viewer = 'true';
   img.dataset.viewerLabel = getValue(source,['name','fileName','檔名']) || '首頁封面';
 
+  let retriedDesktop = false;
+
   img.addEventListener('load',()=>{
     hero.dataset.imageState = 'loaded';
     hero.classList.add('image-loaded');
@@ -268,12 +289,19 @@ function renderImages(images){
   },{once:true});
 
   img.addEventListener('error',()=>{
+    if(mobileSrc && !retriedDesktop && window.matchMedia('(max-width: 640px)').matches){
+      retriedDesktop=true;
+      picture.querySelector('source')?.remove();
+      img.src=src;
+      return;
+    }
     hero.dataset.imageState = 'error';
     hero.classList.add('image-error');
     console.error('首頁專用圖載入失敗：',src,source);
-  },{once:true});
+  });
 
-  hero.appendChild(img);
+  picture.appendChild(img);
+  hero.appendChild(picture);
 }
 
 async function loadFromGas(endpoint){
@@ -329,11 +357,11 @@ async function init(){
   renderWorld(data.world);
   renderImages(data.images);
 
-  const version = data.site?.site_version || data.site?.siteVersion || '';
-  const dataVersion = data.site?.data_version || '';
+  const siteVersion = String(data.site?.site_version || data.site?.siteVersion || '').trim().replace(/^v+/i,'');
+  const dataVersion = String(data.site?.data_version || '').trim().replace(/^v+/i,'');
   const footer = document.querySelector('.footer');
-  if(footer && (version || dataVersion)){
-    footer.textContent = `《時盡》STORY / CHARACTER / WORLD${version ? ' · Site v'+version : ''}${dataVersion ? ' · Data '+dataVersion : ''}`;
+  if(footer && (siteVersion || dataVersion)){
+    footer.textContent = `《時盡》STORY / CHARACTER / WORLD${siteVersion ? ' · Site v'+siteVersion : ''}${dataVersion ? ' · Data v'+dataVersion : ''}`;
   }
 
   }finally{

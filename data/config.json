@@ -117,7 +117,7 @@
     "homepageImageFeather": true,
     "homepageImageSource": "Drive 圖片表：網站素材，優先首頁/封面/主視覺",
     "homepageHeroActions": false,
-    "homepageImageResolver": "exact filename only: 首頁_封面_主視覺_01.png",
+    "homepageImageResolver": "exact filenames: desktop 首頁_封面_主視覺_01.png; mobile (≤640px) 首頁_封面_手機_01.png, otherwise desktop fallback",
     "imageViewer": "wheel zoom + drag + double click + pinch",
     "anyanxiuSeal": "user SVG swarm anchored to seal glyph",
     "homepageImageDebug": false,
