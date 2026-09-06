@@ -11,8 +11,8 @@
 <br>
 
 [![Website](https://img.shields.io/badge/進入《時盡》-111318?style=for-the-badge)](https://vladjia.github.io/TheEndOfTime/)
-[![Frontend](https://img.shields.io/badge/Frontend-v0.18.29-7F1521?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
-[![CORE](https://img.shields.io/badge/CORE-v2.6-4B515A?style=for-the-badge)](https://github.com/vladjia/TheEndOfTime)
+[![Site](https://img.shields.io/endpoint?url=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA%2Fexec%3Faction%3DversionBadge%26type%3Dsite)](https://github.com/vladjia/TheEndOfTime)
+[![CORE](https://img.shields.io/endpoint?url=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA%2Fexec%3Faction%3DversionBadge%26type%3Dcore)](https://github.com/vladjia/TheEndOfTime)
 
 </div>
 
@@ -23,6 +23,9 @@
 《時盡》是一套結合 **劇情閱讀、角色檔案、世界觀探索與個人旅程紀錄** 的互動式網站。
 
 > **讀到哪裡，世界就存在到哪裡。**
+
+未解鎖的內容不以鎖頭、`???` 或空白卡片提示存在。  
+在玩家尚未走到那個時間點以前，那些資訊就不應該出現在他的世界裡。
 
 ---
 
@@ -46,10 +49,9 @@
 - 世界觀逐步解鎖
 - 時印系統與個人旅程
 - 十二時辰母石
-- 單一光源色 → 琉璃折光、內部光流與環繞微光
+- 單一光源色與琉璃折光
 - 個人本命刻紋
 - 時印序與接力碼
-- 時印管理器縮圖同步玩家本命石片主色
 - Google Drive 圖片／影片同步
 - DEV FULL 完整版預覽
 
@@ -59,20 +61,7 @@
 
 玩家只需要選擇一個自己的光源色。
 
-系統會自動讓母石產生：
-
-- 琉璃層次
-- 內部折光
-- 輕微呼吸
-- 石片周圍緩慢運行的微光點
-- 正式鑄印後的個人本命刻紋
-
-所有正式時印顯示區域都應使用玩家自己的：
-
-- 石片型號
-- 石片主色
-- 刻紋種子
-- 共鳴狀態
+系統會依旅程逐步留下屬於這名玩家的時印與時痕。
 
 > **個人時印刻紋 = 你是誰**  
 > **後續時痕 = 你走過什麼**
@@ -84,6 +73,8 @@
 ```javascript
 syncDriveMedia()
 ```
+
+`syncDriveImages()` 僅保留舊版相容。
 
 ---
 
@@ -98,13 +89,24 @@ setMyDevPreviewOff()
 
 ---
 
-## 目前版本
+## 技術
 
-| 系統 | 版本 |
-|---|---:|
-| Frontend | `v0.18.29` |
-| CORE | `v2.6` |
-| 個人刻紋 | `v1` |
+- GitHub Pages
+- HTML / CSS / JavaScript
+- Google Apps Script
+- Google Sheets
+- Google Drive
+
+---
+
+## 版本來源
+
+README **不再手動維護版本號**。
+
+- `Site` Badge：自動讀取 Google Sheets「版本紀錄」最後一筆有效版本。
+- `CORE` Badge：自動讀取 Google Sheets「網站設定」中的 `core_version`。
+
+所以之後網站改版時，只要照原本流程補版本紀錄；README 不需要跟著改版本號。
 
 ---
 
