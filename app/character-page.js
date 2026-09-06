@@ -1,10 +1,57 @@
 
 const $ = s => document.querySelector(s);
 
-async function getJSON(path){
-  const r = await fetch(path,{cache:'no-store'});
+async function getJSON(path,{cache='default'}={}){
+  const r = await fetch(path,{cache});
   if(!r.ok) throw new Error(`${path}: ${r.status}`);
   return r.json();
+}
+
+const CHARACTER_API_CACHE_TTL = 3 * 60 * 1000;
+
+function characterApiCacheKey(mode){
+  return `tet:character-api:v01831:${mode}`;
+}
+
+function readCharacterApiCache(mode){
+  try{
+    const raw=sessionStorage.getItem(characterApiCacheKey(mode));
+    if(!raw) return null;
+    const entry=JSON.parse(raw);
+    if(!entry?.data) return null;
+    if(Date.now()-Number(entry.savedAt||0)>CHARACTER_API_CACHE_TTL) return null;
+    return entry.data;
+  }catch(_){
+    return null;
+  }
+}
+
+function writeCharacterApiCache(mode,data){
+  if(!data?.ok) return;
+  try{
+    sessionStorage.setItem(
+      characterApiCacheKey(mode),
+      JSON.stringify({savedAt:Date.now(),data})
+    );
+  }catch(_){}
+}
+
+async function loadCharacterApi(endpoint,mode){
+  const cached=readCharacterApiCache(mode);
+  if(cached){
+    // 跨角色頁先立即用快取；背景更新供下一頁使用。
+    setTimeout(async()=>{
+      try{
+        const fresh=await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}`,{cache:'no-store'});
+        writeCharacterApiCache(mode,fresh);
+      }catch(_){}
+    },0);
+    return cached;
+  }
+
+  const fresh=await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}`,{cache:'no-store'});
+  writeCharacterApiCache(mode,fresh);
+  return fresh;
 }
 
 function norm(v){
@@ -766,7 +813,7 @@ async function initCharacterPage(){
   }
 
   try{
-    const config = await getJSON('../data/config.json');
+    const config = await getJSON('../data/config.json?v=0.18.31',{cache:'force-cache'});
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
@@ -775,7 +822,7 @@ async function initCharacterPage(){
     if(mode === 'full'){
       document.querySelector('.spoiler-gate')?.remove();
     }
-    const data = await getJSON(`${endpoint}?type=${encodeURIComponent(mode)}&_=${Date.now()}`);
+    const data = await loadCharacterApi(endpoint,mode);
     if(!data?.ok) throw new Error('GAS API returned ok=false');
 
     const char = (data.characters || []).find(x=>x.id===id);

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async()=>{
 
   try{
     await A.ensure();
-    const data=await A.load(true);
+    const data=await A.load(false);
     const stone=data?.stone||{};
     if(!stone.forged){
       if(err) err.textContent='這枚時印尚未完成時空鑄印。';

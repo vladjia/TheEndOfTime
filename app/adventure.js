@@ -7,6 +7,9 @@ window.EndOfTimeAdventure = (() => {
   const ENTRY_COACH_KEY = 'theEndOfTime.timeMark.entryCoachSeen';
   let configCache = null;
   let progressCache = null;
+  let progressRefreshPromise = null;
+  const PROGRESS_SESSION_PREFIX = 'tet:progress:v01831:';
+  const PROGRESS_SESSION_TTL = 3 * 60 * 1000;
   let stoneLayoutsCache = null;
   let stoneLayoutsPromise = null;
   let ensurePromise = null;
@@ -20,7 +23,7 @@ window.EndOfTimeAdventure = (() => {
 
   async function getConfig(){
     if(configCache) return configCache;
-    const r = await fetch(`${rootPrefix()}data/config.json?_=${Date.now()}`, {cache:'no-store'});
+    const r = await fetch(`${rootPrefix()}data/config.json?v=0.18.31`, {cache:'force-cache'});
     if(!r.ok) throw new Error('config load failed');
     configCache = await r.json();
     return configCache;
@@ -612,7 +615,8 @@ window.EndOfTimeAdventure = (() => {
     const config = await getConfig();
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
-    const q = new URLSearchParams({action, ...params, _:Date.now()});
+
+    const q = new URLSearchParams({action, ...params});
     const r = await fetch(`${endpoint}?${q.toString()}`, {cache:'no-store'});
     if(!r.ok) throw new Error(`Adventure API ${r.status}`);
     const data = await r.json();
@@ -622,25 +626,51 @@ window.EndOfTimeAdventure = (() => {
 
   async function ensure(){
     if(ensurePromise) return ensurePromise;
-    ensurePromise = (async()=>{
-      let t = token();
+
+    ensurePromise=(async()=>{
+      let t=token();
+
       if(!t){
-        t = generateToken();
+        t=generateToken();
         setToken(t);
-        try{ await api('adventureCreate',{token:t}); }catch(err){ console.warn('時印建立暫時離線',err); }
+        try{
+          await api('adventureCreate',{token:t});
+          clearProgressSession(t);
+        }catch(err){
+          console.warn('時印建立暫時離線',err);
+        }
         toast('時印已建立。');
-        return {token:t, isNew:true};
+        return {token:t,isNew:true};
       }
+
+      // 已有 TOKEN 時，跨頁不再每次阻塞等待 GAS。
+      // 有 session 快取就直接使用，背景再同步最新資料。
+      const stored=readProgressSession(t);
+      if(stored){
+        progressCache=stored;
+        renderDevPreviewBadge(stored);
+        setTimeout(()=>refreshProgressInBackground(),0);
+        return {token:t,isNew:false,cached:true};
+      }
+
+      // 只有沒有任何本地資料時，才真正等待一次後端。
       try{
-        const loaded = await api('adventureLoad',{token:t});
-        if(!loaded?.exists) await api('adventureCreate',{token:t});
-      }catch(err){ console.warn('時印確認暫時離線',err); }
-      return {token:t, isNew:false};
+        const loaded=await load(true);
+        if(!loaded?.exists){
+          await api('adventureCreate',{token:t});
+          clearProgressSession(t);
+        }
+      }catch(err){
+        console.warn('時印確認暫時離線',err);
+      }
+
+      return {token:t,isNew:false,cached:false};
     })();
+
     try{
       return await ensurePromise;
     }finally{
-      ensurePromise = null;
+      ensurePromise=null;
     }
   }
 
@@ -660,16 +690,120 @@ window.EndOfTimeAdventure = (() => {
     document.body.appendChild(badge);
   }
 
+  function progressSessionKey(t){
+    return `${PROGRESS_SESSION_PREFIX}${String(t||'')}`;
+  }
+
+  function readProgressSession(t,{allowStale=false}={}){
+    if(!t) return null;
+    try{
+      const raw=sessionStorage.getItem(progressSessionKey(t));
+      if(!raw) return null;
+      const entry=JSON.parse(raw);
+      if(!entry?.data) return null;
+      const age=Date.now()-Number(entry.savedAt||0);
+      if(!allowStale && age>PROGRESS_SESSION_TTL) return null;
+      return entry.data;
+    }catch(_){
+      return null;
+    }
+  }
+
+  function writeProgressSession(t,data){
+    if(!t || !data?.ok) return;
+    try{
+      sessionStorage.setItem(
+        progressSessionKey(t),
+        JSON.stringify({savedAt:Date.now(),data})
+      );
+    }catch(_){}
+  }
+
+  function clearProgressSession(t=token()){
+    if(!t) return;
+    try{ sessionStorage.removeItem(progressSessionKey(t)); }catch(_){}
+  }
+
+  function applyTimeMarkEntryState(data){
+    if(!data) return;
+    const stone=data?.stone||{};
+    const forged=!!stone.forged;
+    const traceCount=visibleTimeTraceCount(data);
+
+    document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+      const label=btn.querySelector('.time-mark-orb-label');
+
+      if(!forged){
+        if(label) label.textContent='時印在此';
+        btn.setAttribute('aria-label','時印在此，留下我的時印');
+        btn.dataset.timeMarkState='unforged';
+      }else{
+        if(label) label.textContent=`時痕・${traceCount}`;
+        btn.setAttribute('aria-label',`開啟時印，目前留下 ${traceCount} 道時痕`);
+        btn.dataset.timeMarkState=traceCount>0?'traced':'forged';
+      }
+
+      btn.classList.toggle('is-unforged',!forged);
+      btn.classList.toggle('has-time-traces',forged && traceCount>0);
+    });
+  }
+
+  async function refreshProgressInBackground(){
+    const t=token();
+    if(!t || progressRefreshPromise) return progressRefreshPromise;
+
+    progressRefreshPromise=(async()=>{
+      try{
+        const fresh=await api('adventureLoad',{token:t});
+        progressCache=fresh;
+        writeProgressSession(t,fresh);
+        renderDevPreviewBadge(fresh);
+        applyTimeMarkEntryState(fresh);
+        window.dispatchEvent(new CustomEvent('tet:progress-updated',{detail:fresh}));
+        return fresh;
+      }catch(err){
+        console.warn('背景同步旅程失敗',err);
+        return null;
+      }finally{
+        progressRefreshPromise=null;
+      }
+    })();
+
+    return progressRefreshPromise;
+  }
+
   async function load(force=false){
     const t = token();
     if(!t) return null;
+
     if(progressCache && !force) return progressCache;
+
+    if(!force){
+      const stored=readProgressSession(t);
+      if(stored){
+        progressCache=stored;
+        renderDevPreviewBadge(stored);
+        return stored;
+      }
+    }
+
     try{
-      progressCache = await api('adventureLoad',{token:t});
-      renderDevPreviewBadge(progressCache);
-      return progressCache;
+      const fresh=await api('adventureLoad',{token:t});
+      progressCache=fresh;
+      writeProgressSession(t,fresh);
+      renderDevPreviewBadge(fresh);
+      return fresh;
     }catch(err){
       console.warn('旅程讀取失敗',err);
+
+      // 網路失敗時，即使快取過期也比全空畫面好。
+      const stale=readProgressSession(t,{allowStale:true});
+      if(stale){
+        progressCache=stale;
+        renderDevPreviewBadge(stale);
+        return stale;
+      }
+
       return {ok:false, exists:true, token:t, progress:[], storyRead:[], charactersUnlocked:[], worldUnlocked:[]};
     }
   }
@@ -681,6 +815,7 @@ window.EndOfTimeAdventure = (() => {
     }
     const data = await api('adventureLoad',{token:normalized});
     if(!data?.exists) throw new Error('找不到這枚時印留下的旅程。');
+    clearProgressSession();
     setToken(normalized);
     progressCache = data;
     sessionStorage.removeItem(SESSION_PROMPT_KEY);
@@ -704,6 +839,7 @@ window.EndOfTimeAdventure = (() => {
     };
     const data = await api('adventureComplete',params);
     progressCache = null;
+    clearProgressSession(t);
     toast('此刻，已被時印記下。');
     return data;
   }
@@ -857,7 +993,7 @@ window.EndOfTimeAdventure = (() => {
   async function openForge(){
     if(document.body.classList.contains('pre-entry')) return;
     if(isCritical()) return;
-    const data=await load(true);
+    const data=await load(false);
     let existing=data?.stone||{};
     if(!stoneTypeNumber(existing.stoneType)){
       const retry=await load(true);
@@ -1061,7 +1197,7 @@ window.EndOfTimeAdventure = (() => {
 
     try{
       await ensure();
-      const data=await load(true);
+      const data=await load(false);
       const stone=data?.stone||{};
       const forged=!!stone.forged;
       endCritical();
@@ -1403,7 +1539,7 @@ window.EndOfTimeAdventure = (() => {
     if(!document.body.classList.contains('home-page') && !document.body.classList.contains('pre-entry')) return;
     if(!token()) return;
     try{
-      const data=await load(true);
+      const data=await load(false);
       if(!data?.player?.lastStoryId) return;
       const show=()=>showResumePrompt(data,false);
       if(document.body.classList.contains('pre-entry')){
@@ -1422,32 +1558,19 @@ window.EndOfTimeAdventure = (() => {
 
   async function refreshTimeMarkEntryState(){
     try{
-      document.querySelectorAll('[data-time-mark]').forEach(btn=>{
-        const label=btn.querySelector('.time-mark-orb-label');
-        if(label) label.textContent='讀取時印…';
-      });
+      const cached=progressCache || readProgressSession(token());
+      if(!cached){
+        document.querySelectorAll('[data-time-mark]').forEach(btn=>{
+          const label=btn.querySelector('.time-mark-orb-label');
+          if(label) label.textContent='讀取時印…';
+        });
+      }
 
-      const data=await load(true);
-      const stone=data?.stone||{};
-      const forged=!!stone.forged;
-      const traceCount=visibleTimeTraceCount(data);
+      const data=cached || await load(false);
+      applyTimeMarkEntryState(data);
 
-      document.querySelectorAll('[data-time-mark]').forEach(btn=>{
-        const label=btn.querySelector('.time-mark-orb-label');
-
-        if(!forged){
-          if(label) label.textContent='時印在此';
-          btn.setAttribute('aria-label','時印在此，留下我的時印');
-          btn.dataset.timeMarkState='unforged';
-        }else{
-          if(label) label.textContent=`時痕・${traceCount}`;
-          btn.setAttribute('aria-label',`開啟時印，目前留下 ${traceCount} 道時痕`);
-          btn.dataset.timeMarkState=traceCount>0?'traced':'forged';
-        }
-
-        btn.classList.toggle('is-unforged',!forged);
-        btn.classList.toggle('has-time-traces',forged && traceCount>0);
-      });
+      // UI 已經可以用了，再背景更新，不阻塞換頁。
+      setTimeout(()=>refreshProgressInBackground(),0);
     }catch(_){
       document.querySelectorAll('[data-time-mark]').forEach(btn=>{
         const label=btn.querySelector('.time-mark-orb-label');
@@ -1466,7 +1589,7 @@ window.EndOfTimeAdventure = (() => {
 
     if(document.body.classList.contains('home-page')){
       let guideData=null;
-      try{ guideData=await load(true); }catch(_){}
+      try{ guideData=await load(false); }catch(_){}
       const showGuide=()=>{
         if(!hasSeenFirstGuide(guideData)){
           setTimeout(()=>showFirstTimeGuide(guideData),700);
@@ -1487,5 +1610,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, normalizeHexColor};
+  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();

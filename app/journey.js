@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async()=>{
     await A.ensure();
 
     setLoadingText('尋回旅程中……');
-    const data=await A.load(true);
+    const data=await A.load(false);
 
     if(!data || data.ok===false){
       throw new Error('旅程暫時無法讀取。');
