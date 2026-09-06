@@ -1871,3 +1871,40 @@ body:not(.pre-entry) .time-mark-orb{
   color:rgba(238,240,244,.34);
   font-size:10px;
 }
+
+
+/* ============================================================
+   v0.18.25 · 十二母石「可見本體」真正置中
+   ============================================================ */
+
+/*
+  12 顆母石的 PNG 畫布雖然置中，但透明區與石片實體分布不對稱。
+  因此 place-items:center 只能把「整張 PNG」置中，肉眼看到的石頭仍會偏掉。
+
+  本版依每顆 PNG 的 Alpha 可見像素重心逐顆量測，
+  以 --stone-shift-x / --stone-shift-y 做視覺補償。
+  時印序文字不跟著移動，只有石片本體與其染色 / 刻紋 / 光效一起移動。
+*/
+
+.time-shard-asset .time-shard-image,
+.time-shard-asset .time-shard-canvas,
+.time-shard-asset .time-shard-engraving,
+.time-shard-asset .time-shard-colorwash,
+.time-shard-asset .time-shard-light{
+  translate:var(--stone-shift-x,0%) var(--stone-shift-y,0%)!important;
+}
+
+/* ::after 是石片本體的輔助染色層，也必須跟石片一起移動。 */
+.time-shard-asset::after{
+  translate:var(--stone-shift-x,0%) var(--stone-shift-y,0%)!important;
+}
+
+/* 鑄印預覽區的版面本身仍以欄位中心為基準。 */
+.time-forge-preview{
+  justify-items:center!important;
+  align-items:center!important;
+}
+
+.time-forge-preview .time-shard-asset{
+  margin-inline:auto!important;
+}

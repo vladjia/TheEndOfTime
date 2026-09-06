@@ -80,6 +80,26 @@ window.EndOfTimeAdventure = (() => {
   }
 
 
+  function stoneVisualOffset(type){
+    // 依每顆母石實際透明 PNG 的可見像素重心量測。
+    // 目的：不是把「PNG 畫布」置中，而是把「真正看得到的石片本體」置中。
+    const offsets={
+      1:{x:-2.34,y: 1.56},
+      2:{x:-3.92,y: 1.41},
+      3:{x:-6.15,y: 2.24},
+      4:{x:-4.48,y: 0.49},
+      5:{x:-0.11,y: 0.09},
+      6:{x:-6.03,y: 0.66},
+      7:{x:-4.75,y:-0.34},
+      8:{x:-3.82,y: 1.51},
+      9:{x:-2.03,y: 0.65},
+      10:{x:-5.29,y:-0.04},
+      11:{x:-1.33,y: 1.09},
+      12:{x:-1.96,y:-0.17}
+    };
+    return offsets[stoneTypeNumber(type)] || {x:0,y:0};
+  }
+
   function stoneAspectRatio(type){
     const ratios={
       1:1254/1254,
@@ -701,9 +721,10 @@ window.EndOfTimeAdventure = (() => {
     const levelClass=`resonance-${Math.max(0,Math.min(5,Number(level||0)))}`;
     const url=stoneAssetUrl(type);
     const aspect=stoneAspectRatio(type);
+    const visualOffset=stoneVisualOffset(type);
     const safeSeed=showEngraving ? String(engraveSeed||'') : '';
     return `
-      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${safeSeed.replace(/"/g,'&quot;')}" style="--stone-image:url('${url}');--stone-aspect:${aspect}">
+      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${safeSeed.replace(/"/g,'&quot;')}" style="--stone-image:url('${url}');--stone-aspect:${aspect};--stone-shift-x:${visualOffset.x}%;--stone-shift-y:${visualOffset.y}%">
         <img class="time-shard-image" src="${url}" alt="你的時印石片" crossorigin="anonymous">
         <canvas class="time-shard-canvas" aria-hidden="true"></canvas>
         <canvas class="time-shard-engraving" aria-hidden="true"></canvas>
@@ -1372,5 +1393,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, normalizeHexColor};
+  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, normalizeHexColor};
 })();
