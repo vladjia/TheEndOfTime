@@ -764,6 +764,58 @@ function renderCharacterGallery(items,id,char){
   section.hidden=false;
 }
 
+
+const CHARACTER_SECTION_IDS = [
+  'overview',
+  'profile',
+  'gallery',
+  'weapon',
+  'skills',
+  'signature',
+  'relations',
+  'poem'
+];
+
+function characterKnowledgeSet(adventureData,characterId,mode){
+  if(mode === 'full'){
+    return new Set(CHARACTER_SECTION_IDS);
+  }
+
+  const map=adventureData?.characterSectionUnlocks || {};
+  return new Set(Array.isArray(map?.[characterId]) ? map[characterId] : []);
+}
+
+function setKnowledgeVisible(target,visible){
+  if(!target) return;
+  target.classList.toggle('character-knowledge-hidden',!visible);
+  if(!visible) target.setAttribute('aria-hidden','true');
+  else target.removeAttribute('aria-hidden');
+}
+
+function applyCharacterKnowledge(characterId,knowledge){
+  const has=id=>knowledge.has(id);
+
+  // 身分層：主視覺、稱號、角色名永遠屬於「角色已存在」本身。
+  // overview 才控制玩家目前知道的公開介紹 / 核心句 / 三欄資料 / strip。
+  setKnowledgeVisible(document.getElementById('characterIntro'),has('overview'));
+  setKnowledgeVisible(document.querySelector('.character-rule'),has('overview'));
+  setKnowledgeVisible(document.getElementById('characterMeta'),has('overview'));
+  setKnowledgeVisible(document.getElementById('characterStrip'),has('overview'));
+
+  setKnowledgeVisible(document.getElementById('profileSection'),has('profile'));
+  setKnowledgeVisible(document.getElementById('gallerySection'),has('gallery'));
+  setKnowledgeVisible(document.getElementById('weaponSection'),has('weapon'));
+  setKnowledgeVisible(document.getElementById('skillsSection'),has('skills'));
+  setKnowledgeVisible(document.getElementById('specialVisualSection'),has('signature'));
+  setKnowledgeVisible(document.getElementById('relationsSection'),has('relations'));
+  setKnowledgeVisible(document.getElementById('poemSection'),has('poem'));
+
+  // 舊的 FULL ARCHIVE 防雷卡不再另外暗示「還有什麼」。
+  // 未解鎖資訊應直接不存在。
+  const spoilerGate=document.querySelector('.spoiler-gate');
+  if(spoilerGate) spoilerGate.remove();
+}
+
 function renderCharacter(char,id,data){
   if(!char) return;
 
@@ -813,37 +865,58 @@ async function initCharacterPage(){
   }
 
   try{
-    const config = await getJSON('../data/config.json?v=0.18.31',{cache:'force-cache'});
+    const config = await getJSON('../data/config.json?v=0.18.32',{cache:'force-cache'});
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
     const mode = window.EndOfTimeMode?.current?.() || 'public';
 
-    if(mode === 'full'){
-      document.querySelector('.spoiler-gate')?.remove();
-    }
-    const data = await loadCharacterApi(endpoint,mode);
+    // 角色頁的「資料內容」與「玩家目前理解到哪裡」分開讀。
+    const [data,adventureData] = await Promise.all([
+      loadCharacterApi(endpoint,mode),
+      (async()=>{
+        const A=window.EndOfTimeAdventure;
+        if(!A) return null;
+        await A.ensure();
+        return A.load(false);
+      })()
+    ]);
+
     if(!data?.ok) throw new Error('GAS API returned ok=false');
+
+    // 正常玩家若尚未遇見這個角色，直接回角色索引。
+    // DEV FULL 不受此限制。
+    if(mode !== 'full'){
+      const unlocked=Array.isArray(adventureData?.charactersUnlocked)
+        ? adventureData.charactersUnlocked
+        : [];
+      if(!unlocked.includes(id)){
+        location.replace('index.html');
+        return;
+      }
+    }
 
     const char = (data.characters || []).find(x=>x.id===id);
     if(!char) throw new Error(`Character not found: ${id}`);
 
     applyCopy(data.copy || {});
     renderCharacter(char,id,data);
-    window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
 
-    if(mode === 'full'){
-      document.querySelector('.spoiler-gate')?.remove();
-    }
+    const knowledge=characterKnowledgeSet(adventureData,id,mode);
+    applyCharacterKnowledge(id,knowledge);
+
+    window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
 
     const main = bestCharacterImage(data.images || [],id,{zero:false});
     mountImage($('#characterHero'), main, `${char.fullName || char.name} 主視覺`);
 
-    console.info(`《時盡》角色頁資料來源：Google Sheet / GAS · ${id}`);
+    console.info(
+      `《時盡》角色認知：${id} →`,
+      mode==='full' ? 'DEV FULL' : [...knowledge]
+    );
   }catch(err){
-    console.warn('角色頁 GAS 載入失敗，保留 HTML SEO / fallback。',err);
-  }
-  finally{
+    console.warn('角色頁 GAS / 認知資料載入失敗，保留 HTML SEO / fallback。',err);
+  }finally{
     window.SiteLoading?.hide?.();
   }
 }

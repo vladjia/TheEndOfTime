@@ -1829,3 +1829,12 @@ body[data-character="anyanxiu"] .character-visual:hover .character-visual-mark{
     text-align:center;
   }
 }
+
+
+/* ============================================================
+   v0.18.32 · 角色認知分層
+   未解鎖區塊不是鎖住，而是目前世界中不存在。
+   ============================================================ */
+.character-knowledge-hidden{
+  display:none!important;
+}
