@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async()=>{
         <div class="journey-list-row journey-record-row">
           <small>${labelFor(String(item.type||''))}</small>
           <div>
-            <strong>${String(item.targetId||'').replace(/[<>&"]/g,'')}</strong>
+            <strong>${String(item.displayLabel||item.targetId||'').replace(/[<>&"]/g,'')}</strong>
             ${item.recordedAt ? `<span>${new Date(item.recordedAt).toLocaleString('zh-TW')}</span>` : ''}
           </div>
         </div>
