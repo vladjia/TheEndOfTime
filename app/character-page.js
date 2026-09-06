@@ -10,7 +10,7 @@ async function getJSON(path,{cache='default'}={}){
 const CHARACTER_API_CACHE_TTL = 3 * 60 * 1000;
 
 function characterApiCacheKey(mode){
-  return `tet:character-api:v01831:${mode}`;
+  return `tet:character-api:v01834:${mode}`;
 }
 
 function readCharacterApiCache(mode){
@@ -648,7 +648,20 @@ function applyCopy(copy){
 }
 
 
-function galleryMedia(items,id){
+function galleryMedia(items,id,adventureData,mode){
+  const devFull =
+    mode === 'full'
+    || String(adventureData?.player?.devPreviewMode || '')
+      .trim()
+      .toUpperCase() === 'FULL';
+
+  const unlockedImageIds = new Set(
+    (adventureData?.progress || [])
+      .filter(row => String(row?.type || '').trim().toUpperCase() === 'IMAGE')
+      .map(row => String(row?.targetId || '').trim())
+      .filter(Boolean)
+  );
+
   return (items || [])
     .filter(item => item.targetId === id)
     .filter(item => {
@@ -656,6 +669,7 @@ function galleryMedia(items,id){
       const path = norm(item.path || '');
       return cat.includes('圖誌') || path.includes('圖誌');
     })
+    .filter(item => devFull || unlockedImageIds.has(String(item.id || '').trim()))
     .sort((a,b)=>
       String(a.name||'').localeCompare(String(b.name||''),'zh-Hant',{
         numeric:true,
@@ -698,8 +712,8 @@ function ensureGallerySection(){
   return section;
 }
 
-function renderCharacterGallery(items,id,char){
-  const media=galleryMedia(items,id);
+function renderCharacterGallery(items,id,char,adventureData,mode){
+  const media=galleryMedia(items,id,adventureData,mode);
   const section=ensureGallerySection();
   const grid=section.querySelector('#characterGalleryGrid');
 
@@ -787,11 +801,7 @@ function characterKnowledgeSet(adventureData,characterId,mode){
   }
 
   const map=adventureData?.characterSectionUnlocks || {};
-  return new Set(
-    Array.isArray(map?.[characterId])
-      ? map[characterId]
-      : []
-  );
+  return new Set(Array.isArray(map?.[characterId]) ? map[characterId] : []);
 }
 
 function setKnowledgeVisible(target,visible){
@@ -825,7 +835,7 @@ function applyCharacterKnowledge(characterId,knowledge){
   if(spoilerGate) spoilerGate.remove();
 }
 
-function renderCharacter(char,id,data){
+function renderCharacter(char,id,data,adventureData,mode){
   if(!char) return;
 
   document.body.dataset.character = id || char.id || '';
@@ -845,7 +855,7 @@ function renderCharacter(char,id,data){
   renderMeta(char);
   renderStrip(char);
   renderParagraphs($('#profileContent'),char.publicDetail || char.publicIntro);
-  renderCharacterGallery(data.images || [],id,char);
+  renderCharacterGallery(data.images || [],id,char,adventureData,mode);
   renderWeapon(char,id,data.weapons || [],data.images || []);
   renderSkills(data.skills || [],id);
   renderSpecialVisual(char,id,data.skills || [],data.images || []);
@@ -909,7 +919,7 @@ async function initCharacterPage(){
     if(!char) throw new Error(`Character not found: ${id}`);
 
     applyCopy(data.copy || {});
-    renderCharacter(char,id,data);
+    renderCharacter(char,id,data,adventureData,mode);
 
     const knowledge=characterKnowledgeSet(adventureData,id,mode);
     applyCharacterKnowledge(id,knowledge);
