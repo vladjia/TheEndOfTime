@@ -1716,3 +1716,100 @@ body:not(.pre-entry) .time-mark-orb{
       drop-shadow(0 0 10px rgba(127,21,33,.22));
   }
 }
+
+
+/* ============================================================
+   v0.18.22 · 未鑄印時印：持續心跳 / 呼吸提醒
+   ============================================================ */
+
+/* 尚未完成時空鑄印時，石片本體持續以「雙拍心跳 + 緩慢呼吸」提醒。
+   不使用任何方框、外框或整顆按鈕縮放。 */
+.time-mark-orb.is-unforged .time-mark-orb-video{
+  animation:timeMarkUnforgedHeartbeat 3.2s ease-in-out infinite!important;
+  transform-origin:50% 50%!important;
+}
+
+/* 文字只做非常輕微的明暗變化，不位移、不縮放。 */
+.time-mark-orb.is-unforged .time-mark-orb-label{
+  animation:timeMarkUnforgedLabelBreath 3.2s ease-in-out infinite!important;
+}
+
+/* 已完成時印後，回到一般較安靜的呼吸。 */
+.time-mark-orb:not(.is-unforged) .time-mark-orb-video{
+  animation:timeMarkShardBreath 3.8s ease-in-out infinite!important;
+}
+
+@keyframes timeMarkUnforgedHeartbeat{
+  0%,100%{
+    opacity:.88;
+    transform:translate(-50%,-50%) scale(.985);
+    filter:
+      brightness(.96)
+      saturate(.98)
+      drop-shadow(0 0 4px rgba(255,255,255,.10))
+      drop-shadow(0 0 7px rgba(127,21,33,.10));
+  }
+
+  /* 第一拍 */
+  18%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.075);
+    filter:
+      brightness(1.12)
+      saturate(1.06)
+      drop-shadow(0 0 8px rgba(255,255,255,.18))
+      drop-shadow(0 0 15px rgba(127,21,33,.24));
+  }
+  26%{
+    opacity:.94;
+    transform:translate(-50%,-50%) scale(1.015);
+  }
+
+  /* 第二拍 */
+  34%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.055);
+    filter:
+      brightness(1.08)
+      saturate(1.04)
+      drop-shadow(0 0 7px rgba(255,255,255,.16))
+      drop-shadow(0 0 13px rgba(127,21,33,.20));
+  }
+
+  /* 心跳後進入較長的呼吸空檔 */
+  48%{
+    opacity:.94;
+    transform:translate(-50%,-50%) scale(1.005);
+  }
+  70%{
+    opacity:.90;
+    transform:translate(-50%,-50%) scale(.99);
+  }
+}
+
+@keyframes timeMarkUnforgedLabelBreath{
+  0%,100%{opacity:.72}
+  18%{opacity:.95}
+  34%{opacity:.88}
+  60%{opacity:.74}
+}
+
+/* 使用者偏好減少動態時，保留柔和提示但不做心跳縮放。 */
+@media(prefers-reduced-motion:reduce){
+  .time-mark-orb.is-unforged .time-mark-orb-video{
+    animation:timeMarkUnforgedGlowOnly 3.8s ease-in-out infinite!important;
+  }
+  .time-mark-orb.is-unforged .time-mark-orb-label{
+    animation:none!important;
+  }
+}
+@keyframes timeMarkUnforgedGlowOnly{
+  0%,100%{
+    opacity:.88;
+    filter:brightness(.98) drop-shadow(0 0 5px rgba(127,21,33,.10));
+  }
+  50%{
+    opacity:1;
+    filter:brightness(1.08) drop-shadow(0 0 12px rgba(127,21,33,.20));
+  }
+}
