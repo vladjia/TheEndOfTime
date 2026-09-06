@@ -79,6 +79,25 @@ window.EndOfTimeAdventure = (() => {
     return Number.isInteger(n) && n>=1 && n<=12 ? n : 0;
   }
 
+
+  function stoneAspectRatio(type){
+    const ratios={
+      1:1254/1254,
+      2:1236/1272,
+      3:1312/1199,
+      4:1236/1272,
+      5:1236/1272,
+      6:1254/1254,
+      7:1212/1298,
+      8:1226/1283,
+      9:1236/1272,
+      10:1230/1278,
+      11:1254/1254,
+      12:1254/1254
+    };
+    return ratios[stoneTypeNumber(type)] || 1;
+  }
+
   function stoneAssetUrl(type){
     const n=stoneTypeNumber(type);
     if(!n) return '';
@@ -669,7 +688,7 @@ window.EndOfTimeAdventure = (() => {
     `,{lockClose:true});
   }
 
-  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,engraveSeed='',awaiting=false}={}){
+  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,engraveSeed='',showEngraving=true,awaiting=false}={}){
     const type=stoneTypeNumber(stoneType);
     if(awaiting || !type){
       return `
@@ -681,8 +700,10 @@ window.EndOfTimeAdventure = (() => {
     }
     const levelClass=`resonance-${Math.max(0,Math.min(5,Number(level||0)))}`;
     const url=stoneAssetUrl(type);
+    const aspect=stoneAspectRatio(type);
+    const safeSeed=showEngraving ? String(engraveSeed||'') : '';
     return `
-      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${String(engraveSeed||'').replace(/"/g,'&quot;')}" style="--stone-image:url('${url}')">
+      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${safeSeed.replace(/"/g,'&quot;')}" style="--stone-image:url('${url}');--stone-aspect:${aspect}">
         <img class="time-shard-image" src="${url}" alt="你的時印石片" crossorigin="anonymous">
         <canvas class="time-shard-canvas" aria-hidden="true"></canvas>
         <canvas class="time-shard-engraving" aria-hidden="true"></canvas>
@@ -751,6 +772,7 @@ window.EndOfTimeAdventure = (() => {
             level:existing.resonanceLevel||0,
             stoneType:existingType,
             engraveSeed:existing.engraveSeed||'',
+            showEngraving:isForged,
             awaiting:!existingType
           })}
         </div>
@@ -1150,9 +1172,11 @@ window.EndOfTimeAdventure = (() => {
   }
 
   function showTimeMarkEntryCoach(){
-    if(localStorage.getItem(ENTRY_COACH_KEY)==='1') return;
     const btn=document.querySelector('[data-time-mark]');
     if(!btn) return;
+
+    const oldCoach=document.querySelector('.time-mark-entry-coach');
+    if(oldCoach) oldCoach.remove();
 
     const coach=document.createElement('div');
     coach.className='time-mark-entry-coach';
@@ -1168,7 +1192,6 @@ window.EndOfTimeAdventure = (() => {
     requestAnimationFrame(()=>coach.classList.add('is-visible'));
 
     const close=()=>{
-      localStorage.setItem(ENTRY_COACH_KEY,'1');
       btn.classList.remove('is-coach-highlight');
       coach.classList.remove('is-visible');
       setTimeout(()=>coach.remove(),220);
@@ -1281,5 +1304,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, normalizeHexColor};
+  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, normalizeHexColor};
 })();

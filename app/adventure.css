@@ -1395,3 +1395,68 @@ body:not(.pre-entry) .time-mark-orb{
     drop-shadow(0 0 2px rgba(255,255,255,.36))
     drop-shadow(0 0 8px var(--shard-glow));
 }
+
+
+/* ============================================================
+   v0.18.18 · 時印顯示 / 首次導覽修正
+   ============================================================ */
+
+/* 十二母石依各自原始 PNG 比例顯示，不再套固定 1:1.08 容器。 */
+.time-shard-asset{
+  aspect-ratio:var(--stone-aspect,1)!important;
+  height:auto!important;
+  overflow:visible!important;
+}
+
+/* 母石、染色 Canvas、刻紋 Canvas 都完整貼合相同畫布。 */
+.time-shard-asset .time-shard-image,
+.time-shard-asset .time-shard-canvas,
+.time-shard-asset .time-shard-engraving{
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+
+/* 預覽區與幻境區不裁掉母石外緣 / 光暈。 */
+.time-forge-preview,
+.time-forge-reveal,
+.timemark-shard-host,
+.time-mark-mini-shard{
+  overflow:visible!important;
+}
+
+/* 右上角透明時印影片留出更多安全空間，避免上下緣看起來被切斷。 */
+.time-mark-orb-media{
+  width:58px!important;
+  height:64px!important;
+  overflow:visible!important;
+}
+.time-mark-orb-video{
+  width:48px!important;
+  height:86px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+
+/* 「先進入看看」之後的回頭導覽固定顯示在右上時印附近。 */
+.time-mark-entry-coach{
+  z-index:14500!important;
+}
+.time-mark-orb.is-coach-highlight{
+  position:relative;
+  z-index:14510!important;
+  filter:drop-shadow(0 0 10px rgba(127,21,33,.28));
+}
+
+@media(max-width:720px){
+  .time-mark-orb-media{
+    width:50px!important;
+    height:58px!important;
+  }
+  .time-mark-orb-video{
+    width:42px!important;
+    height:76px!important;
+  }
+}
