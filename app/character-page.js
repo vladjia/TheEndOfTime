@@ -130,6 +130,24 @@ function bestCharacterImage(images,id,opts={}){
   return picked;
 }
 
+function characterContentImage(data,characterId,adventureData){
+  const fields=adventureData?.characterContent?.[characterId] || {};
+  const imageId = [
+    fields?.portrait?.imageId,
+    fields?.portrait?.imageID,
+    fields?.publicIntro?.imageId,
+    fields?.publicIntro?.imageID,
+    fields?.profile?.imageId,
+    fields?.profile?.imageID
+  ].map(value=>String(value || '').trim()).find(Boolean);
+
+  if(!imageId) return null;
+
+  return (data?.images || []).find(item=>[
+    item?.id,item?.assetId,item?.assetID,item?.driveId,item?.driveID,item?.fileId,item?.fileID
+  ].some(value=>String(value || '').trim()===imageId)) || null;
+}
+
 function getWeaponImages(images, weaponId){
   return (images || [])
     .filter(img => isImageMedia(img) && img.targetId === weaponId)
@@ -949,7 +967,8 @@ async function initCharacterPage(){
 
     window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
 
-    const main = bestCharacterImage(data.images || [],id,{zero:false});
+    const main = characterContentImage(data,id,adventureData)
+      || bestCharacterImage(data.images || [],id,{zero:false});
     mountImage($('#characterHero'), main, `${char.fullName || char.name} 主視覺`);
 
     console.info(

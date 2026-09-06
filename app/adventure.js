@@ -8,7 +8,7 @@ window.EndOfTimeAdventure = (() => {
   let configCache = null;
   let progressCache = null;
   let progressRefreshPromise = null;
-  const PROGRESS_SESSION_PREFIX = 'tet:progress:v01837:';
+  const PROGRESS_SESSION_PREFIX = 'tet:progress:v01839:';
   const PROGRESS_SESSION_TTL = 3 * 60 * 1000;
   let stoneLayoutsCache = null;
   let stoneLayoutsPromise = null;
