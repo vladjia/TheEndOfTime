@@ -1460,3 +1460,51 @@ body:not(.pre-entry) .time-mark-orb{
     height:76px!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.19 · 右上角時印：透明底 + 完整旋轉範圍
+   ============================================================ */
+
+/* 右上角只負責承載透明 WebM，不做任何黑底或裁切。 */
+.time-mark-orb-media{
+  width:68px!important;
+  height:76px!important;
+  overflow:visible!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+/* 影片完整以 9:16 顯示；不放大裁邊。 */
+.time-mark-orb-video{
+  position:absolute!important;
+  width:54px!important;
+  height:96px!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  background:transparent!important;
+  mix-blend-mode:normal!important;
+  pointer-events:none!important;
+}
+
+/* 按鈕本身也不裁切影片。 */
+.time-mark-orb,
+.time-mark-toggle{
+  overflow:visible!important;
+  background:transparent!important;
+}
+
+@media(max-width:720px){
+  .time-mark-orb-media{
+    width:58px!important;
+    height:68px!important;
+  }
+  .time-mark-orb-video{
+    width:48px!important;
+    height:86px!important;
+  }
+}
