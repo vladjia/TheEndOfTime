@@ -1508,3 +1508,84 @@ body:not(.pre-entry) .time-mark-orb{
     height:86px!important;
   }
 }
+
+
+/* ============================================================
+   v0.18.20 · 右上角時印完整顯示
+   ============================================================ */
+.site-header,
+.site-header-inner,
+.topbar,
+.topbar-inner,
+.topbar-actions,
+.nav,
+.nav-inner,
+.nav-actions,
+.header-actions,
+.header-tools,
+.header-right,
+.site-actions,
+.site-nav,
+.site-nav-actions{
+  overflow:visible!important;
+}
+
+.time-mark-orb{
+  min-width:96px!important;
+  min-height:86px!important;
+  padding:0 10px 0 0!important;
+  overflow:visible!important;
+  align-items:center!important;
+  background:transparent!important;
+}
+
+.time-mark-orb-media{
+  position:relative!important;
+  flex:0 0 68px!important;
+  width:68px!important;
+  height:86px!important;
+  overflow:visible!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+}
+
+.time-mark-orb-video{
+  width:58px!important;
+  height:104px!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  overflow:visible!important;
+  background:transparent!important;
+  mix-blend-mode:normal!important;
+}
+
+.time-mark-orb-label{
+  position:relative!important;
+  z-index:3!important;
+  margin-left:2px!important;
+}
+
+.time-mark-toggle,
+.time-mark-orb.is-coach-highlight{
+  overflow:visible!important;
+}
+
+@media(max-width:720px){
+  .time-mark-orb{
+    min-width:66px!important;
+    min-height:76px!important;
+    padding-right:0!important;
+  }
+  .time-mark-orb-media{
+    flex-basis:60px!important;
+    width:60px!important;
+    height:76px!important;
+  }
+  .time-mark-orb-video{
+    width:50px!important;
+    height:92px!important;
+  }
+}
