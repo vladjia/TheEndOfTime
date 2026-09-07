@@ -649,6 +649,36 @@ window.EndOfTimeAdventure = (() => {
     }
   }
 
+  function engagementDeviceInfo(){
+    const ua=String(navigator.userAgent||'');
+    const platform=String(navigator.userAgentData?.platform||navigator.platform||'');
+    const touchPoints=Number(navigator.maxTouchPoints||0);
+    const isIPad=/iPad/i.test(ua)||(/Mac/i.test(platform)&&touchPoints>1);
+    const isIOS=isIPad||/iPhone|iPod/i.test(ua);
+    const isAndroid=/Android/i.test(ua)||/Android/i.test(platform);
+    const isTablet=isIPad||/Tablet|PlayBook|Silk/i.test(ua)||(isAndroid&&!/Mobile|Mobi/i.test(ua));
+    const isMobile=!isTablet&&(
+      navigator.userAgentData?.mobile===true||
+      /iPhone|iPod|Mobile|Mobi/i.test(ua)||
+      isAndroid
+    );
+
+    let operatingSystem='OTHER';
+    if(isAndroid) operatingSystem='ANDROID';
+    else if(isIOS) operatingSystem='IOS';
+    else if(/CrOS|Chrome OS/i.test(`${ua} ${platform}`)) operatingSystem='CHROMEOS';
+    else if(/Windows|Win32|Win64/i.test(`${ua} ${platform}`)) operatingSystem='WINDOWS';
+    else if(/Macintosh|MacIntel|Mac OS X|macOS/i.test(`${ua} ${platform}`)) operatingSystem='MACOS';
+    else if(/Linux/i.test(`${ua} ${platform}`)) operatingSystem='LINUX';
+
+    let deviceType='OTHER';
+    if(isTablet) deviceType='TABLET';
+    else if(isMobile) deviceType='MOBILE';
+    else if(['WINDOWS','MACOS','CHROMEOS','LINUX'].includes(operatingSystem)) deviceType='DESKTOP';
+
+    return {deviceType,operatingSystem};
+  }
+
   function queueEngagementUntil(at){
     const tracker=engagementTracker;
     if(!tracker || !tracker.active) return;
@@ -671,6 +701,8 @@ window.EndOfTimeAdventure = (() => {
       token:t,
       sessionId:tracker.segmentId,
       page:tracker.page,
+      deviceType:tracker.deviceType,
+      operatingSystem:tracker.operatingSystem,
       event,
       // 同一工作階段永遠上傳累積秒數，重送或亂序抵達都不會重複計時。
       seconds:String(Math.max(0,Math.floor(Number(tracker.totalSeconds)||0)))
@@ -769,9 +801,12 @@ window.EndOfTimeAdventure = (() => {
       const config=await getConfig();
       const endpoint=String(config?.gasApiEndpoint||'').trim();
       if(!endpoint) return;
+      const device=engagementDeviceInfo();
 
       engagementTracker={
         endpoint,
+        deviceType:device.deviceType,
+        operatingSystem:device.operatingSystem,
         active:false,
         segmentId:'',
         page:engagementPage(),
