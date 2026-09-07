@@ -87,6 +87,24 @@ window.EndOfTimeAdventure = (() => {
   }
 
 
+  const SHICHEN_GLYPHS = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const SHARD_GLYPH_FONT = '"TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif';
+  let shardGlyphFontPromise = null;
+
+  function shichenGlyph(type){
+    const n = stoneTypeNumber(type);
+    return n ? SHICHEN_GLYPHS[n-1] : '';
+  }
+
+  // canvas 不會自動載入字體，畫之前必須先確認字體已就緒。
+  function ensureShardGlyphFont(){
+    if(shardGlyphFontPromise) return shardGlyphFontPromise;
+    shardGlyphFontPromise = document.fonts
+      ? document.fonts.load('700 180px "TheEndOfTimeDisplay"').catch(()=>null)
+      : Promise.resolve(null);
+    return shardGlyphFontPromise;
+  }
+
   function stoneVisualOffset(type){
     // 依每顆母石實際透明 PNG 的可見像素重心量測。
     // 目的：不是把「PNG 畫布」置中，而是把「真正看得到的石片本體」置中。
@@ -366,6 +384,54 @@ window.EndOfTimeAdventure = (() => {
     ctx.restore();
   }
 
+  function drawShichenGlyph(ctx,w,h,layout,type,hex){
+    const glyph=shichenGlyph(type);
+    if(!glyph) return;
+
+    const cx=Number(layout.centerX||.5)*w;
+    const cy=Number(layout.centerY||.5)*h;
+    const safeW=Number(layout.width||.38)*w;
+    const safeH=Number(layout.height||.34)*h;
+    const rotation=(Number(layout.rotation||0)*Math.PI)/180;
+
+    const chosen=hexToRgb(hex);
+    const pale={
+      r:Math.round(chosen.r+(255-chosen.r)*.78),
+      g:Math.round(chosen.g+(255-chosen.g)*.78),
+      b:Math.round(chosen.b+(255-chosen.b)*.78)
+    };
+
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(rotation);
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+
+    // 先估字級，再用實際字面量測校正，確保不會超出安全區。
+    let size=Math.min(safeW,safeH)*.62;
+    ctx.font=`700 ${size}px ${SHARD_GLYPH_FONT}`;
+    const m=ctx.measureText(glyph);
+    const gw=Math.abs(m.actualBoundingBoxLeft)+Math.abs(m.actualBoundingBoxRight);
+    const gh=Math.abs(m.actualBoundingBoxAscent)+Math.abs(m.actualBoundingBoxDescent);
+    if(gw>0 && gh>0){
+      size*=Math.min((safeW*.78)/gw,(safeH*.78)/gh);
+      ctx.font=`700 ${size}px ${SHARD_GLYPH_FONT}`;
+    }
+
+    // 光暈讓字看起來是從石片內部透出來，而不是貼在表面。
+    ctx.shadowColor=`rgba(${chosen.r},${chosen.g},${chosen.b},0.85)`;
+    ctx.shadowBlur=size*.20;
+    ctx.fillStyle=`rgba(${pale.r},${pale.g},${pale.b},0.90)`;
+    ctx.fillText(glyph,0,0);
+
+    ctx.shadowBlur=0;
+    ctx.lineWidth=Math.max(1,size*.012);
+    ctx.strokeStyle=`rgba(${pale.r},${pale.g},${pale.b},0.55)`;
+    ctx.strokeText(glyph,0,0);
+
+    ctx.restore();
+  }
+
   async function renderShardEngraving(el,hex){
     if(!el || !el.classList?.contains('time-shard-asset')) return;
 
@@ -395,6 +461,8 @@ window.EndOfTimeAdventure = (() => {
 
         const layouts=await loadStoneLayouts();
         const layout=engravingLayoutFor(layouts,type);
+        await ensureShardGlyphFont();
+        drawShichenGlyph(ctx,w,h,layout,type,normalizeHexColor(hex));
         drawPersonalEngravingGeometry(ctx,w,h,layout,seed,normalizeHexColor(hex));
 
         // 最後一道保護：真正以母石透明區域裁切。
