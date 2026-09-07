@@ -398,8 +398,7 @@ window.EndOfTimeAdventure = (() => {
 
     // 石片偏亮時，字必須沉下去（暗刻）；偏暗時才浮起來（透光）。
     // 不這樣做的話，選白色系光源色的人會看到白字疊在白石片上，等於沒畫。
-    // 門檻可微調：數字調低 → 更多顏色會走暗刻。
-    const lightStone=rgbToHsl(chosen).l>68;
+    const lightStone=isLightShard(hex);
 
     const ink=lightStone
       ? {r:Math.round(chosen.r*.20),g:Math.round(chosen.g*.20),b:Math.round(chosen.b*.20)}
@@ -658,9 +657,18 @@ window.EndOfTimeAdventure = (() => {
     else img.addEventListener('load',run,{once:true});
   }
 
+  // 石片明暗判定的唯一真相：刻紋顏色與 CSS 混合模式都以它為準。
+  // 門檻調低 → 更多顏色會被視為亮石片（走暗刻 + multiply）。
+  function isLightShard(hex){
+    return rgbToHsl(hexToRgb(hex)).l>68;
+  }
+
   function applyShardPalette(el,hex){
     if(!el) return;
     const p=shardPalette(hex);
+    // 亮石片必須改用 multiply，否則刻紋 CSS 的 mix-blend-mode:screen
+    // 會把暗色的字整個吃掉（screen 只能變亮，不能變暗）。
+    el.classList.toggle('is-light-shard',isLightShard(p.base));
     el.style.setProperty('--shard-main',p.base);
     el.style.setProperty('--shard-dark',p.dark);
     el.style.setProperty('--shard-deep',p.deep);

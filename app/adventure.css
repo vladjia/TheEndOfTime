@@ -2313,3 +2313,17 @@ body:not(.pre-entry) .time-mark-orb{
   .time-shard-orbit-particle.p2{transform:rotate(170deg)}
   .time-shard-orbit-particle.p3{transform:rotate(285deg)}
 }
+
+/* ============================================================
+   亮石片的時辰刻紋
+   預設的 mix-blend-mode:screen 只能讓畫面變亮，暗色的字會被完全吃掉。
+   石片偏亮時改用 multiply，暗刻才畫得出來。
+   （由 adventure.js 的 applyShardPalette 掛上 .is-light-shard）
+   ============================================================ */
+.time-shard-asset.is-light-shard .time-shard-engraving{
+  mix-blend-mode:multiply;
+  filter:drop-shadow(0 0 2px rgba(0,0,0,.20));
+}
+.time-mark-mini-shard .time-shard-asset.is-light-shard .time-shard-engraving{
+  filter:drop-shadow(0 0 2px rgba(0,0,0,.24));
+}
