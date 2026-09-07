@@ -395,11 +395,27 @@ window.EndOfTimeAdventure = (() => {
     const rotation=(Number(layout.rotation||0)*Math.PI)/180;
 
     const chosen=hexToRgb(hex);
-    const pale={
-      r:Math.round(chosen.r+(255-chosen.r)*.78),
-      g:Math.round(chosen.g+(255-chosen.g)*.78),
-      b:Math.round(chosen.b+(255-chosen.b)*.78)
-    };
+
+    // 石片偏亮時，字必須沉下去（暗刻）；偏暗時才浮起來（透光）。
+    // 不這樣做的話，選白色系光源色的人會看到白字疊在白石片上，等於沒畫。
+    // 門檻可微調：數字調低 → 更多顏色會走暗刻。
+    const lightStone=rgbToHsl(chosen).l>68;
+
+    const ink=lightStone
+      ? {r:Math.round(chosen.r*.20),g:Math.round(chosen.g*.20),b:Math.round(chosen.b*.20)}
+      : {r:Math.round(chosen.r+(255-chosen.r)*.78),
+         g:Math.round(chosen.g+(255-chosen.g)*.78),
+         b:Math.round(chosen.b+(255-chosen.b)*.78)};
+
+    // 亮石片用暗光暈做出凹陷深度；暗石片用主色光暈做出透光感。
+    const halo=lightStone
+      ? {r:0,g:0,b:0,a:.45}
+      : {r:chosen.r,g:chosen.g,b:chosen.b,a:.85};
+
+    // 亮石片的刻痕邊緣會反光，補一道白邊讓字更立體。
+    const rim=lightStone
+      ? {r:255,g:255,b:255,a:.42}
+      : {r:ink.r,g:ink.g,b:ink.b,a:.55};
 
     ctx.save();
     ctx.translate(cx,cy);
@@ -419,14 +435,14 @@ window.EndOfTimeAdventure = (() => {
     }
 
     // 光暈讓字看起來是從石片內部透出來，而不是貼在表面。
-    ctx.shadowColor=`rgba(${chosen.r},${chosen.g},${chosen.b},0.85)`;
+    ctx.shadowColor=`rgba(${halo.r},${halo.g},${halo.b},${halo.a})`;
     ctx.shadowBlur=size*.20;
-    ctx.fillStyle=`rgba(${pale.r},${pale.g},${pale.b},0.90)`;
+    ctx.fillStyle=`rgba(${ink.r},${ink.g},${ink.b},0.90)`;
     ctx.fillText(glyph,0,0);
 
     ctx.shadowBlur=0;
     ctx.lineWidth=Math.max(1,size*.012);
-    ctx.strokeStyle=`rgba(${pale.r},${pale.g},${pale.b},0.55)`;
+    ctx.strokeStyle=`rgba(${rim.r},${rim.g},${rim.b},${rim.a})`;
     ctx.strokeText(glyph,0,0);
 
     ctx.restore();
