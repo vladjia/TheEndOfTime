@@ -694,12 +694,19 @@ function initWelcomeExperienceV2(){
   button.addEventListener('blur',()=>hovering=false);
   button.addEventListener('click',dissolve);
 
-  Promise.resolve(document.fonts ? document.fonts.load('700 180px "TheEndOfTimeDisplay"') : null)
-    .catch(()=>null)
-    .then(()=>{
-      setup();
-      requestAnimationFrame(renderCanvas);
-    });
+  const fontReady = document.fonts
+    ? document.fonts.load('700 180px "TheEndOfTimeDisplay"')
+    : Promise.resolve(null);
+
+  Promise.race([
+    fontReady.catch(()=>null),
+    new Promise(r=>setTimeout(r,1500))
+  ]).then(()=>{
+    setup();
+    requestAnimationFrame(renderCanvas);
+    // 字體較晚抵達時補畫一次，入口不會停在 fallback 字型。
+    fontReady.then(()=>{ if(!clicked) setup(); }).catch(()=>{});
+  });
 
   window.addEventListener('resize',()=>{
     if(clicked) return;
