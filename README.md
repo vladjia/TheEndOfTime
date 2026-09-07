@@ -11,8 +11,8 @@
 <br>
 
 [![Website](https://img.shields.io/badge/進入《時盡》-111318?style=for-the-badge)](https://vladjia.github.io/TheEndOfTime/)
-[![Site](https://img.shields.io/endpoint?url=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA%2Fexec%3Faction%3DversionBadge%26type%3Dsite)](https://github.com/vladjia/TheEndOfTime)
-[![CORE](https://img.shields.io/endpoint?url=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA%2Fexec%3Faction%3DversionBadge%26type%3Dcore)](https://github.com/vladjia/TheEndOfTime)
+[![Site](https://img.shields.io/endpoint?url=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA%2Fexec%3Faction%3DversionBadge%26type%3Dsite&cacheSeconds=300)](https://github.com/vladjia/TheEndOfTime)
+[![CORE](https://img.shields.io/endpoint?url=https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbwpF5cAHbnIFphMdrd5jLcGs0rmt8li7aYSZ4Y47CU1tEOLwYXMv1bVDKOqQqKilOA%2Fexec%3Faction%3DversionBadge%26type%3Dcore&cacheSeconds=300)](https://github.com/vladjia/TheEndOfTime)
 
 </div>
 
