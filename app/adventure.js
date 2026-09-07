@@ -440,7 +440,8 @@ window.EndOfTimeAdventure = (() => {
     const img=el.querySelector('.time-shard-image');
     const canvas=el.querySelector('.time-shard-engraving');
 
-    if(!seed || !type || !img || !canvas){
+    // 時辰字是「出身」，鑄印前就該顯現；刻紋幾何才需要等種子誕生。
+    if(!type || !img || !canvas){
       if(canvas) canvas.style.opacity='0';
       return;
     }
@@ -463,7 +464,7 @@ window.EndOfTimeAdventure = (() => {
         const layout=engravingLayoutFor(layouts,type);
         await ensureShardGlyphFont();
         drawShichenGlyph(ctx,w,h,layout,type,normalizeHexColor(hex));
-        drawPersonalEngravingGeometry(ctx,w,h,layout,seed,normalizeHexColor(hex));
+        if(seed) drawPersonalEngravingGeometry(ctx,w,h,layout,seed,normalizeHexColor(hex));
 
         // 最後一道保護：真正以母石透明區域裁切。
         // 即使將來刻紋演算法變得更複雜，也絕不會畫到石片之外。
