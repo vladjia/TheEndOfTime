@@ -1,0 +1,60 @@
+name: Deploy 時盡
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 取得原始碼
+        uses: actions/checkout@v4
+
+      - name: 改寫所有快取版號
+        run: |
+          set -e
+          VER="$(TZ=Asia/Taipei date +%Y%m%d)-${GITHUB_SHA::7}"
+          echo "本次版號：$VER"
+
+          BEFORE=$(grep -rno '?v=' --include='*.html' --include='*.css' --include='*.js' . | wc -l)
+
+          find . -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' \) \
+            -not -path './.git/*' -not -path './.github/*' -print0 \
+          | xargs -0 -r sed -i "s|?v=[0-9A-Za-z._-]*|?v=$VER|g"
+
+          AFTER=$(grep -rno "?v=$VER" --include='*.html' --include='*.css' --include='*.js' . | wc -l)
+          echo "改寫前 $BEFORE 處，改寫後符合新版號 $AFTER 處"
+
+          if [ "$BEFORE" != "$AFTER" ]; then
+            echo "::warning::有 ?v= 未被改寫，請檢查格式"
+          fi
+
+      - name: 移除不需上線的檔案
+        run: rm -rf .git .github
+
+      - name: 設定 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 打包網站
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@v4
