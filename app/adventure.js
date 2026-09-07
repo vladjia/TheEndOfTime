@@ -16,6 +16,10 @@ window.EndOfTimeAdventure = (() => {
   let timeMarkBusy = false;
   let criticalAction = '';
   let criticalTimer = null;
+  const ENGAGEMENT_IDLE_MS = 120000;
+  const ENGAGEMENT_HEARTBEAT_MS = 30000;
+  const ENGAGEMENT_TICK_MS = 10000;
+  let engagementTracker = null;
 
   function rootPrefix(){
     return location.pathname.includes('/story/') || location.pathname.includes('/characters/') || location.pathname.includes('/world/') || location.pathname.includes('/journey/') || location.pathname.includes('/timemark/') ? '../' : '';
@@ -622,6 +626,208 @@ window.EndOfTimeAdventure = (() => {
     const data = await r.json();
     if(data?.ok === false) throw new Error(data.error || 'Adventure API failed');
     return data;
+  }
+
+  // ============================================================
+  // 網站有效停留統計
+  // - 以時印為匿名識別，不收姓名、帳號或 IP
+  // - 在前景且未閒置時才累計
+  // - 每 30 秒送一次心跳；切出、閒置、離頁時結束目前一段
+  // ============================================================
+  function engagementSegmentId(){
+    if(typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    return `tet${Date.now().toString(36)}${Math.random().toString(36).slice(2,16)}`;
+  }
+
+  function engagementPage(){
+    try{
+      const url=new URL(location.href);
+      const storyId=String(url.searchParams.get('id')||'').trim();
+      return storyId ? `${url.pathname}?id=${storyId}` : (url.pathname||'/');
+    }catch(_){
+      return location.pathname||'/';
+    }
+  }
+
+  function queueEngagementUntil(at){
+    const tracker=engagementTracker;
+    if(!tracker || !tracker.active) return;
+    const end=Math.max(tracker.lastCountedAt,Number(at)||Date.now());
+    tracker.fractionMs+=end-tracker.lastCountedAt;
+    tracker.lastCountedAt=end;
+    const seconds=Math.floor(tracker.fractionMs/1000);
+    if(seconds>0){
+      tracker.totalSeconds+=seconds;
+      tracker.fractionMs-=seconds*1000;
+    }
+  }
+
+  function engagementParams(event){
+    const tracker=engagementTracker;
+    if(!tracker || !tracker.segmentId) return null;
+    const t=token();
+    if(!t) return null;
+    return {
+      token:t,
+      sessionId:tracker.segmentId,
+      page:tracker.page,
+      event,
+      // 同一工作階段永遠上傳累積秒數，重送或亂序抵達都不會重複計時。
+      seconds:String(Math.max(0,Math.floor(Number(tracker.totalSeconds)||0)))
+    };
+  }
+
+  async function sendEngagement(event){
+    const params=engagementParams(event);
+    if(!params) return;
+    try{
+      await api('adventureEngagement',params);
+    }catch(err){
+      console.warn('網站停留紀錄未同步，下一次心跳會自動補回。',err);
+    }
+  }
+
+  function sendEngagementBeacon(event){
+    const tracker=engagementTracker;
+    const params=engagementParams(event);
+    if(!tracker?.endpoint || !params) return;
+    try{
+      const q=new URLSearchParams({action:'adventureEngagement',...params});
+      fetch(`${tracker.endpoint}?${q.toString()}`,{
+        method:'GET',
+        mode:'no-cors',
+        cache:'no-store',
+        keepalive:true
+      }).catch(()=>{});
+    }catch(_){ }
+  }
+
+  function flushEngagement(event,{beacon=false}={}){
+    const tracker=engagementTracker;
+    if(!tracker) return;
+    if(beacon) sendEngagementBeacon(event);
+    else void sendEngagement(event);
+  }
+
+  function startEngagementSegment(){
+    const tracker=engagementTracker;
+    if(!tracker || tracker.active || document.visibilityState!=='visible') return;
+    const now=Date.now();
+    tracker.active=true;
+    tracker.segmentId=engagementSegmentId();
+    tracker.page=engagementPage();
+    tracker.lastCountedAt=now;
+    tracker.lastInteractionAt=now;
+    tracker.lastHeartbeatAt=now;
+    tracker.fractionMs=0;
+    tracker.totalSeconds=0;
+    void sendEngagement('START');
+  }
+
+  function finishEngagementSegment(event,{at=Date.now(),beacon=false}={}){
+    const tracker=engagementTracker;
+    if(!tracker || !tracker.active) return;
+    queueEngagementUntil(at);
+    tracker.active=false;
+    flushEngagement(event,{beacon});
+  }
+
+  function markEngagementActivity(){
+    const tracker=engagementTracker;
+    if(!tracker || document.visibilityState!=='visible') return;
+    if(!tracker.active){
+      startEngagementSegment();
+      return;
+    }
+    tracker.lastInteractionAt=Date.now();
+  }
+
+  function checkEngagement(){
+    const tracker=engagementTracker;
+    if(!tracker || !tracker.active || document.visibilityState!=='visible') return;
+    const now=Date.now();
+    const idleAt=tracker.lastInteractionAt+ENGAGEMENT_IDLE_MS;
+
+    if(now>=idleAt){
+      finishEngagementSegment('IDLE',{at:idleAt});
+      return;
+    }
+
+    if(now-tracker.lastHeartbeatAt>=ENGAGEMENT_HEARTBEAT_MS){
+      queueEngagementUntil(now);
+      tracker.lastHeartbeatAt=now;
+      flushEngagement('HEARTBEAT');
+    }
+  }
+
+  async function startEngagementTracking(){
+    if(engagementTracker) return;
+    const t=token();
+    if(!t) return;
+
+    try{
+      const config=await getConfig();
+      const endpoint=String(config?.gasApiEndpoint||'').trim();
+      if(!endpoint) return;
+
+      engagementTracker={
+        endpoint,
+        active:false,
+        segmentId:'',
+        page:engagementPage(),
+        lastCountedAt:0,
+        lastInteractionAt:0,
+        lastHeartbeatAt:0,
+        fractionMs:0,
+        totalSeconds:0,
+        hiddenTimer:null
+      };
+
+      const pauseAt=()=>{
+        const tracker=engagementTracker;
+        if(!tracker || tracker.hiddenTimer) return;
+        const hiddenAt=Date.now();
+        tracker.hiddenTimer=setTimeout(()=>{
+          if(!engagementTracker) return;
+          engagementTracker.hiddenTimer=null;
+          finishEngagementSegment('PAUSE',{at:hiddenAt,beacon:true});
+        },250);
+      };
+
+      document.addEventListener('visibilitychange',()=>{
+        if(document.visibilityState==='hidden') pauseAt();
+        else{
+          const tracker=engagementTracker;
+          if(tracker?.hiddenTimer){
+            clearTimeout(tracker.hiddenTimer);
+            tracker.hiddenTimer=null;
+          }
+          markEngagementActivity();
+        }
+      });
+
+      window.addEventListener('pagehide',()=>{
+        const tracker=engagementTracker;
+        if(tracker?.hiddenTimer){
+          clearTimeout(tracker.hiddenTimer);
+          tracker.hiddenTimer=null;
+        }
+        finishEngagementSegment('LEAVE',{beacon:true});
+      });
+
+      window.addEventListener('pageshow',event=>{
+        if(event.persisted && document.visibilityState==='visible') markEngagementActivity();
+      });
+
+      ['pointerdown','keydown','scroll','touchstart','mousemove'].forEach(type=>{
+        window.addEventListener(type,markEngagementActivity,{passive:type!=='keydown'});
+      });
+
+      setInterval(checkEngagement,ENGAGEMENT_TICK_MS);
+      startEngagementSegment();
+    }catch(err){
+      console.warn('網站停留統計尚未啟動。',err);
+    }
   }
 
   async function ensure(){
@@ -1645,6 +1851,7 @@ window.EndOfTimeAdventure = (() => {
   async function init(){
     bindButtons();
     await ensure();
+    void startEngagementTracking();
     await refreshTimeMarkEntryState();
     maybePromptReturning();
 
