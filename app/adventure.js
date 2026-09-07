@@ -688,7 +688,8 @@ window.EndOfTimeAdventure = (() => {
     const endpoint = config.gasApiEndpoint;
     if(!endpoint) throw new Error('No GAS endpoint');
 
-    const q = new URLSearchParams({action, ...params});
+    // 十二時辰母石依讀者當地時間決定，所以小時數必須由前端送出。
+    const q = new URLSearchParams({action, hour:String(new Date().getHours()), ...params});
     const r = await fetch(`${endpoint}?${q.toString()}`, {cache:'no-store'});
     if(!r.ok) throw new Error(`Adventure API ${r.status}`);
     const data = await r.json();
