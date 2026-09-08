@@ -155,7 +155,10 @@ window.EndOfTimeAdventure = (() => {
 
     const paint = () => {
       const t = token();
-      codeEl.textContent = revealed ? t : maskToken(t);
+      // 六十甲子格式要用中文襯線排，等寬字體是給英數用的。
+      const jiazi = t.startsWith(TM_PREFIX);
+      codeEl.textContent = revealed ? (jiazi ? formatTimeMark(t) : t) : maskToken(t);
+      codeEl.classList.toggle('is-jiazi', jiazi);
       codeEl.classList.toggle('is-revealed', revealed);
       toggleBtn.textContent = revealed ? '隱藏時印' : '顯示完整時印';
       toggleBtn.setAttribute('aria-pressed', revealed ? 'true' : 'false');
@@ -2450,6 +2453,7 @@ window.EndOfTimeAdventure = (() => {
 
     const showConfirmation=(wanted)=>{
       pendingToken=wanted;
+      confirmCode.classList.toggle('is-jiazi', wanted.startsWith(TM_PREFIX));
       confirmCode.textContent=formatTimeMark(wanted);
       confirmStatus.textContent='';
       form.hidden=true;

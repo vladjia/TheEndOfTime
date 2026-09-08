@@ -2496,3 +2496,39 @@ body:not(.pre-entry) .time-mark-orb{
   justify-content:flex-start;
   padding-top:22px;
 }
+
+
+/* ============================================================
+   v0.18.65 · 六十甲子時印的排版
+   等寬字體是給英數設計的；中文塞進去會用系統 fallback，
+   600 的粗體變得又厚又擠，而且八組排不進一行會孤字換行。
+   ============================================================ */
+.time-mark-code.is-jiazi,
+.time-mark-confirm-code.is-jiazi,
+.time-mark-field input.is-jiazi{
+  font:400 15px/1.8 "Noto Serif TC","Songti TC","PingFang TC",serif;
+  letter-spacing:.14em;
+  /* 干支是兩兩一組，不能從中間拆開 */
+  word-break:keep-all;
+  overflow-wrap:break-word;
+}
+.time-mark-confirm-code.is-jiazi{
+  font-size:14px;
+}
+@media(max-width:480px){
+  .time-mark-code.is-jiazi,
+  .time-mark-confirm-code.is-jiazi{
+    font-size:13.5px;
+    letter-spacing:.10em;
+  }
+}
+
+/* 取回輸入框也一樣：貼進來的是中文，就別再用等寬排 */
+.time-mark-field input#restoreTimeMark{
+  font:400 14px/1.7 "Noto Serif TC","Songti TC",serif;
+  letter-spacing:.10em;
+}
+.time-mark-field input#restoreTimeMark::placeholder{
+  letter-spacing:.06em;
+  opacity:.42;
+}
