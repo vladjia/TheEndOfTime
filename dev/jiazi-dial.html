@@ -7,6 +7,13 @@
 <title>六十甲子盤 · 取回時印</title>
 <style>
 :root{
+  /* 五行。十天干不是十個東西，是五行各分陰陽。
+     陽干用本色，陰干壓暗一階 —— 同一行，不同面。 */
+  --wood:#6FA07A;  --wood-yin:#4E7C59;
+  --fire:#C9515A;  --fire-yin:#8F2B34;
+  --earth:#C9A26B; --earth-yin:#96754A;
+  --metal:#D8DCE2; --metal-yin:#9AA1AB;
+  --water:#6E97C0; --water-yin:#47698C;
   --bg:#080a0e;
   --panel:#0e1118;
   --line:rgba(255,255,255,.10);
@@ -104,6 +111,45 @@ h1{margin:12px 0 6px;font-size:23px;font-weight:600;letter-spacing:.16em}
 .cell.off{opacity:.14;pointer-events:none}
 .cell.zhi{font-size:18px}
 
+/* 天干依五行上色，陽干亮、陰干沉。 */
+.cell.gan[data-wx="木"]{color:var(--wood-yin)}
+.cell.gan[data-wx="火"]{color:var(--fire-yin)}
+.cell.gan[data-wx="土"]{color:var(--earth-yin)}
+.cell.gan[data-wx="金"]{color:var(--metal-yin)}
+.cell.gan[data-wx="水"]{color:var(--water-yin)}
+.cell.gan[data-yang="1"][data-wx="木"]{color:var(--wood)}
+.cell.gan[data-yang="1"][data-wx="火"]{color:var(--fire)}
+.cell.gan[data-yang="1"][data-wx="土"]{color:var(--earth)}
+.cell.gan[data-yang="1"][data-wx="金"]{color:var(--metal)}
+.cell.gan[data-yang="1"][data-wx="水"]{color:var(--water)}
+.cell.gan:hover{background:rgba(255,255,255,.07)}
+.cell.gan.on{color:#0d1015!important}
+.cell.gan.on[data-wx="木"]{background:var(--wood);box-shadow:0 0 18px rgba(111,160,122,.55)}
+.cell.gan.on[data-wx="火"]{background:var(--fire);box-shadow:0 0 18px rgba(201,81,90,.55)}
+.cell.gan.on[data-wx="土"]{background:var(--earth);box-shadow:0 0 18px rgba(201,162,107,.55)}
+.cell.gan.on[data-wx="金"]{background:var(--metal);box-shadow:0 0 18px rgba(216,220,226,.45)}
+.cell.gan.on[data-wx="水"]{background:var(--water);box-shadow:0 0 18px rgba(110,151,192,.55)}
+
+/* 外圈的五行弧：每兩個天干一段，那一段就是一行。 */
+.wuxing{position:absolute;inset:0;pointer-events:none}
+.wuxing text{
+  font:600 3.4px/1 "Noto Serif TC",serif;
+  opacity:.72;
+}
+
+/* 五行計數 */
+.tally{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  margin-top:12px;
+}
+.tally i{
+  font-style:normal;
+  font:600 12px/1 "Noto Serif TC",serif;letter-spacing:.16em;
+  opacity:.30;transition:opacity .25s;
+}
+.tally i.has{opacity:1}
+.tally i b{font-weight:400;font-size:11px;opacity:.7}
+
 .core-face{
   position:absolute;inset:34.5%;
   border-radius:50%;
@@ -175,6 +221,7 @@ button.ghost{border-color:transparent;color:var(--dim)}
 
 <div class="dial-wrap">
   <div class="dial" id="dial">
+    <svg class="wuxing" id="wuxing" viewBox="0 0 100 100"></svg>
     <svg class="mesh" id="mesh" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
     <div class="ring outer"></div>
     <div class="ring inner"></div>
@@ -191,6 +238,7 @@ button.ghost{border-color:transparent;color:var(--dim)}
 </div>
 
 <div class="readout" id="readout"></div>
+<div class="tally" id="tally"></div>
 
 <p class="hint" id="hint"></p>
 
@@ -198,7 +246,10 @@ button.ghost{border-color:transparent;color:var(--dim)}
   <b>這是預覽稿，不連後端。</b><br>
   外圈十天干，內圈十二地支。點下天干後，內圈只留下六個咬得到的地支——
   甲只能配子寅辰午申戌，這不是防呆，是齒輪本來就咬不到。<br>
-  八格填滿即是一枚時印，六十的八次方 ＝ 168 兆種。
+  八格填滿即是一枚時印，六十的八次方 ＝ 168 兆種。<br><br>
+  <b>五行不是另外加上去的。</b>十天干本來就是五行各分陰陽：甲乙木、丙丁火、戊己土、庚辛金、壬癸水。
+  外圈的顏色就是它自己的行，陽干亮、陰干沉。下方是這枚時印的五行分佈——
+  它只是一段描述，不是能力。
 </div>
 
 <script>
@@ -208,6 +259,12 @@ button.ghost{border-color:transparent;color:var(--dim)}
 const GAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
 const ZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
 const SLOTS = 8;
+
+// 十天干 ＝ 五行 × 陰陽。順序本來就是這樣排的，不是我配的。
+const WUXING = ['木','火','土','金','水'];
+const WX_HEX = {木:'#6FA07A', 火:'#C9515A', 土:'#C9A26B', 金:'#D8DCE2', 水:'#6E97C0'};
+const ganWuxing = gi => WUXING[Math.floor(gi / 2)];
+const ganYang   = gi => gi % 2 === 0;          // 甲丙戊庚壬為陽
 
 // 六十甲子：干支同奇偶才咬得到
 const validZhi = gi => ZHI.filter((_, zi) => (zi % 2) === (gi % 2));
@@ -234,7 +291,10 @@ GAN.forEach((ch, i) => {
   el.textContent = ch;
   el.dataset.kind = 'gan';
   el.dataset.i = String(i);
-  place(el, i * 36, 43.5);
+  el.dataset.wx = ganWuxing(i);
+  el.dataset.yang = ganYang(i) ? '1' : '0';
+  el.title = `${ch}　${ganWuxing(i)}　${ganYang(i) ? '陽' : '陰'}`;
+  place(el, i * 36, 40.5);
   dial.appendChild(el);
   cells.push(el);
 });
@@ -249,6 +309,40 @@ ZHI.forEach((ch, i) => {
   cells.push(el);
 });
 
+// ── 五行弧：外圈每兩個天干一段 ──────────
+(function drawWuxing(){
+  const svg = $('wuxing');
+  const R = 47;
+  const pt = (deg, r) => {
+    const a = (deg - 90) * Math.PI / 180;
+    return [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
+  };
+  WUXING.forEach((wx, k) => {
+    // 一行＝相鄰兩個天干，所以弧心落在它們中間（甲 0°、乙 36° → 木在 18°）
+    const mid = k * 72 + 18;
+    const arc = (a, b) => {
+      const [x1, y1] = pt(a, R), [x2, y2] = pt(b, R);
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d', `M ${x1} ${y1} A ${R} ${R} 0 0 1 ${x2} ${y2}`);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke', WX_HEX[wx]);
+      path.setAttribute('stroke-width','1');
+      path.setAttribute('opacity','.40');
+      svg.appendChild(path);
+    };
+    arc(mid - 26, mid - 7);      // 留中間的缺口給行名
+    arc(mid + 7,  mid + 26);
+
+    const [lx, ly] = pt(mid, R);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', lx); t.setAttribute('y', ly + 1.25);
+    t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill', WX_HEX[wx]);
+    t.textContent = wx;
+    svg.appendChild(t);
+  });
+})();
+
 // ── 咬合線 ────────────────────────────
 function drawMesh(gi){
   mesh.innerHTML = '';
@@ -257,7 +351,7 @@ function drawMesh(gi){
     const a = (angleDeg - 90) * Math.PI / 180;
     return [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
   };
-  const [gx, gy] = pt(gi * 36, 43.5);
+  const [gx, gy] = pt(gi * 36, 40.5);
   ZHI.forEach((_, zi) => {
     if((zi % 2) !== (gi % 2)) return;
     const [zx, zy] = pt(zi * 30, 25.5);
@@ -308,9 +402,18 @@ function render(){
     : `<small>時印</small><span class="none">□□　□□　□□　□□　□□　□□　□□　□□</span>`;
   $('go').disabled = done < SLOTS;
 
+  // 五行分佈：只是一段描述，不是能力。
+  const count = {};
+  WUXING.forEach(w => count[w] = 0);
+  picked.forEach(p => { if(p) count[ganWuxing(GAN.indexOf(p.g))]++; });
+  const CN = ['〇','一','二','三','四','五','六','七','八'];
+  $('tally').innerHTML = WUXING.map(w =>
+    `<i class="${count[w] ? 'has' : ''}" style="color:${WX_HEX[w]}">${w}<b> ${CN[count[w]]}</b></i>`
+  ).join('');
+
   $('hint').innerHTML = stage === 'gan'
     ? '點外圈的天干。'
-    : `<b>${GAN[curGan]}</b> 只咬得到 <b>${validZhi(curGan).join('、')}</b>　—　其餘六個地支這一轉根本對不上。`;
+    : `<b style="color:${WX_HEX[ganWuxing(curGan)]}">${GAN[curGan]}</b>　${ganWuxing(curGan)}・${ganYang(curGan) ? '陽' : '陰'}　—　只咬得到 <b>${validZhi(curGan).join('、')}</b>，其餘六個這一轉對不上。`;
 }
 
 // ── 操作 ──────────────────────────────
