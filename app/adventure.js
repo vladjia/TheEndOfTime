@@ -504,9 +504,11 @@ window.EndOfTimeAdventure = (() => {
 
     const run=async()=>{
       try{
-        const w=img.naturalWidth||0;
-        const h=img.naturalHeight||0;
-        if(!w || !h) return;
+        const nw=img.naturalWidth||0;
+        const nh=img.naturalHeight||0;
+        if(!nw || !nh) return;
+        const size=shardWorkSize(nw,nh);
+        const w=size.w, h=size.h;
 
         if(canvas.width!==w || canvas.height!==h){
           canvas.width=w;
@@ -541,6 +543,17 @@ window.EndOfTimeAdventure = (() => {
     else img.addEventListener('load',run,{once:true});
   }
 
+  // 母石原圖約 1254px，但螢幕預覽與 OG 圖都用不到那麼大。
+  // 上色是逐像素運算，解析度砍半＝運算量降到 1/3，肉眼看不出差別。
+  const SHARD_WORK_MAX = 768;
+
+  function shardWorkSize(w,h){
+    const m=Math.max(w,h);
+    if(m<=SHARD_WORK_MAX) return {w:w,h:h};
+    const k=SHARD_WORK_MAX/m;
+    return {w:Math.round(w*k), h:Math.round(h*k)};
+  }
+
   function recolorShardCanvas(el,hex){
     if(!el || !el.classList?.contains('time-shard-asset')) return;
     const img=el.querySelector('.time-shard-image');
@@ -549,8 +562,10 @@ window.EndOfTimeAdventure = (() => {
 
     const run=()=>{
       try{
-        const w=img.naturalWidth||0, h=img.naturalHeight||0;
-        if(!w || !h) return;
+        const nw=img.naturalWidth||0, nh=img.naturalHeight||0;
+        if(!nw || !nh) return;
+        const size=shardWorkSize(nw,nh);
+        const w=size.w, h=size.h;
 
         if(canvas.width!==w || canvas.height!==h){
           canvas.width=w;
@@ -704,7 +719,19 @@ window.EndOfTimeAdventure = (() => {
     return rgbToHsl(hexToRgb(hex)).l>68;
   }
 
+  // 拖色盤會連續觸發，用 rAF 合併成每幀最多一次重畫。
   function applyShardPalette(el,hex){
+    if(!el) return;
+    el._paletteNext = hex;
+    if(el._paletteQueued) return;
+    el._paletteQueued = true;
+    requestAnimationFrame(() => {
+      el._paletteQueued = false;
+      applyShardPaletteNow(el, el._paletteNext);
+    });
+  }
+
+  function applyShardPaletteNow(el,hex){
     if(!el) return;
     const p=shardPalette(hex);
     // 亮石片必須改用 multiply，否則刻紋 CSS 的 mix-blend-mode:screen
