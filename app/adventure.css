@@ -2357,3 +2357,92 @@ body:not(.pre-entry) .time-mark-orb{
 #journeyTokenToggle{
   margin-top:6px;
 }
+
+
+/* ============================================================
+   v0.18.61 · 時辰字獨立圖層 + 時痕刻印
+   ============================================================ */
+
+/* 時辰字從本命刻紋那張畫布獨立出來。
+   玩家可以自選字色，混合模式必須跟著「字 vs 石片」走；
+   本命刻紋永遠是淡色，跟著石片明暗走。兩者疊在同一張畫布會互相殺死。 */
+.time-shard-glyph{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:0;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  filter:
+    drop-shadow(0 0 2px rgba(255,255,255,.28))
+    drop-shadow(0 0 5px var(--shard-glow));
+  transition:opacity .28s ease;
+}
+/* 字比石片暗 → 暗刻。screen 只能變亮，暗色的字會被整個吃掉。 */
+.time-shard-asset.glyph-dark .time-shard-glyph{
+  mix-blend-mode:multiply;
+  filter:drop-shadow(0 0 2px rgba(0,0,0,.20));
+}
+
+/* ── 時痕 ──
+   分兩層：裂口本身是暗的（multiply），光是從裂口透出來的（screen）。
+   兩層都在，所以不管石片被染成多亮或多暗，時痕都不會消失。
+   裂口是靜的；會呼吸、會流動的是光。 */
+.time-shard-scar-dark,
+.time-shard-scar{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s ease;
+}
+.time-shard-scar-dark{
+  z-index:6;
+  mix-blend-mode:multiply;
+}
+.time-shard-scar{
+  z-index:7;
+  mix-blend-mode:screen;
+  filter:drop-shadow(0 0 6px var(--shard-glow));
+}
+
+/* 三張新畫布一樣要貼合同一個畫面，規則與 v0.18.18 相同。 */
+.time-shard-asset .time-shard-glyph,
+.time-shard-asset .time-shard-scar-dark,
+.time-shard-asset .time-shard-scar{
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+
+/* 右上角小石片：細線會糊成一團，時痕減弱但不隱藏。 */
+.time-mark-mini-shard .time-shard-scar{opacity:.78}
+.time-mark-mini-shard .time-shard-scar-dark{opacity:.85}
+
+/* 鑄印面板的「自動配色」勾選格 */
+.time-color-field.time-glyph-auto{
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+}
+.time-color-field.time-glyph-auto input[type=checkbox]{
+  width:16px;height:16px;
+  accent-color:var(--shard-main,#c9a26b);
+  cursor:pointer;
+}
+.time-forge-controls .time-color-picker[type=color]{
+  width:100%;
+  min-height:38px;
+  padding:2px;
+  cursor:pointer;
+}

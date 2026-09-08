@@ -30,7 +30,10 @@ function paintShard(A, stone){
     relay: stone.relayCode || '',
     level: stone.resonanceLevel || 0,
     stoneType: stone.stoneType,
-    engraveSeed: stone.engraveSeed || ''
+    engraveSeed: stone.engraveSeed || '',
+    glyphColor: stone.glyphColor || '',
+    scar: stone.scar || '',
+    scarDone: stone.scarDone ?? ''
   });
   const el = box.firstElementChild;
   A.applyShardPalette(el, color);

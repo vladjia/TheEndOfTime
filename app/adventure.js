@@ -425,7 +425,7 @@ window.EndOfTimeAdventure = (() => {
     ctx.restore();
   }
 
-  function drawShichenGlyph(ctx,w,h,layout,type,hex){
+  function drawShichenGlyph(ctx,w,h,layout,type,hex,pick){
     const glyph=shichenGlyph(type);
     if(!glyph) return;
 
@@ -437,23 +437,20 @@ window.EndOfTimeAdventure = (() => {
 
     const chosen=hexToRgb(hex);
 
-    // 石片偏亮時，字必須沉下去（暗刻）；偏暗時才浮起來（透光）。
-    // 不這樣做的話，選白色系光源色的人會看到白字疊在白石片上，等於沒畫。
-    const lightStone=isLightShard(hex);
+    // 字比石片暗 → 沉下去（暗刻）；比石片亮 → 浮起來（透光）。
+    // 判斷依據是「字色與石片的明度差」，不是石片自己亮不亮 ——
+    // 玩家可以自選字色，只看石片會讓深色字在深石片上整個消失。
+    const res=resolveGlyphInk(hex,pick);
+    const ink=hexToRgb(res.hex);
+    const dark=res.dark;
 
-    const ink=lightStone
-      ? {r:Math.round(chosen.r*.20),g:Math.round(chosen.g*.20),b:Math.round(chosen.b*.20)}
-      : {r:Math.round(chosen.r+(255-chosen.r)*.78),
-         g:Math.round(chosen.g+(255-chosen.g)*.78),
-         b:Math.round(chosen.b+(255-chosen.b)*.78)};
-
-    // 亮石片用暗光暈做出凹陷深度；暗石片用主色光暈做出透光感。
-    const halo=lightStone
+    // 暗刻用暗光暈做出凹陷深度；亮刻用主色光暈做出透光感。
+    const halo=dark
       ? {r:0,g:0,b:0,a:.45}
       : {r:chosen.r,g:chosen.g,b:chosen.b,a:.85};
 
-    // 亮石片的刻痕邊緣會反光，補一道白邊讓字更立體。
-    const rim=lightStone
+    // 暗刻的刻痕邊緣會反光，補一道白邊讓字更立體。
+    const rim=dark
       ? {r:255,g:255,b:255,a:.42}
       : {r:ink.r,g:ink.g,b:ink.b,a:.55};
 
@@ -488,6 +485,313 @@ window.EndOfTimeAdventure = (() => {
     ctx.restore();
   }
 
+
+  // ══════════════════════════════════════════════════════════
+  //  時痕刻印
+  //
+  //  一條時痕 ＝ 一個人生，不是一個選擇。
+  //  同一個人生裡的每一個選擇，是那條裂縫上的一節、一個轉折、一個結。
+  //  遠看是幾個人生，近看是每一步。
+  //
+  //  條數被角色數綁住（最多四條），不會隨選擇數變成一團亂。
+  //  走完的人生收束到同一個終點；沒走完的斷在半路，而且沒有光。
+  //
+  //  參數由 dev/scar-lab.html 調定（v0.18.61），不要憑感覺改這裡的數字。
+  // ══════════════════════════════════════════════════════════
+
+  const SCAR = {
+    thickness:6.2, spread:0.52, turn:0.46, decay:0.900,
+    branch:0.30, branchLen:0.62, originR:1.10,
+    brightness:0.90, glow:1.60, carve:1.05, node:0.55,
+    breathSpeed:0.60, breathAmp:0.30,
+    pulse:0.60, pulseSpeed:0.34, pulseWidth:0.22,
+    converge:0.75, hueSpread:0.45, offsetRange:25,
+    jitter:0.10, unfinished:0.45
+  };
+
+  // 四個角色的固定方位。跨玩家一致 —— 別人看你分享出去的石片，
+  // 一眼就知道左上那條是誰。刻意不用正 90 度等分，太對稱會變成徽章。
+  const SCAR_LIVES = [
+    {key:'yeshenxing', base:  8},
+    {key:'baiji',      base:103},
+    {key:'anyanxiu',   base:191},
+    {key:'jiashi',     base:284}
+  ];
+
+  // ── 母石輪廓遮罩：裂縫靠它自己找路，不會長到石片外面被切掉一半 ──
+  function scarMask(img,w,h){
+    const MW=160, MH=Math.max(1,Math.round(160*h/w));
+    const c=document.createElement('canvas');
+    c.width=MW;c.height=MH;
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(img,0,0,MW,MH);
+    const d=ctx.getImageData(0,0,MW,MH).data;
+    const a=new Uint8Array(MW*MH);
+    for(let i=0;i<a.length;i++) a[i]=d[i*4+3]>40?1:0;
+    return {MW,MH,a,w,h};
+  }
+  function maskSolid(mask,x,y){
+    if(!mask) return true;
+    const mx=Math.round(x/mask.w*mask.MW), my=Math.round(y/mask.h*mask.MH);
+    if(mx<0||my<0||mx>=mask.MW||my>=mask.MH) return false;
+    return mask.a[my*mask.MW+mx]===1;
+  }
+  // 端點在石片內，而且四周留得下線寬 —— 才算走得過去
+  function maskWalkable(mask,x,y,margin){
+    if(!maskSolid(mask,x,y)) return false;
+    for(let k=0;k<8;k++){
+      const a=k/8*Math.PI*2;
+      if(!maskSolid(mask,x+Math.cos(a)*margin,y+Math.sin(a)*margin)) return false;
+    }
+    return true;
+  }
+
+  // 收束點：石片上離安全區中心最遠、而且還放得下線寬的那個點。
+  // 十二顆母石形狀都不同，所以每個時辰天生就有自己的終點方向 —— 不用另外定座標。
+  // 你從哪個時辰來，決定你走向終點的路長什麼樣；終點本身，十二個時辰都一樣。
+  function scarAnchor(mask,cx,cy,margin){
+    let best=null,bestD=-1;
+    for(let my=0;my<mask.MH;my++){
+      for(let mx=0;mx<mask.MW;mx++){
+        if(mask.a[my*mask.MW+mx]!==1) continue;
+        const x=(mx+.5)/mask.MW*mask.w, y=(my+.5)/mask.MH*mask.h;
+        const d=(x-cx)*(x-cx)+(y-cy)*(y-cy);
+        if(d<=bestD) continue;
+        if(!maskWalkable(mask,x,y,margin)) continue;
+        bestD=d;best={x,y};
+      }
+    }
+    return best||{x:cx,y:cy};
+  }
+
+  const angWrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
+
+  function buildScarPath(seq,layout,w,h,mask,opt){
+    const {baseAngle=0,seedOffset=0,completed=true,anchor=null,key=''}=opt||{};
+    const rand=seededRandom('scar:'+key+':'+seq+':'+baseAngle);
+    const cx=Number(layout.centerX||.5)*w, cy=Number(layout.centerY||.5)*h;
+    const safeW=Number(layout.width||.38)*w, safeH=Number(layout.height||.34)*h;
+    const rot=(Number(layout.rotation||0)*Math.PI)/180;
+
+    const a0=((baseAngle+seedOffset)*Math.PI)/180+rot;
+
+    // 起點：安全區橢圓邊界往外推。
+    // 中央留給時辰字（你從哪裡來）與本命刻紋（你是誰），走過的路不能壓掉它們。
+    const er=Math.min(safeW,safeH)*.5;
+    const ox=cx+Math.cos(a0)*er*SCAR.originR;
+    const oy=cy+Math.sin(a0)*er*SCAR.originR;
+
+    // 前重後輕：頭幾步把骨架撐開，之後越來越細。
+    // 真實的裂縫是這樣裂的，而且早期的選擇本來就決定一個人生的形狀。
+    const step0=Math.min(w,h)*.5*SCAR.spread*.34;
+    const margin=Math.max(4,Math.min(w,h)*.018);
+
+    const TRIES=[0,.28,-.28,.6,-.6,1.0,-1.0,1.5,-1.5,2.1,-2.1,2.7,-2.7];
+    function advance(x,y,a,len){
+      for(let st=0;st<4;st++){
+        const l=len*Math.pow(.62,st);
+        for(let ti=0;ti<TRIES.length;ti++){
+          const na=a+TRIES[ti];
+          const nx=x+Math.cos(na)*l, ny=y+Math.sin(na)*l;
+          if(maskWalkable(mask,nx,ny,margin)) return {x:nx,y:ny,a:na,len:l};
+        }
+      }
+      return null;
+    }
+
+    const segs=[];
+    // 真實的裂縫沒有直線。每一節切成小段、左右微抖，看起來才是裂的不是畫的。
+    const SUB=3;
+    function push(x1,y1,x2,y2,meta){
+      const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1;
+      const px=-dy/L, py=dx/L;
+      let ax=x1, ay=y1;
+      for(let k=1;k<=SUB;k++){
+        const t=k/SUB;
+        const j=(k===SUB)?0:(rand()-.5)*L*SCAR.jitter;
+        const bx=x1+dx*t+px*j, by=y1+dy*t+py*j;
+        segs.push(Object.assign({x1:ax,y1:ay,x2:bx,y2:by},meta));
+        ax=bx;ay=by;
+      }
+    }
+
+    let x=ox, y=oy, a=a0, len=step0;
+    const n=seq.length;
+
+    for(let i=0;i<n;i++){
+      const dir = seq[i]==='L' ? -1 : 1;
+      let want = a + dir*SCAR.turn*(0.55+rand()*0.9);
+
+      // 走完的人生，後段會被終點拉過去；沒走完的不會，它就斷在半路。
+      if(completed && anchor && SCAR.converge>0 && n>2){
+        const prog=i/(n-1);
+        const pull=Math.pow(Math.max(0,(prog-.55)/.45),1.4)*SCAR.converge;
+        if(pull>0){
+          const toA=Math.atan2(anchor.y-y,anchor.x-x);
+          want += angWrap(toA-want)*pull;
+        }
+      }
+
+      const next=advance(x,y,want,len);
+      if(!next) break;
+      push(x,y,next.x,next.y,{depth:0,order:i,tip:true});
+
+      // 分岔：往轉折的反側甩出去，像應力釋放。那是走得特別重的一步。
+      if(rand()<SCAR.branch){
+        let bx=next.x, by=next.y, ba=next.a-dir*(0.75+rand()*0.7), bl=next.len*SCAR.branchLen;
+        const steps=1+Math.floor(rand()*3);
+        for(let k=0;k<steps;k++){
+          const bn=advance(bx,by,ba+(rand()-.5)*.7,bl);
+          if(!bn) break;
+          push(bx,by,bn.x,bn.y,{depth:1+k,order:i});
+          bx=bn.x;by=bn.y;ba=bn.a;bl=bn.len*0.66;
+        }
+      }
+
+      x=next.x;y=next.y;a=next.a;
+      len=next.len*SCAR.decay;
+    }
+
+    // 走完了，就一定接得上終點。差最後一段的話補上去。
+    if(completed && anchor && SCAR.converge>0 && segs.length){
+      const d=Math.hypot(anchor.x-x,anchor.y-y);
+      if(d>1 && d<step0*3.2) push(x,y,anchor.x,anchor.y,{depth:0,order:n,arrival:true});
+    }
+    return segs;
+  }
+
+  const scarWidth=(sg,base)=>Math.max(0.8, base*Math.pow(0.62,sg.depth)*(1-Math.min(0.42, sg.order*0.012)));
+
+  // ── 第一層：裂口。石頭真的裂開了。走 multiply，任何顏色都吃得住 ──
+  function paintScarDark(ctx,segs,hex,w,h,fade){
+    if(!segs.length||SCAR.carve<=0) return;
+    fade = (fade==null?1:fade);
+    const base=SCAR.thickness*(w/768)*(fade<1?.82:1);
+    const c=hexToRgb(hex);
+    // 帶一點主色的暗，不是純黑；純黑會像貼上去的墨線。
+    const d={r:Math.round(c.r*.22),g:Math.round(c.g*.22),b:Math.round(c.b*.22)};
+    const cl=(n)=>Math.min(1,Math.max(0,n));
+
+    ctx.save();
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.strokeStyle=`rgba(${d.r},${d.g},${d.b},${cl(.30*SCAR.carve*fade)})`;
+    ctx.shadowColor=`rgba(0,0,0,${.55*SCAR.carve*fade})`;
+    ctx.shadowBlur=base*3.2;
+    segs.forEach(sg=>{
+      ctx.lineWidth=scarWidth(sg,base)*2.4;
+      ctx.beginPath();ctx.moveTo(sg.x1,sg.y1);ctx.lineTo(sg.x2,sg.y2);ctx.stroke();
+    });
+    ctx.shadowBlur=0;
+    ctx.strokeStyle=`rgba(${d.r},${d.g},${d.b},${cl(.86*SCAR.carve*fade)})`;
+    segs.forEach(sg=>{
+      ctx.lineWidth=scarWidth(sg,base)*1.15;
+      ctx.beginPath();ctx.moveTo(sg.x1,sg.y1);ctx.lineTo(sg.x2,sg.y2);ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  // ── 第二層：光。裂口裡透出來的東西，會呼吸的就是它 ──
+  function paintScarLight(ctx,segs,hex,w,h){
+    if(!segs.length) return;
+    const base=SCAR.thickness*(w/768);
+    const c=hexToRgb(hex);
+    const core={
+      r:Math.round(c.r+(255-c.r)*.88),
+      g:Math.round(c.g+(255-c.g)*.88),
+      b:Math.round(c.b+(255-c.b)*.88)
+    };
+    const cl=(n)=>Math.min(1,Math.max(0,n));
+
+    ctx.save();
+    ctx.lineCap='round';ctx.lineJoin='round';
+    if(SCAR.glow>0){
+      ctx.shadowColor=`rgba(${c.r},${c.g},${c.b},${cl(.85*SCAR.brightness)})`;
+      ctx.shadowBlur=base*4.6*SCAR.glow;
+      ctx.strokeStyle=`rgba(${c.r},${c.g},${c.b},${cl(.42*SCAR.brightness)})`;
+      segs.forEach(sg=>{
+        ctx.lineWidth=scarWidth(sg,base)*1.9;
+        ctx.beginPath();ctx.moveTo(sg.x1,sg.y1);ctx.lineTo(sg.x2,sg.y2);ctx.stroke();
+      });
+    }
+    ctx.shadowColor=`rgba(${c.r},${c.g},${c.b},${cl(.9*SCAR.brightness)})`;
+    ctx.shadowBlur=base*1.5*SCAR.glow;
+    ctx.strokeStyle=`rgba(${core.r},${core.g},${core.b},${cl(.98*SCAR.brightness)})`;
+    segs.forEach(sg=>{
+      ctx.lineWidth=scarWidth(sg,base)*.62;
+      ctx.beginPath();ctx.moveTo(sg.x1,sg.y1);ctx.lineTo(sg.x2,sg.y2);ctx.stroke();
+    });
+    // 每一個選擇的落點：一顆小小的結
+    if(SCAR.node>0){
+      ctx.shadowBlur=base*2.4*SCAR.glow;
+      ctx.fillStyle=`rgba(${core.r},${core.g},${core.b},${cl(.92*SCAR.brightness)})`;
+      segs.forEach(sg=>{
+        if(sg.depth!==0||!sg.tip) return;
+        ctx.beginPath();ctx.arc(sg.x2,sg.y2,Math.max(.6,scarWidth(sg,base)*.58*SCAR.node),0,Math.PI*2);ctx.fill();
+      });
+    }
+    ctx.restore();
+  }
+
+  // ── 流動：一道更亮的光沿著主幹跑。只跑主幹不跑分岔 ──
+  // 主幹是時間線，讓光只走時間線，看起來像記憶在往前推。
+  function paintScarPulse(ctx,segs,hex,w,h,t){
+    if(SCAR.pulse<=0) return;
+    const trunk=segs.filter(sg=>sg.depth===0);
+    if(!trunk.length) return;
+    const c=hexToRgb(hex);
+    const base=SCAR.thickness*(w/768);
+    const head=(t*SCAR.pulseSpeed)%1.35;   // 留一段暗場，才有「一口一口」的感覺
+    const width=SCAR.pulseWidth;
+
+    ctx.save();
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.shadowColor=`rgba(${c.r},${c.g},${c.b},.9)`;
+    trunk.forEach((sg,i)=>{
+      const pos=i/Math.max(1,trunk.length-1);
+      const d=Math.abs(pos-head);
+      if(d>width) return;
+      const k=Math.pow(1-d/width,1.6)*SCAR.pulse;
+      ctx.shadowBlur=base*3.4*SCAR.glow*k;
+      ctx.lineWidth=Math.max(0.8,base*(1+k*1.5));
+      ctx.strokeStyle=`rgba(255,255,255,${Math.min(1,k*0.95)})`;
+      ctx.beginPath();ctx.moveTo(sg.x1,sg.y1);ctx.lineTo(sg.x2,sg.y2);ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  // ── 時痕資料：目前後端還沒有「選擇」，所以正常情況下這裡是空的，
+  //    整套時痕就安靜地不畫任何東西。等選擇系統上線，它會自己長出來。
+  //    DEV 預覽：?scar=RLRLLRR&scar2=LRLR&scarDone=1  或
+  //             localStorage['tet.devScar'] = 'RLRLLRR|LRLR|RRLL'（| 分隔人生）
+  //             localStorage['tet.devScarDone'] = '2'
+  function scarSequences(el){
+    const raw=String(el?.dataset?.scar||'').trim();
+    let list = raw ? raw.split('|') : [];
+    let done = Number(el?.dataset?.scarDone);
+
+    if(!list.length){
+      try{
+        const q=new URLSearchParams(location.search);
+        const dev=q.get('scar') || localStorage.getItem('tet.devScar') || '';
+        if(dev) list=String(dev).split('|');
+        const dd=q.get('scarDone') || localStorage.getItem('tet.devScarDone');
+        if(dd!=null && dd!=='') done=Number(dd);
+      }catch(_){}
+    }
+
+    list=list.map(x=>String(x||'').toUpperCase().replace(/[^LR]/g,'')).filter(Boolean).slice(0,SCAR_LIVES.length);
+    if(!list.length) return null;
+    if(!Number.isFinite(done)) done=list.length;   // 沒指定就當作全部走完
+    return {list, done:Math.max(0,Math.min(list.length,done))};
+  }
+
+  // 每個人生的起點：角色固定方位 + engraveSeed 決定的偏移。
+  // 跨玩家看得出哪條是誰，同一個人的石片又獨一無二。
+  function scarLifeAngles(seed){
+    const rand=seededRandom('origin:'+String(seed||''));
+    return SCAR_LIVES.map(c=>({key:c.key, base:c.base, offset:(rand()*2-1)*SCAR.offsetRange}));
+  }
+
   async function renderShardEngraving(el,hex){
     if(!el || !el.classList?.contains('time-shard-asset')) return;
 
@@ -495,10 +799,14 @@ window.EndOfTimeAdventure = (() => {
     const type=stoneTypeNumber(el.dataset.stoneType);
     const img=el.querySelector('.time-shard-image');
     const canvas=el.querySelector('.time-shard-engraving');
+    const glyphCanvas=el.querySelector('.time-shard-glyph');
+    const scarDark=el.querySelector('.time-shard-scar-dark');
+    const scarLight=el.querySelector('.time-shard-scar');
 
     // 時辰字是「出身」，鑄印前就該顯現；刻紋幾何才需要等種子誕生。
     if(!type || !img || !canvas){
       if(canvas) canvas.style.opacity='0';
+      if(glyphCanvas) glyphCanvas.style.opacity='0';
       return;
     }
 
@@ -510,19 +818,34 @@ window.EndOfTimeAdventure = (() => {
         const size=shardWorkSize(nw,nh);
         const w=size.w, h=size.h;
 
-        if(canvas.width!==w || canvas.height!==h){
-          canvas.width=w;
-          canvas.height=h;
-        }
-
-        const ctx=canvas.getContext('2d');
-        ctx.clearRect(0,0,w,h);
+        [canvas,glyphCanvas,scarDark,scarLight].forEach(c=>{
+          if(c && (c.width!==w || c.height!==h)){ c.width=w; c.height=h; }
+        });
 
         const layouts=await loadStoneLayouts();
         const layout=engravingLayoutFor(layouts,type);
+        const color=normalizeHexColor(hex);
+        const pick=String(el.dataset.glyphColor||'').trim();
+
+        // ── 時辰字：獨立一層。
+        // 玩家可以自選字色，混合模式要跟著「字 vs 石片」走；
+        // 本命刻紋永遠是淡色，跟著石片明暗走。兩者混在同一張畫布上會互相殺死。
         await ensureShardGlyphFont();
-        drawShichenGlyph(ctx,w,h,layout,type,normalizeHexColor(hex));
-        if(seed) drawPersonalEngravingGeometry(ctx,w,h,layout,seed,normalizeHexColor(hex));
+        if(glyphCanvas){
+          const gx=glyphCanvas.getContext('2d');
+          gx.clearRect(0,0,w,h);
+          drawShichenGlyph(gx,w,h,layout,type,color,pick);
+          gx.globalCompositeOperation='destination-in';
+          gx.drawImage(img,0,0,w,h);
+          gx.globalCompositeOperation='source-over';
+          glyphCanvas.style.opacity='1';
+        }
+
+        // ── 本命刻紋 ──
+        const ctx=canvas.getContext('2d');
+        ctx.clearRect(0,0,w,h);
+        if(!glyphCanvas) drawShichenGlyph(ctx,w,h,layout,type,color,pick);
+        if(seed) drawPersonalEngravingGeometry(ctx,w,h,layout,seed,color);
 
         // 最後一道保護：真正以母石透明區域裁切。
         // 即使將來刻紋演算法變得更複雜，也絕不會畫到石片之外。
@@ -533,6 +856,9 @@ window.EndOfTimeAdventure = (() => {
         canvas.dataset.seed=seed;
         canvas.dataset.stoneType=String(type);
         canvas.style.opacity='1';
+
+        // ── 時痕 ──
+        renderScar(el,{img,layout,w,h,color,seed,scarDark,scarLight});
       }catch(err){
         console.warn('個人時印刻紋繪製失敗。',err);
         canvas.style.opacity='0';
@@ -542,6 +868,133 @@ window.EndOfTimeAdventure = (() => {
     if(img.complete && img.naturalWidth) run();
     else img.addEventListener('load',run,{once:true});
   }
+
+  // 時痕：裂口烘一次（靜的），光烘一次（每幀只做透明度與流動）。
+  function renderScar(el,{img,layout,w,h,color,seed,scarDark,scarLight}){
+    if(!scarDark || !scarLight) return;
+    const data=scarSequences(el);
+    el._scar=null;
+
+    const dk=scarDark.getContext('2d');
+    dk.clearRect(0,0,w,h);
+    const lt=scarLight.getContext('2d');
+    lt.clearRect(0,0,w,h);
+
+    if(!data){
+      // 還沒有任何選擇 —— 石片上什麼都不該有。
+      scarDark.style.opacity='0';
+      scarLight.style.opacity='0';
+      return;
+    }
+
+    if(!el._scarMask || el._scarMaskKey!==`${el.dataset.stoneType}:${w}x${h}`){
+      el._scarMask=scarMask(img,w,h);
+      el._scarMaskKey=`${el.dataset.stoneType}:${w}x${h}`;
+      el._scarAnchor=null;
+    }
+    const mask=el._scarMask;
+    const cx=Number(layout.centerX||.5)*w, cy=Number(layout.centerY||.5)*h;
+    if(!el._scarAnchor){
+      el._scarAnchor=scarAnchor(mask,cx,cy,Math.max(4,Math.min(w,h)*.018));
+    }
+
+    const angles=scarLifeAngles(seed);
+    const lives=data.list.map((seq,i)=>{
+      const c=angles[i]||angles[0];
+      const completed=i<data.done;
+      // 同一道光的不同溫度，不是四支蠟筆。
+      const deg=(i-(data.list.length-1)/2)*SCAR.hueSpread*22;
+      return {
+        completed,
+        hex:shiftHue(color,deg),
+        segs:buildScarPath(seq,layout,w,h,mask,{
+          baseAngle:c.base, seedOffset:c.offset, completed,
+          anchor:el._scarAnchor, key:c.key+':'+String(seed||'')
+        })
+      };
+    });
+
+    // 裂口：沒走完的一樣有裂口 —— 路是走過的。
+    lives.forEach(L=>paintScarDark(dk,L.segs,L.hex,w,h,L.completed?1:SCAR.unfinished));
+    // 以母石 alpha 裁切即可。mix-blend-mode 會尊重 alpha，
+    // 透明的地方等於不參與混色 —— 千萬不要為了 multiply 去填白底，
+    // 那會在石片外面留下一個白方塊。
+    dk.globalCompositeOperation='destination-in';
+    dk.drawImage(img,0,0,w,h);
+    dk.globalCompositeOperation='source-over';
+    scarDark.style.opacity='1';
+
+    // 光只給走完的人生。沒走完 = 沒有理解 = 沒有光。
+    const layer=document.createElement('canvas');
+    layer.width=w;layer.height=h;
+    const lx=layer.getContext('2d');
+    lives.forEach(L=>{ if(L.completed) paintScarLight(lx,L.segs,L.hex,w,h); });
+    lx.globalCompositeOperation='destination-in';
+    lx.drawImage(img,0,0,w,h);
+    lx.globalCompositeOperation='source-over';
+
+    el._scar={lives,layer,img,w,h};
+    scarLight.style.opacity='1';
+    registerScar(el);
+  }
+
+  // ── 呼吸與流動：全站共用一支 rAF，不是每片石頭各開一支 ──
+  const scarShards=new Set();
+  let scarRaf=0, scarT0=0;
+  const scarReduced=()=>{
+    try{ return window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(_){ return false; }
+  };
+
+  function registerScar(el){
+    scarShards.add(el);
+    if(scarReduced()){ scarPaint(el,0); return; }
+    if(!scarRaf){
+      scarT0=performance.now();
+      scarRaf=requestAnimationFrame(scarLoop);
+    }
+  }
+
+  function scarPaint(el,t){
+    const S=el._scar;
+    if(!S) return;
+    const canvas=el.querySelector('.time-shard-scar');
+    if(!canvas || !canvas.isConnected){ scarShards.delete(el); return; }
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,S.w,S.h);
+    // 1 → 1-amp → 1，正弦來回，沒有「啪」的一下
+    const breathe=1-SCAR.breathAmp*(1-Math.cos(t*SCAR.breathSpeed*Math.PI*2))*0.5;
+    ctx.globalAlpha=Math.min(1,Math.max(.05,breathe));
+    ctx.drawImage(S.layer,0,0);
+    ctx.globalAlpha=1;
+    if(SCAR.pulse>0){
+      // 相位錯開，幾條不會同時亮成一片
+      S.lives.forEach((L,i)=>{
+        if(L.completed) paintScarPulse(ctx,L.segs,L.hex,S.w,S.h,t+i*0.37);
+      });
+      ctx.globalCompositeOperation='destination-in';
+      ctx.drawImage(S.img,0,0,S.w,S.h);
+      ctx.globalCompositeOperation='source-over';
+    }
+  }
+
+  function scarLoop(now){
+    scarRaf=0;
+    if(document.hidden){ return; }        // 分頁沒在看就不燒電
+    const t=(now-scarT0)/1000;
+    let alive=false;
+    scarShards.forEach(el=>{
+      if(!el.isConnected || !el._scar){ scarShards.delete(el); return; }
+      alive=true;
+      try{ scarPaint(el,t); }catch(_){}
+    });
+    if(alive && !scarReduced()) scarRaf=requestAnimationFrame(scarLoop);
+  }
+
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && scarShards.size && !scarRaf && !scarReduced()){
+      scarRaf=requestAnimationFrame(scarLoop);
+    }
+  });
 
   // 母石原圖約 1254px，但螢幕預覽與 OG 圖都用不到那麼大。
   // 上色是逐像素運算，解析度砍半＝運算量降到 1/3，肉眼看不出差別。
@@ -713,6 +1166,62 @@ window.EndOfTimeAdventure = (() => {
     else img.addEventListener('load',run,{once:true});
   }
 
+  function hexOf({r,g,b}){
+    const t=n=>Math.min(255,Math.max(0,Math.round(n))).toString(16).padStart(2,'0').toUpperCase();
+    return `#${t(r)}${t(g)}${t(b)}`;
+  }
+  function hslToRgbObj(h,s,l){
+    const cl=(n,a,b)=>Math.min(Math.max(n,a),b);
+    h=(((h%360)+360)%360)/360; s=cl(s,0,100)/100; l=cl(l,0,100)/100;
+    if(s===0){const v=Math.round(l*255);return{r:v,g:v,b:v};}
+    const hue2rgb=(p,q,t)=>{
+      if(t<0)t+=1;if(t>1)t-=1;
+      if(t<1/6)return p+(q-p)*6*t;
+      if(t<1/2)return q;
+      if(t<2/3)return p+(q-p)*(2/3-t)*6;
+      return p;
+    };
+    const q=l<.5?l*(1+s):l+s-l*s, pp=2*l-q;
+    return {r:Math.round(hue2rgb(pp,q,h+1/3)*255),g:Math.round(hue2rgb(pp,q,h)*255),b:Math.round(hue2rgb(pp,q,h-1/3)*255)};
+  }
+  function shiftHue(hex,deg){
+    const c=rgbToHsl(hexToRgb(hex));
+    return hexOf(hslToRgbObj(c.h+deg,c.s,c.l));
+  }
+
+  // 上色演算法會把石片提得比 base 色亮很多，判斷對比要用「提亮後」的明度。
+  function stoneLightness(hex){
+    const l=rgbToHsl(hexToRgb(hex)).l*.55+34;
+    return Math.min(100,Math.max(0,l));
+  }
+
+  // 時辰字最後用什麼顏色畫、要走亮刻還是暗刻。
+  //   pick 為空 → 沿用原本的自動配色（依石片明暗決定深字或淺字）
+  //   pick 有值 → 玩家自選；只保證一件事：與石片的明度差不得小於 GLYPH_MIN_CONTRAST，
+  //              否則會出現「白字白石片」這種等於沒畫的組合，而且是玩家自己選的，事後救不了。
+  const GLYPH_MIN_CONTRAST=22;
+  function resolveGlyphInk(stoneHex,pick){
+    const stoneL=stoneLightness(stoneHex);
+    const picked=/^#?[0-9a-f]{6}$/i.test(String(pick||'').trim()) ? normalizeHexColor(pick) : '';
+    if(!picked){
+      const c=hexToRgb(stoneHex);
+      const light=isLightShard(stoneHex);
+      const ink=light
+        ? {r:Math.round(c.r*.20),g:Math.round(c.g*.20),b:Math.round(c.b*.20)}
+        : {r:Math.round(c.r+(255-c.r)*.78),g:Math.round(c.g+(255-c.g)*.78),b:Math.round(c.b+(255-c.b)*.78)};
+      return {hex:hexOf(ink),dark:light,auto:true,adjusted:false};
+    }
+    const g=rgbToHsl(hexToRgb(picked));
+    let dark=g.l<stoneL, L=g.l, adjusted=false;
+    if(Math.abs(g.l-stoneL)<GLYPH_MIN_CONTRAST){
+      const down=stoneL-GLYPH_MIN_CONTRAST, up=stoneL+GLYPH_MIN_CONTRAST;
+      dark = (down>=4) ? (up>96 ? true : (g.l<=stoneL)) : false;
+      L = dark ? Math.max(4,down) : Math.min(96,up);
+      adjusted=true;
+    }
+    return {hex:hexOf(hslToRgbObj(g.h,g.s,L)),dark,auto:false,adjusted};
+  }
+
   // 石片明暗判定的唯一真相：刻紋顏色與 CSS 混合模式都以它為準。
   // 門檻調低 → 更多顏色會被視為亮石片（走暗刻 + multiply）。
   //
@@ -740,6 +1249,8 @@ window.EndOfTimeAdventure = (() => {
     // 亮石片必須改用 multiply，否則刻紋 CSS 的 mix-blend-mode:screen
     // 會把暗色的字整個吃掉（screen 只能變亮，不能變暗）。
     el.classList.toggle('is-light-shard',isLightShard(p.base));
+    // 時辰字可由玩家自選顏色，混合模式要看「字 vs 石片」，不是石片自己亮不亮。
+    el.classList.toggle('glyph-dark',resolveGlyphInk(p.base,el.dataset.glyphColor).dark);
     el.style.setProperty('--shard-main',p.base);
     el.style.setProperty('--shard-dark',p.dark);
     el.style.setProperty('--shard-deep',p.deep);
@@ -1290,7 +1801,10 @@ window.EndOfTimeAdventure = (() => {
       relay: '',
       level: stone.resonanceLevel || 0,
       stoneType: type,
-      engraveSeed: stone.engraveSeed || ''
+      engraveSeed: stone.engraveSeed || '',
+      glyphColor: stone.glyphColor || '',
+      scar: stone.scar || '',
+      scarDone: stone.scarDone ?? ''
     });
     document.body.appendChild(holder);
     const shard = holder.firstElementChild;
@@ -1410,9 +1924,12 @@ window.EndOfTimeAdventure = (() => {
     return data;
   }
 
-  async function forgeShard(color){
+  async function forgeShard(color,glyphColor){
     const t=token() || (await ensure()).token;
-    const data=await api('adventureForge',{token:t,color:normalizeHexColor(color)});
+    const params={token:t,color:normalizeHexColor(color)};
+    // 空字串代表「自動配色」，後端照收，玩家之後還能改回來。
+    params.glyphColor = /^#?[0-9a-f]{6}$/i.test(String(glyphColor||'').trim()) ? normalizeHexColor(glyphColor) : '';
+    const data=await api('adventureForge',params);
     // 記憶體與 sessionStorage 都要清，否則 ensure() 會把鑄印前的舊狀態撈回來覆蓋。
     progressCache=null;
     clearProgressSession(t);
@@ -1513,7 +2030,7 @@ window.EndOfTimeAdventure = (() => {
     `,{lockClose:true});
   }
 
-  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,engraveSeed='',showEngraving=true,awaiting=false}={}){
+  function shardPreviewMarkup({color='#7F1521',serial='',relay='',level=0,stoneType=0,engraveSeed='',glyphColor='',scar='',scarDone='',showEngraving=true,awaiting=false}={}){
     const type=stoneTypeNumber(stoneType);
     if(awaiting || !type){
       return `
@@ -1529,10 +2046,13 @@ window.EndOfTimeAdventure = (() => {
     const visualOffset=stoneVisualOffset(type);
     const safeSeed=showEngraving ? String(engraveSeed||'') : '';
     return `
-      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${safeSeed.replace(/"/g,'&quot;')}" style="--stone-image:url('${url}');--stone-aspect:${aspect};--stone-shift-x:${visualOffset.x}%;--stone-shift-y:${visualOffset.y}%">
+      <div class="time-shard-asset ${levelClass}" data-shard-preview data-stone-type="${type}" data-engrave-seed="${safeSeed.replace(/"/g,'&quot;')}" data-glyph-color="${String(glyphColor||'').replace(/"/g,'&quot;')}" data-scar="${String(scar||'').replace(/"/g,'&quot;')}" data-scar-done="${String(scarDone??'')}" style="--stone-image:url('${url}');--stone-aspect:${aspect};--stone-shift-x:${visualOffset.x}%;--stone-shift-y:${visualOffset.y}%">
         <img class="time-shard-image" src="${url}" alt="你的時印石片" crossorigin="anonymous">
         <canvas class="time-shard-canvas" aria-hidden="true"></canvas>
         <canvas class="time-shard-engraving" aria-hidden="true"></canvas>
+        <canvas class="time-shard-glyph" aria-hidden="true"></canvas>
+        <canvas class="time-shard-scar-dark" aria-hidden="true"></canvas>
+        <canvas class="time-shard-scar" aria-hidden="true"></canvas>
         <span class="time-shard-colorwash" aria-hidden="true"></span>
         <span class="time-shard-light" aria-hidden="true"></span>
         <span class="time-shard-refraction refraction-a" aria-hidden="true"></span>
@@ -1566,7 +2086,10 @@ window.EndOfTimeAdventure = (() => {
           relay:stone.relayCode||'',
           level:stone.resonanceLevel||0,
           stoneType:stone.stoneType,
-          engraveSeed:stone.engraveSeed||''
+          engraveSeed:stone.engraveSeed||'',
+          glyphColor:stone.glyphColor||'',
+          scar:stone.scar||'',
+          scarDone:stone.scarDone??''
         })}
       </div>
       <div class="time-mark-actions">
@@ -1590,6 +2113,8 @@ window.EndOfTimeAdventure = (() => {
       existing=retry?.stone||existing;
     }
     const initial=normalizeHexColor(existing.color||'#7F1521');
+    // 色盤一定要有值；沒自選過就先擺自動配色算出來的顏色當起點。
+    const glyphInitial=normalizeHexColor(existing.glyphColor||resolveGlyphInk(initial,'').hex);
     const isForged=!!existing.forged;
     const existingType=stoneTypeNumber(existing.stoneType);
     const o=overlay(`
@@ -1605,6 +2130,9 @@ window.EndOfTimeAdventure = (() => {
             level:existing.resonanceLevel||0,
             stoneType:existingType,
             engraveSeed:existing.engraveSeed||'',
+            glyphColor:existing.glyphColor||'',
+            scar:existing.scar||'',
+            scarDone:existing.scarDone??'',
             showEngraving:isForged,
             awaiting:!existingType
           })}
@@ -1624,6 +2152,19 @@ window.EndOfTimeAdventure = (() => {
             </label>
           </div>
           <p class="time-color-help">可直接使用色盤，也可以輸入 HEX 或 RGB。三者會彼此同步。</p>
+
+          <label class="time-color-label" for="timeGlyphColor" style="margin-top:18px">時辰字的顏色</label>
+          <div class="time-color-fields">
+            <label class="time-color-field">
+              <span>字色</span>
+              <input id="timeGlyphColor" class="time-color-picker" type="color" value="${glyphInitial}">
+            </label>
+            <label class="time-color-field time-glyph-auto">
+              <span>自動配色</span>
+              <input id="timeGlyphAuto" type="checkbox" ${existing.glyphColor?'':'checked'}>
+            </label>
+          </div>
+          <p class="time-color-help" data-glyph-note></p>
         </div>
       </div>
       <div class="time-mark-actions">
@@ -1636,23 +2177,51 @@ window.EndOfTimeAdventure = (() => {
     const picker=o.querySelector('#timeShardColor');
     const hexInput=o.querySelector('#timeShardHex');
     const rgbInput=o.querySelector('#timeShardRgb');
+    const glyphPicker=o.querySelector('#timeGlyphColor');
+    const glyphAuto=o.querySelector('#timeGlyphAuto');
+    const glyphNote=o.querySelector('[data-glyph-note]');
     const shard=o.querySelector('[data-shard-preview]');
     const status=o.querySelector('[data-forge-status]');
     const confirmBtn=o.querySelector('[data-forge-confirm]');
     let current=initial;
+    let currentGlyph=existing.glyphColor||'';
+
+    // 時辰字是「你從哪裡來」，跟光源色本來就是兩件事，沒道理綁在一起。
+    // 唯一的規矩：字色跟石片的明度差不夠時自動推開，
+    // 否則會出現白字白石片這種等於沒畫的組合，而且是玩家自己選的，事後救不了。
+    const syncGlyph=()=>{
+      shard.dataset.glyphColor=currentGlyph;
+      const res=resolveGlyphInk(current,currentGlyph);
+      glyphNote.textContent = res.auto
+        ? `自動：依石片明暗決定深字或淺字（目前為${res.dark?'暗刻':'亮刻'}）。`
+        : (res.adjusted
+            ? `這個顏色跟石片太接近，已自動拉開對比，實際會畫成 ${res.hex}。`
+            : `${res.dark?'暗刻':'亮刻'}．${res.hex}`);
+      applyShardPalette(shard,current);
+    };
 
     const commitColor=(hex,source)=>{
       current=normalizeHexColor(hex);
       if(source!=='picker') picker.value=current;
       if(source!=='hex') hexInput.value=current;
       if(source!=='rgb') rgbInput.value=formatRgb(current);
-      applyShardPalette(shard,current);
       hexInput.classList.remove('is-invalid');
       rgbInput.classList.remove('is-invalid');
       status.textContent='';
+      syncGlyph();
     };
 
-    applyShardPalette(shard,current);
+    glyphPicker.addEventListener('input',()=>{
+      glyphAuto.checked=false;
+      currentGlyph=normalizeHexColor(glyphPicker.value);
+      syncGlyph();
+    });
+    glyphAuto.addEventListener('change',()=>{
+      currentGlyph = glyphAuto.checked ? '' : normalizeHexColor(glyphPicker.value);
+      syncGlyph();
+    });
+
+    syncGlyph();
 
     picker.addEventListener('input',()=>commitColor(picker.value,'picker'));
 
@@ -1695,7 +2264,7 @@ window.EndOfTimeAdventure = (() => {
       status.textContent=isForged?'正在重新凝聚你的光源色。':'時空正在回應你的存在……';
 
       try{
-        const result=await forgeShard(chosen);
+        const result=await forgeShard(chosen,currentGlyph);
         // 鑄印回傳只有 stone，不是完整進度結構，塞進快取會讓後續讀到殘缺資料。
         void syncShareCard(result?.stone);   // 背景更新分享卡片，失敗不影響鑄印
         endCritical();
@@ -1869,7 +2438,10 @@ window.EndOfTimeAdventure = (() => {
               relay,
               level:stone.resonanceLevel||0,
               stoneType:stone.stoneType,
-              engraveSeed:stone.engraveSeed||''
+              engraveSeed:stone.engraveSeed||'',
+              glyphColor:stone.glyphColor||'',
+              scar:stone.scar||'',
+              scarDone:stone.scarDone??''
             })}
             <div class="time-mark-mini-copy">
               <small>時印序</small>
@@ -2274,5 +2846,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, maskToken, bindTokenReveal, relayLoad, shareUrlFor, copyShareUrl, isLightShard, buildShareCard, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
+  return {token, maskToken, bindTokenReveal, resolveGlyphInk, stoneLightness, SCAR, relayLoad, shareUrlFor, copyShareUrl, isLightShard, buildShareCard, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();

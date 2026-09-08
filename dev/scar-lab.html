@@ -1089,11 +1089,6 @@ class Shard{
     dk.globalCompositeOperation='destination-in';
     dk.drawImage(this.img,0,0,this.w,this.h);
     dk.globalCompositeOperation='source-over';
-    // multiply 圖層的空白處必須是白色，否則整片石頭會被壓暗
-    dk.globalCompositeOperation='destination-over';
-    dk.fillStyle='#fff';
-    dk.fillRect(0,0,this.w,this.h);
-    dk.globalCompositeOperation='source-over';
 
     // 光只給走完的人生。沒走完 = 沒有理解 = 沒有光。
     const ctx=this.scarLayer.getContext('2d');
