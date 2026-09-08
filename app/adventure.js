@@ -33,12 +33,97 @@ window.EndOfTimeAdventure = (() => {
     return configCache;
   }
 
-  function generateToken(){
-    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    const chunk = (start) => Array.from(bytes.slice(start,start+4), b => alphabet[b % alphabet.length]).join('');
-    return `TET-${chunk(0)}-${chunk(4)}-${chunk(8)}-${chunk(12)}`;
+  // ══════════════════════════════════════════════════════════
+  //  時印格式：前綴「時印」＋ 八組六十甲子
+  //
+  //    時印甲子乙丑丙寅丁卯戊辰己巳庚午辛未
+  //
+  //  十天干咬十二地支，只有同奇偶才成立 —— 所以「甲丑」不存在。
+  //  可用組合六十種，八組即 5×60⁷ ≈ 14 兆（第一組被時辰鎖住，只剩五種）。
+  //
+  //  第一組的地支＝進站時辰，與母石型號是同一個真相。
+  //  後端可以直接從時印讀出母石，不必另外傳 hour。
+  //
+  //  舊格式 TET-XXXX-XXXX-XXXX-XXXX 永遠繼續接受，不做資料遷移。
+  // ══════════════════════════════════════════════════════════
+  const TM_GAN = '甲乙丙丁戊己庚辛壬癸';
+  const TM_ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  const TM_PREFIX = '時印';
+  const TM_PAIRS = 8;
+  const TM_LEGACY = /^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/;
+
+  // 十二時辰：子 23-01 ／ 丑 01-03 ／ … ／ 亥 21-23
+  function stoneTypeFromHour(hour){
+    const h = Number(hour);
+    if(!isFinite(h) || h < 0 || h > 23) return 0;
+    return Math.floor(((Math.floor(h) + 1) % 24) / 2) + 1;
+  }
+
+  // 密碼學等級的亂數；時印是全權憑證，不能用 Math.random。
+  function tmRandInt(max){
+    const a = new Uint32Array(1);
+    const limit = Math.floor(0xFFFFFFFF / max) * max;   // 去掉模數偏差
+    let v;
+    do{ crypto.getRandomValues(a); v = a[0]; }while(v >= limit);
+    return v % max;
+  }
+
+  // 給定地支，回傳咬得到的五個天干（同奇偶）
+  function tmStemsFor(zi){
+    const out = [];
+    for(let g = 0; g < 10; g++) if((g % 2) === (zi % 2)) out.push(g);
+    return out;
+  }
+
+  function generateToken(hour){
+    const type = stoneTypeFromHour(hour == null ? new Date().getHours() : hour) || 1;
+    const zi0 = type - 1;                       // 第一組的地支＝進站時辰
+    const stems = tmStemsFor(zi0);
+    let out = TM_PREFIX + TM_GAN[stems[tmRandInt(stems.length)]] + TM_ZHI[zi0];
+    for(let i = 1; i < TM_PAIRS; i++){
+      const n = tmRandInt(60);                  // 六十甲子的第 n 格
+      out += TM_GAN[n % 10] + TM_ZHI[n % 12];
+    }
+    return out;
+  }
+
+  // 從時印讀出母石型號（1–12）。舊格式沒有這個資訊，回 0。
+  function stoneTypeFromToken(value){
+    const t = String(value || '').trim();
+    if(!t.startsWith(TM_PREFIX)) return 0;
+    const zi = TM_ZHI.indexOf(t[TM_PREFIX.length + 1]);
+    return zi < 0 ? 0 : zi + 1;
+  }
+
+  // 把使用者貼進來的東西正規化。
+  // 允許空白、全形空白、中間號；前綴可有可無；不合六十甲子的組合一律拒絕。
+  function normalizeTimeMarkInput(value){
+    const raw = String(value || '').trim();
+    if(TM_LEGACY.test(raw.toUpperCase())) return raw.toUpperCase();
+
+    const chars = [...raw].filter(c => TM_GAN.includes(c) || TM_ZHI.includes(c));
+    if(chars.length !== TM_PAIRS * 2) return '';
+    let out = TM_PREFIX;
+    for(let i = 0; i < TM_PAIRS; i++){
+      const g = TM_GAN.indexOf(chars[i * 2]);
+      const z = TM_ZHI.indexOf(chars[i * 2 + 1]);
+      if(g < 0 || z < 0) return '';
+      if((g % 2) !== (z % 2)) return '';        // 不存在的干支組合
+      out += TM_GAN[g] + TM_ZHI[z];
+    }
+    return out;
+  }
+
+  function isValidTimeMark(value){ return !!normalizeTimeMarkInput(value); }
+
+  // 顯示用：八組之間留空，看得出是八個字對
+  function formatTimeMark(value){
+    const t = String(value || '').trim();
+    if(!t.startsWith(TM_PREFIX)) return t;
+    const body = t.slice(TM_PREFIX.length);
+    const pairs = [];
+    for(let i = 0; i < body.length; i += 2) pairs.push(body.slice(i, i + 2));
+    return `${TM_PREFIX}　${pairs.join(' ')}`;
   }
 
   // 時印等同帳號憑證：拿到的人就能取回整段旅程。
@@ -46,6 +131,17 @@ window.EndOfTimeAdventure = (() => {
   function maskToken(value){
     const t = String(value || '').trim();
     if(!t) return '';
+
+    if(t.startsWith(TM_PREFIX)){
+      const body = t.slice(TM_PREFIX.length);
+      const pairs = [];
+      for(let i = 0; i < body.length; i += 2) pairs.push(body.slice(i, i + 2));
+      if(pairs.length < 3) return `${TM_PREFIX}　●● ●● ●● ●● ●● ●● ●● ●●`;
+      // 第一組等於母石，石片本來就公開展示，露出來不損失任何祕密。
+      const mid = pairs.slice(1, -1).map(() => '●●').join(' ');
+      return `${TM_PREFIX}　${pairs[0]} ${mid} ${pairs[pairs.length - 1]}`;
+    }
+
     const parts = t.split('-');
     if(parts.length !== 5) return 'TET-••••-••••-••••-••••';
     return `${parts[0]}-••••-••••-••••-${parts[4]}`;
@@ -86,7 +182,11 @@ window.EndOfTimeAdventure = (() => {
   function savedCardToken(){ return localStorage.getItem(SAVED_CARD_KEY) || ''; }
   function hasSavedCurrentCard(){ const t=token(); return !!t && savedCardToken()===t; }
   function markCurrentCardSaved(){ const t=token(); if(t) localStorage.setItem(SAVED_CARD_KEY,t); }
-  function setToken(value){ localStorage.setItem(STORAGE_KEY, String(value || '').trim().toUpperCase()); }
+  function setToken(value){
+    const raw = String(value || '').trim();
+    // 舊格式要轉大寫；干支沒有大小寫，原樣存。
+    localStorage.setItem(STORAGE_KEY, TM_LEGACY.test(raw.toUpperCase()) ? raw.toUpperCase() : raw);
+  }
   function clearToken(){ localStorage.removeItem(STORAGE_KEY); progressCache = null; }
 
   function normalizeHexColor(value){
@@ -1548,7 +1648,7 @@ window.EndOfTimeAdventure = (() => {
       let t=token();
 
       if(!t){
-        t=generateToken();
+        t=generateToken(new Date().getHours());
         setToken(t);
         try{
           await api('adventureCreate',{token:t});
@@ -1911,8 +2011,8 @@ window.EndOfTimeAdventure = (() => {
   }
 
   async function restore(value){
-    const normalized = String(value || '').trim().toUpperCase();
-    if(!/^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/.test(normalized)){
+    const normalized = normalizeTimeMarkInput(value);
+    if(!normalized){
       throw new Error('這枚時印的格式不正確。');
     }
     const data = await api('adventureLoad',{token:normalized});
@@ -2296,10 +2396,10 @@ window.EndOfTimeAdventure = (() => {
       <div data-restore-form>
         <div class="time-mark-kicker">RESTORE TIME MARK</div>
         <h2>取回其他時印</h2>
-        <p>只有需要切換另一段旅程時，才需要在這裡輸入時印。</p>
+        <p>只有需要切換另一段旅程時，才需要在這裡輸入時印。<br>整枚貼上即可，空白與前綴都可以省略。</p>
         <div class="time-mark-field">
           <label for="restoreTimeMark">輸入另一枚時印</label>
-          <input id="restoreTimeMark" autocomplete="off" placeholder="TET-XXXX-XXXX-XXXX-XXXX">
+          <input id="restoreTimeMark" autocomplete="off" placeholder="時印　甲子 乙丑 丙寅 丁卯 戊辰 己巳 庚午 辛未">
         </div>
         <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
         <div class="time-mark-actions">
@@ -2344,8 +2444,13 @@ window.EndOfTimeAdventure = (() => {
       requestAnimationFrame(()=>field.focus());
     };
 
+    // 畫面顯示排版過的樣子，實際要送出的是正規化後的字串。
+    // 別再從 textContent 讀回來 —— 那是給人看的，不是資料。
+    let pendingToken='';
+
     const showConfirmation=(wanted)=>{
-      confirmCode.textContent=wanted;
+      pendingToken=wanted;
+      confirmCode.textContent=formatTimeMark(wanted);
       confirmStatus.textContent='';
       form.hidden=true;
       confirmation.hidden=false;
@@ -2384,12 +2489,12 @@ window.EndOfTimeAdventure = (() => {
 
     restoreBtn.onclick=()=>{
       if(restoreBtn.disabled || isCritical()) return;
-      const wanted=String(field.value||'').trim().toUpperCase();
+      const wanted=normalizeTimeMarkInput(field.value);
       if(wanted && wanted===token()){
         status.textContent='這枚時印已經在這台裝置上使用中。';
         field.select();return;
       }
-      if(!/^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/.test(wanted)){
+      if(!wanted){
         status.textContent='這枚時印的格式不正確。';
         field.focus();return;
       }
@@ -2403,7 +2508,8 @@ window.EndOfTimeAdventure = (() => {
 
     confirmBtn.onclick=()=>{
       if(confirmBtn.disabled || isCritical()) return;
-      startRestore(confirmCode.textContent);
+      if(!pendingToken) return;
+      startRestore(pendingToken);
     };
     backBtn.onclick=()=>showForm();
   }
@@ -2846,5 +2952,7 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, maskToken, bindTokenReveal, resolveGlyphInk, stoneLightness, SCAR, relayLoad, shareUrlFor, copyShareUrl, isLightShard, buildShareCard, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
+  return {token, maskToken, formatTimeMark, normalizeTimeMarkInput, isValidTimeMark,
+          stoneTypeFromToken, stoneTypeFromHour, generateToken,
+          bindTokenReveal, resolveGlyphInk, stoneLightness, SCAR, relayLoad, shareUrlFor, copyShareUrl, isLightShard, buildShareCard, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();
