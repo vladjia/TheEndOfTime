@@ -28,10 +28,10 @@
       "maskAlphaThreshold": 24
     },
     "stone-03": {
-      "centerX": 0.5694,
-      "centerY": 0.4654,
-      "width": 0.1959,
-      "height": 0.2822,
+      "centerX": 0.5614,
+      "centerY": 0.4795,
+      "width": 0.225,
+      "height": 0.3,
       "rotation": -22.0,
       "padding": 0.1,
       "maskAlphaThreshold": 24
