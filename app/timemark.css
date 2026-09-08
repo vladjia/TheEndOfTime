@@ -54,3 +54,22 @@
 @media(max-width:760px){
   .timemark-shard-host .time-shard-asset{width:min(300px,82vw)}
 }
+
+/* ============================================================
+   公開展示模式（?r=RIFT-XXXXXXXX）
+   別人的時印：唯讀，不出現任何個人操作入口。
+   ============================================================ */
+body.timemark-public .time-mark-toggle,
+body.timemark-public [data-time-mark]{
+  display:none !important;
+}
+body.timemark-public .timemark-head small{
+  color:var(--blood-hi,#c13a4d);
+}
+.timemark-missing{
+  padding:48px 24px;
+  text-align:center;
+  color:rgba(238,240,244,.52);
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.025);
+}

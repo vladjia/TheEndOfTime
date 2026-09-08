@@ -1184,6 +1184,26 @@ window.EndOfTimeAdventure = (() => {
     }
   }
 
+  // 公開展示：以接力碼讀取他人時印（後端不會回傳 TOKEN）
+  async function relayLoad(relay){
+    const code = String(relay || '').trim().toUpperCase();
+    if(!/^RIFT-[A-Z2-9]{8}$/.test(code)) throw new Error('這枚接力碼的格式不正確。');
+    return api('adventureRelayLoad', {relay: code});
+  }
+
+  function shareUrlFor(relay){
+    const code = String(relay || '').trim().toUpperCase();
+    if(!code) return '';
+    return new URL(`${rootPrefix()}timemark/index.html?r=${encodeURIComponent(code)}`, location.href).href;
+  }
+
+  async function copyShareUrl(relay){
+    const url = shareUrlFor(relay);
+    if(!url) throw new Error('這枚時印尚未完成鑄印，還沒有分享連結。');
+    await navigator.clipboard.writeText(url);
+    toast('分享連結已複製。');
+  }
+
   async function restore(value){
     const normalized = String(value || '').trim().toUpperCase();
     if(!/^TET-[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}$/.test(normalized)){
@@ -1672,10 +1692,11 @@ window.EndOfTimeAdventure = (() => {
 
         <div class="time-mark-actions">
           ${forged
-            ? `<a class="time-mark-btn primary" href="${rootPrefix()}timemark/index.html?r=${encodeURIComponent(relay)}">進入時印幻境</a>
+            ? `<a class="time-mark-btn primary" href="${rootPrefix()}timemark/index.html">進入時印幻境</a>
                <button class="time-mark-btn" type="button" data-forge-open>調整石片色彩</button>`
             : `<button class="time-mark-btn primary" type="button" data-forge-open>時空鑄印專屬石片</button>`}
           <button class="time-mark-btn" type="button" data-copy-time>複製時印</button>
+          ${forged ? `<button class="time-mark-btn" type="button" data-copy-share>複製分享連結</button>` : ''}
           <a class="time-mark-btn" href="${rootPrefix()}journey/index.html">查看目前旅程</a>
         </div>
 
@@ -1701,6 +1722,8 @@ window.EndOfTimeAdventure = (() => {
       );
 
       o.querySelector('[data-copy-time]').onclick=copyToken;
+      const shareBtn=o.querySelector('[data-copy-share]');
+      if(shareBtn) shareBtn.onclick=()=>copyShareUrl(relay).catch(e=>toast(e.message||'複製失敗。'));
       const forgeBtn=o.querySelector('[data-forge-open]');
       if(forgeBtn) forgeBtn.onclick=()=>openForge();
       o.querySelector('[data-restore-open]').onclick=()=>openRestoreDialog();
@@ -2056,5 +2079,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, maskToken, bindTokenReveal, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
+  return {token, maskToken, bindTokenReveal, relayLoad, shareUrlFor, copyShareUrl, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();

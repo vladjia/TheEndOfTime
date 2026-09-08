@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async()=>{
       openBtn.textContent=forged ? '進入時印幻境' : '查看時印';
       openBtn.onclick=()=>{
         if(forged && stone.relayCode){
-          location.href=`../timemark/index.html?r=${encodeURIComponent(stone.relayCode)}`;
+          location.href='../timemark/index.html';
         }else{
           // 不再像舊「儲存時印卡」那樣直接呼叫 openForge。
           // 先開啟時印管理器，讓玩家自己決定是否進行時空鑄印。
