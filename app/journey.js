@@ -100,7 +100,13 @@ document.addEventListener('DOMContentLoaded', async()=>{
     }
 
     const t=A.token();
-    if(tokenEl) tokenEl.textContent=t || '尚未建立';
+    // 時印預設遮蔽，需要時才手動顯示（20 秒後自動收回）。
+    const tokenToggle=$('#journeyTokenToggle');
+    if(tokenEl) tokenEl.textContent = t ? A.maskToken(t) : '尚未建立';
+    if(tokenToggle){
+      tokenToggle.hidden = !t;
+      if(t) A.bindTokenReveal(tokenEl, tokenToggle);
+    }
     if(copyBtn){
       copyBtn.disabled=!t;
       copyBtn.onclick=()=>A.copyToken();

@@ -41,6 +41,47 @@ window.EndOfTimeAdventure = (() => {
     return `TET-${chunk(0)}-${chunk(4)}-${chunk(8)}-${chunk(12)}`;
   }
 
+  // 時印等同帳號憑證：拿到的人就能取回整段旅程。
+  // 畫面上一律只顯示遮蔽形式，避免隨截圖外流。
+  function maskToken(value){
+    const t = String(value || '').trim();
+    if(!t) return '';
+    const parts = t.split('-');
+    if(parts.length !== 5) return 'TET-••••-••••-••••-••••';
+    return `${parts[0]}-••••-••••-••••-${parts[4]}`;
+  }
+
+  // 綁定「顯示／隱藏完整時印」；顯示後 20 秒自動收回，避免忘了關就截圖。
+  function bindTokenReveal(codeEl, toggleBtn){
+    if(!codeEl || !toggleBtn) return;
+    let revealed = false;
+    let timer = null;
+
+    const paint = () => {
+      const t = token();
+      codeEl.textContent = revealed ? t : maskToken(t);
+      codeEl.classList.toggle('is-revealed', revealed);
+      toggleBtn.textContent = revealed ? '隱藏時印' : '顯示完整時印';
+      toggleBtn.setAttribute('aria-pressed', revealed ? 'true' : 'false');
+    };
+
+    const hide = () => {
+      revealed = false;
+      clearTimeout(timer);
+      timer = null;
+      paint();
+    };
+
+    toggleBtn.onclick = () => {
+      revealed = !revealed;
+      paint();
+      clearTimeout(timer);
+      timer = revealed ? setTimeout(hide, 20000) : null;
+    };
+
+    paint();
+  }
+
   function token(){ return localStorage.getItem(STORAGE_KEY) || ''; }
   function savedCardToken(){ return localStorage.getItem(SAVED_CARD_KEY) || ''; }
   function hasSavedCurrentCard(){ const t=token(); return !!t && savedCardToken()===t; }
@@ -1623,8 +1664,11 @@ window.EndOfTimeAdventure = (() => {
           </div>
         ` : ''}
 
-        <div class="time-mark-code">${token()}</div>
-        <p class="time-mark-note">時印是你的旅程憑證，不需要背下來；有需要時再複製保存即可。</p>
+        <div class="time-mark-credential">
+          <div class="time-mark-code" data-token-display></div>
+          <button class="time-mark-link-btn" type="button" data-token-toggle aria-pressed="false">顯示完整時印</button>
+        </div>
+        <p class="time-mark-note">時印等同你的鑰匙——任何拿到它的人都能取回這段旅程。平常保持隱藏就好，需要時直接用「複製時印」，不必顯示在畫面上。</p>
 
         <div class="time-mark-actions">
           ${forged
@@ -1650,6 +1694,11 @@ window.EndOfTimeAdventure = (() => {
       if(managerShard){
         applyShardPalette(managerShard,color);
       }
+
+      bindTokenReveal(
+        o.querySelector('[data-token-display]'),
+        o.querySelector('[data-token-toggle]')
+      );
 
       o.querySelector('[data-copy-time]').onclick=copyToken;
       const forgeBtn=o.querySelector('[data-forge-open]');
@@ -2007,5 +2056,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
+  return {token, maskToken, bindTokenReveal, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();

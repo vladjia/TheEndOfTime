@@ -2327,3 +2327,33 @@ body:not(.pre-entry) .time-mark-orb{
 .time-mark-mini-shard .time-shard-asset.is-light-shard .time-shard-engraving{
   filter:drop-shadow(0 0 2px rgba(0,0,0,.24));
 }
+
+/* ============================================================
+   時印憑證顯示
+   時印等同帳號憑證，預設遮蔽；手動顯示後 20 秒自動收回。
+   顯示狀態用暖紅描邊提示「這段現在是敏感內容」。
+   ============================================================ */
+.time-mark-credential{
+  margin:22px 0 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
+.time-mark-credential .time-mark-code{
+  margin:0;
+  width:100%;
+  transition:border-color .2s ease, background .2s ease, color .2s ease;
+}
+.time-mark-code.is-revealed{
+  border-color:rgba(193,58,77,.55);
+  background:rgba(149,26,43,.10);
+  color:rgba(245,236,238,.96);
+}
+.journey-token.is-revealed{
+  color:rgba(245,236,238,.98);
+  text-shadow:0 0 18px rgba(193,58,77,.34);
+}
+#journeyTokenToggle{
+  margin-top:6px;
+}
