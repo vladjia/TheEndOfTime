@@ -1,7 +1,11 @@
 
+/* 顯示字型：已子集化為網站實際用字（847 字），15MB → 607KB。
+   母檔 TheEndOfTimeDisplay_補字完成.ttf 保存在 Drive，不放進 repo。
+   之後新增角色詩號或招式名，需重新產生子集。 */
 @font-face{
   font-family:"TheEndOfTimeDisplay";
-  src:url("../assets/fonts/TheEndOfTimeDisplay.ttf") format("truetype");
+  src:url("../assets/fonts/TheEndOfTimeDisplay.subset.woff2") format("woff2"),
+      url("../assets/fonts/TheEndOfTimeDisplay.subset.woff") format("woff");
   font-display:swap;
   font-style:normal;
   font-weight:400 900;
