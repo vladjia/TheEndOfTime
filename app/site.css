@@ -4,8 +4,8 @@
    之後新增角色詩號或招式名，需重新產生子集。 */
 @font-face{
   font-family:"TheEndOfTimeDisplay";
-  src:url("../assets/fonts/TheEndOfTimeDisplay.subset.woff2") format("woff2"),
-      url("../assets/fonts/TheEndOfTimeDisplay.subset.woff") format("woff");
+  src:url("../assets/fonts/TheEndOfTimeDisplay.subset.woff2?v=0.18.51") format("woff2"),
+      url("../assets/fonts/TheEndOfTimeDisplay.subset.woff?v=0.18.51") format("woff");
   font-display:swap;
   font-style:normal;
   font-weight:400 900;
