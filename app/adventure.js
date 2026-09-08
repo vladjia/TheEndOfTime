@@ -1191,10 +1191,11 @@ window.EndOfTimeAdventure = (() => {
     return api('adventureRelayLoad', {relay: code});
   }
 
+  // 分享連結指向靜態卡片頁（帶個人化 OG meta），它會再轉到分享頁。
   function shareUrlFor(relay){
     const code = String(relay || '').trim().toUpperCase();
     if(!code) return '';
-    return new URL(`${rootPrefix()}timemark/index.html?r=${encodeURIComponent(code)}`, location.href).href;
+    return new URL(`${rootPrefix()}share/${encodeURIComponent(code)}.html`, location.href).href;
   }
 
   async function copyShareUrl(relay){
@@ -1202,6 +1203,167 @@ window.EndOfTimeAdventure = (() => {
     if(!url) throw new Error('這枚時印尚未完成鑄印，還沒有分享連結。');
     await navigator.clipboard.writeText(url);
     toast('分享連結已複製。');
+  }
+
+  // 預覽圖 base64 約 150KB，超過網址長度上限，必須改用 POST。
+  // Content-Type 用 text/plain 是為了避開 CORS preflight（GAS 不處理 OPTIONS）。
+  async function apiPost(action, params={}){
+    const config = await getConfig();
+    const endpoint = config.gasApiEndpoint;
+    if(!endpoint) throw new Error('No GAS endpoint');
+
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({action, hour: new Date().getHours(), ...params}),
+      redirect: 'follow'
+    });
+    if(!r.ok) throw new Error(`Adventure POST ${r.status}`);
+    const data = await r.json();
+    if(data?.ok === false) throw new Error(data.error || 'Adventure POST failed');
+    return data;
+  }
+
+  // ============================================================
+  // 分享卡片：把石片合成 1200×630 的 OG 預覽圖
+  // 直接沿用畫面上那組 canvas，確保分享圖與玩家看到的完全一致。
+  // ============================================================
+  const SHARE_W = 1200, SHARE_H = 630;
+
+  function waitForShardPaint(el, timeout = 6000){
+    return new Promise(resolve => {
+      const started = Date.now();
+      const tick = () => {
+        const body = el.querySelector('.time-shard-canvas');
+        const carve = el.querySelector('.time-shard-engraving');
+        const bodyReady = body && body.width > 0 && body.dataset.tinted;
+        const carveReady = !carve || carve.width > 0;
+        if((bodyReady && carveReady) || Date.now() - started > timeout) return resolve();
+        requestAnimationFrame(tick);
+      };
+      tick();
+    });
+  }
+
+  async function buildShareCard(stone){
+    const color = normalizeHexColor(stone.color || '#7F1521');
+    const type = stoneTypeNumber(stone.stoneType);
+    if(!type) throw new Error('石片型號不完整。');
+
+    // 離屏渲染一份石片
+    const holder = document.createElement('div');
+    holder.setAttribute('aria-hidden', 'true');
+    holder.style.cssText = 'position:fixed;left:-99999px;top:0;width:520px;height:520px;pointer-events:none;opacity:0';
+    holder.innerHTML = shardPreviewMarkup({
+      color,
+      serial: '',
+      relay: '',
+      level: stone.resonanceLevel || 0,
+      stoneType: type,
+      engraveSeed: stone.engraveSeed || ''
+    });
+    document.body.appendChild(holder);
+    const shard = holder.firstElementChild;
+
+    try{
+      applyShardPalette(shard, color);
+      await ensureShardGlyphFont();
+      await waitForShardPaint(shard);
+
+      const cv = document.createElement('canvas');
+      cv.width = SHARE_W; cv.height = SHARE_H;
+      const ctx = cv.getContext('2d');
+      const rgb = hexToRgb(color);
+
+      // 背景：品牌暗底 + 主色暈光
+      ctx.fillStyle = '#07090d';
+      ctx.fillRect(0, 0, SHARE_W, SHARE_H);
+      const glow = ctx.createRadialGradient(330, 300, 0, 330, 300, 520);
+      glow.addColorStop(0, `rgba(${rgb.r},${rgb.g},${rgb.b},0.28)`);
+      glow.addColorStop(1, 'rgba(7,9,13,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, SHARE_W, SHARE_H);
+      const wash = ctx.createLinearGradient(0, 0, SHARE_W, SHARE_H);
+      wash.addColorStop(0, 'rgba(149,26,43,.16)');
+      wash.addColorStop(.55, 'rgba(7,9,13,0)');
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, 0, SHARE_W, SHARE_H);
+
+      // 石片（左側）
+      const bodyCv = shard.querySelector('.time-shard-canvas');
+      const carveCv = shard.querySelector('.time-shard-engraving');
+      if(bodyCv && bodyCv.width){
+        const box = 430;
+        const scale = Math.min(box / bodyCv.width, box / bodyCv.height);
+        const w = bodyCv.width * scale, h = bodyCv.height * scale;
+        const x = 120 + (box - w) / 2, y = (SHARE_H - h) / 2;
+
+        ctx.save();
+        ctx.shadowColor = `rgba(${rgb.r},${rgb.g},${rgb.b},0.55)`;
+        ctx.shadowBlur = 60;
+        ctx.drawImage(bodyCv, x, y, w, h);
+        ctx.restore();
+
+        if(carveCv && carveCv.width){
+          ctx.save();
+          // 與 CSS 的 mix-blend-mode 對齊：亮石片用 multiply，暗石片用 screen
+          ctx.globalCompositeOperation = isLightShard(color) ? 'multiply' : 'screen';
+          ctx.drawImage(carveCv, x, y, w, h);
+          ctx.restore();
+        }
+      }
+
+      // 右側文字
+      const L = 620;
+      const disp = '"TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif';
+      const sans = '"Noto Sans TC","Microsoft JhengHei",sans-serif';
+
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+
+      ctx.fillStyle = 'rgba(193,58,77,.92)';
+      ctx.font = `800 20px ${sans}`;
+      ctx.letterSpacing && (ctx.letterSpacing = '6px');
+      ctx.fillText('THE END OF TIME', L, 196);
+      ctx.letterSpacing && (ctx.letterSpacing = '0px');
+
+      ctx.fillStyle = '#f1f3f6';
+      ctx.font = `700 96px ${disp}`;
+      ctx.fillText('時盡', L, 300);
+
+      ctx.strokeStyle = 'rgba(255,255,255,.14)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(L, 336); ctx.lineTo(L + 420, 336); ctx.stroke();
+
+      ctx.fillStyle = 'rgba(238,241,245,.94)';
+      ctx.font = `700 40px ${sans}`;
+      ctx.fillText(serialLabel(stone.serial) || '時印', L, 396);
+
+      const glyph = shichenGlyph(type);
+      ctx.fillStyle = 'rgba(199,204,214,.82)';
+      ctx.font = `500 26px ${sans}`;
+      ctx.fillText(`${glyph}時　·　第 ${Number(stone.resonanceLevel || 0)} 階共鳴`, L, 444);
+
+      ctx.fillStyle = 'rgba(199,204,214,.55)';
+      ctx.font = `500 24px ${disp}`;
+      ctx.fillText('過程可以改變，結果不能。', L, 506);
+
+      return cv.toDataURL('image/jpeg', 0.86);
+    }finally{
+      holder.remove();
+    }
+  }
+
+  // 鑄印或改色後，在背景更新分享卡片；失敗不影響主流程。
+  async function syncShareCard(stone){
+    try{
+      if(!stone || !stone.forged || !stone.relayCode) return;
+      const image = await buildShareCard(stone);
+      await apiPost('adventureShareCard', {token: token(), image: image});
+      console.info('分享卡片已更新。');
+    }catch(err){
+      console.warn('分享卡片更新失敗（不影響鑄印）。', err);
+    }
   }
 
   async function restore(value){
@@ -1503,6 +1665,7 @@ window.EndOfTimeAdventure = (() => {
       try{
         const result=await forgeShard(chosen);
         progressCache=result;
+        void syncShareCard(result?.stone);   // 背景更新分享卡片，失敗不影響鑄印
         endCritical();
         closeOverlay(true);
 
@@ -2079,5 +2242,5 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, maskToken, bindTokenReveal, relayLoad, shareUrlFor, copyShareUrl, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
+  return {token, maskToken, bindTokenReveal, relayLoad, shareUrlFor, copyShareUrl, isLightShard, buildShareCard, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();
