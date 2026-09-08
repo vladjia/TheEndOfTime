@@ -1383,7 +1383,9 @@ window.EndOfTimeAdventure = (() => {
   async function forgeShard(color){
     const t=token() || (await ensure()).token;
     const data=await api('adventureForge',{token:t,color:normalizeHexColor(color)});
+    // 記憶體與 sessionStorage 都要清，否則 ensure() 會把鑄印前的舊狀態撈回來覆蓋。
     progressCache=null;
+    clearProgressSession(t);
     return data;
   }
 
@@ -1664,7 +1666,7 @@ window.EndOfTimeAdventure = (() => {
 
       try{
         const result=await forgeShard(chosen);
-        progressCache=result;
+        // 鑄印回傳只有 stone，不是完整進度結構，塞進快取會讓後續讀到殘缺資料。
         void syncShareCard(result?.stone);   // 背景更新分享卡片，失敗不影響鑄印
         endCritical();
         closeOverlay(true);
