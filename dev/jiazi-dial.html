@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>六十甲子盤 · 取回時印</title>
+<style>
+:root{
+  --bg:#080a0e;
+  --panel:#0e1118;
+  --line:rgba(255,255,255,.10);
+  --ink:rgba(238,240,244,.88);
+  --dim:rgba(238,240,244,.34);
+  --gold:#c9a26b;
+  --gold-soft:rgba(201,162,107,.16);
+  --red:#7F1521;
+  --red-lit:#d64359;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 620px at 50% -14%,rgba(127,21,33,.20),transparent 62%),
+    var(--bg);
+  color:var(--ink);
+  font:14px/1.75 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:34px 20px 70px;
+}
+
+.kicker{font:600 10px/1 ui-monospace,monospace;letter-spacing:.34em;color:rgba(255,255,255,.32)}
+h1{margin:12px 0 6px;font-size:23px;font-weight:600;letter-spacing:.16em}
+.lede{margin:0 0 26px;color:var(--dim);font-size:13px;text-align:center;max-width:520px}
+
+/* ── 八格 ─────────────────────────── */
+.slots{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  margin:0 0 26px;
+}
+.slot{
+  width:60px;height:66px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  display:grid;place-items:center;
+  font:400 21px/1.25 "Noto Serif TC","Songti TC",serif;
+  letter-spacing:.02em;
+  color:var(--dim);
+  cursor:pointer;
+  transition:border-color .2s,background .2s,color .2s,transform .2s;
+  position:relative;
+}
+.slot span{display:block;text-align:center}
+.slot.filled{color:var(--ink);background:rgba(201,162,107,.06)}
+.slot.active{
+  border-color:rgba(201,162,107,.62);
+  background:var(--gold-soft);
+  color:var(--gold);
+  transform:translateY(-3px);
+}
+.slot::after{
+  content:attr(data-n);
+  position:absolute;top:3px;left:5px;
+  font:600 8px/1 ui-monospace,monospace;color:rgba(255,255,255,.20);
+}
+.slot.empty span{color:rgba(255,255,255,.16)}
+
+/* ── 盤 ───────────────────────────── */
+.dial-wrap{position:relative;width:min(430px,90vw);aspect-ratio:1;margin:6px 0 4px}
+.dial{position:absolute;inset:0}
+.ring{
+  position:absolute;border-radius:50%;
+  border:1px solid var(--line);
+}
+.ring.outer{inset:0}
+.ring.inner{inset:19.5%}
+.ring.core{
+  inset:34.5%;
+  border-color:rgba(201,162,107,.30);
+  /* 中心是實心的轂，要能擋住後面的地支，不然字會疊在一起 */
+  background:
+    radial-gradient(circle at 50% 42%,rgba(201,162,107,.10),transparent 70%),
+    #0b0e14;
+  box-shadow:0 0 34px rgba(0,0,0,.7) inset;
+}
+
+.cell{
+  position:absolute;left:50%;top:50%;
+  width:42px;height:42px;margin:-21px 0 0 -21px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  font:400 19px/1 "Noto Serif TC","Songti TC",serif;
+  color:var(--dim);
+  cursor:pointer;
+  user-select:none;
+  transition:color .18s,background .18s,transform .18s,opacity .3s;
+}
+.cell:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.cell.on{
+  color:#12151b;background:var(--gold);
+  box-shadow:0 0 18px rgba(201,162,107,.5);
+}
+.cell.off{opacity:.14;pointer-events:none}
+.cell.zhi{font-size:18px}
+
+.core-face{
+  position:absolute;inset:34.5%;
+  border-radius:50%;
+  display:grid;place-items:center;
+  text-align:center;
+  pointer-events:none;
+}
+.core-face b{
+  display:block;
+  font:400 33px/1.2 "Noto Serif TC","Songti TC",serif;
+  letter-spacing:.06em;
+  color:var(--ink);
+  text-shadow:0 0 24px rgba(201,162,107,.34);
+}
+.core-face small{
+  display:block;margin-top:6px;
+  font:600 9px/1 ui-monospace,monospace;letter-spacing:.24em;
+  color:rgba(255,255,255,.28);
+}
+
+/* 咬合線：選定天干後，把六個咬得到的地支連起來 */
+.mesh{position:absolute;inset:0;pointer-events:none}
+.mesh line{stroke:rgba(201,162,107,.20);stroke-width:1}
+
+/* ── 動作 ─────────────────────────── */
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+button{
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--line);
+  color:rgba(255,255,255,.76);
+  padding:9px 15px;font:12px/1 inherit;letter-spacing:.1em;
+  cursor:pointer;transition:background .16s,border-color .16s,color .16s;
+}
+button:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.3)}
+button.primary{background:rgba(201,162,107,.15);border-color:rgba(201,162,107,.5);color:#e6cfa6}
+button.primary:disabled{opacity:.34;cursor:not-allowed}
+button.ghost{border-color:transparent;color:var(--dim)}
+
+.hint{margin-top:16px;font-size:11.5px;color:rgba(255,255,255,.30);text-align:center;max-width:520px}
+.hint b{color:var(--gold);font-weight:600}
+
+.readout{
+  margin-top:20px;padding:12px 16px;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);
+  font:13px/1.9 "Noto Serif TC",serif;letter-spacing:.14em;
+  color:var(--ink);text-align:center;min-width:min(420px,90vw);
+}
+.readout small{
+  display:block;font:600 9px/1 ui-monospace,monospace;
+  letter-spacing:.24em;color:rgba(255,255,255,.26);margin-bottom:7px;
+}
+.readout .none{color:rgba(255,255,255,.20);letter-spacing:.3em}
+
+.note{
+  margin-top:30px;max-width:560px;
+  border-top:1px solid var(--line);padding-top:16px;
+  font-size:11.5px;line-height:1.9;color:rgba(255,255,255,.34);
+}
+.note b{color:rgba(255,255,255,.62);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="kicker">TIME MARK · RETRIEVE</div>
+<h1>取回你的時印</h1>
+<p class="lede">十干咬十二支，轉六十下回到原點。<br>轉不出來的組合，本來就不存在。</p>
+
+<div class="slots" id="slots"></div>
+
+<div class="dial-wrap">
+  <div class="dial" id="dial">
+    <svg class="mesh" id="mesh" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+    <div class="ring outer"></div>
+    <div class="ring inner"></div>
+    <div class="ring core"></div>
+    <div class="core-face" id="core"><b>—</b><small>SLOT 1</small></div>
+  </div>
+</div>
+
+<div class="actions">
+  <button id="back" class="ghost">上一格</button>
+  <button id="clear" class="ghost">重來</button>
+  <button id="demo">隨機一枚（示範）</button>
+  <button id="go" class="primary" disabled>取回時印</button>
+</div>
+
+<div class="readout" id="readout"></div>
+
+<p class="hint" id="hint"></p>
+
+<div class="note">
+  <b>這是預覽稿，不連後端。</b><br>
+  外圈十天干，內圈十二地支。點下天干後，內圈只留下六個咬得到的地支——
+  甲只能配子寅辰午申戌，這不是防呆，是齒輪本來就咬不到。<br>
+  八格填滿即是一枚時印，六十的八次方 ＝ 168 兆種。
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const GAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const ZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SLOTS = 8;
+
+// 六十甲子：干支同奇偶才咬得到
+const validZhi = gi => ZHI.filter((_, zi) => (zi % 2) === (gi % 2));
+
+const picked = new Array(SLOTS).fill(null);   // {g, z}
+let slot = 0;
+let stage = 'gan';                            // gan → zhi
+let curGan = -1;
+
+const $ = id => document.getElementById(id);
+const dial = $('dial');
+const mesh = $('mesh');
+
+// ── 建盤 ──────────────────────────────
+const cells = [];
+function place(el, angleDeg, radiusPct){
+  const a = (angleDeg - 90) * Math.PI / 180;
+  el.style.left = `${50 + Math.cos(a) * radiusPct}%`;
+  el.style.top  = `${50 + Math.sin(a) * radiusPct}%`;
+}
+GAN.forEach((ch, i) => {
+  const el = document.createElement('div');
+  el.className = 'cell gan';
+  el.textContent = ch;
+  el.dataset.kind = 'gan';
+  el.dataset.i = String(i);
+  place(el, i * 36, 43.5);
+  dial.appendChild(el);
+  cells.push(el);
+});
+ZHI.forEach((ch, i) => {
+  const el = document.createElement('div');
+  el.className = 'cell zhi';
+  el.textContent = ch;
+  el.dataset.kind = 'zhi';
+  el.dataset.i = String(i);
+  place(el, i * 30, 25.5);
+  dial.appendChild(el);
+  cells.push(el);
+});
+
+// ── 咬合線 ────────────────────────────
+function drawMesh(gi){
+  mesh.innerHTML = '';
+  if(gi < 0) return;
+  const pt = (angleDeg, r) => {
+    const a = (angleDeg - 90) * Math.PI / 180;
+    return [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
+  };
+  const [gx, gy] = pt(gi * 36, 43.5);
+  ZHI.forEach((_, zi) => {
+    if((zi % 2) !== (gi % 2)) return;
+    const [zx, zy] = pt(zi * 30, 25.5);
+    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1', gx); l.setAttribute('y1', gy);
+    l.setAttribute('x2', zx); l.setAttribute('y2', zy);
+    mesh.appendChild(l);
+  });
+}
+
+// ── 畫面 ──────────────────────────────
+function render(){
+  // 八格
+  const box = $('slots');
+  box.innerHTML = '';
+  for(let i = 0; i < SLOTS; i++){
+    const d = document.createElement('div');
+    d.className = 'slot' + (picked[i] ? ' filled' : ' empty') + (i === slot ? ' active' : '');
+    d.dataset.n = String(i + 1);
+    d.innerHTML = `<span>${picked[i] ? picked[i].g + '<br>' + picked[i].z : '－<br>－'}</span>`;
+    d.onclick = () => { slot = i; stage = 'gan'; curGan = -1; render(); };
+    box.appendChild(d);
+  }
+
+  // 盤面
+  cells.forEach(el => {
+    const kind = el.dataset.kind, i = Number(el.dataset.i);
+    el.classList.remove('on','off');
+    if(kind === 'gan'){
+      if(stage === 'zhi' && i === curGan) el.classList.add('on');
+    }else{
+      if(stage === 'gan') el.classList.add('off');
+      else if((i % 2) !== (curGan % 2)) el.classList.add('off');
+    }
+  });
+  drawMesh(stage === 'zhi' ? curGan : -1);
+
+  // 中心
+  const core = $('core');
+  const cur = picked[slot];
+  const face = stage === 'zhi' ? GAN[curGan] + '〇' : (cur ? cur.g + cur.z : '—');
+  core.innerHTML = `<b>${face}</b><small>SLOT ${slot + 1} · ${stage === 'gan' ? '選天干' : '選地支'}</small>`;
+
+  // 讀出
+  const done = picked.filter(Boolean).length;
+  $('readout').innerHTML = done
+    ? `<small>時印</small>${picked.map(p => p ? p.g + p.z : '□□').join('　')}`
+    : `<small>時印</small><span class="none">□□　□□　□□　□□　□□　□□　□□　□□</span>`;
+  $('go').disabled = done < SLOTS;
+
+  $('hint').innerHTML = stage === 'gan'
+    ? '點外圈的天干。'
+    : `<b>${GAN[curGan]}</b> 只咬得到 <b>${validZhi(curGan).join('、')}</b>　—　其餘六個地支這一轉根本對不上。`;
+}
+
+// ── 操作 ──────────────────────────────
+dial.addEventListener('click', e => {
+  const el = e.target.closest('.cell');
+  if(!el || el.classList.contains('off')) return;
+  const kind = el.dataset.kind, i = Number(el.dataset.i);
+
+  if(kind === 'gan'){
+    curGan = i;
+    stage = 'zhi';
+    render();
+    return;
+  }
+
+  picked[slot] = { g: GAN[curGan], z: ZHI[i] };
+  // 填完自動前進到下一個空格
+  const next = picked.findIndex(p => !p);
+  slot = next >= 0 ? next : slot;
+  stage = 'gan';
+  curGan = -1;
+  render();
+});
+
+$('back').onclick = () => {
+  if(stage === 'zhi'){ stage = 'gan'; curGan = -1; render(); return; }
+  if(slot > 0) slot--;
+  picked[slot] = null;
+  render();
+};
+$('clear').onclick = () => {
+  picked.fill(null); slot = 0; stage = 'gan'; curGan = -1; render();
+};
+$('demo').onclick = () => {
+  for(let i = 0; i < SLOTS; i++){
+    const gi = Math.floor(Math.random() * 10);
+    const zs = validZhi(gi);
+    picked[i] = { g: GAN[gi], z: zs[Math.floor(Math.random() * zs.length)] };
+  }
+  slot = SLOTS - 1; stage = 'gan'; curGan = -1; render();
+};
+$('go').onclick = () => {
+  const code = picked.map(p => p.g + p.z).join('');
+  $('hint').innerHTML = `這一枚是 <b>${code}</b>（預覽稿不連後端）`;
+};
+
+// 貼上整枚時印就自動填滿
+document.addEventListener('paste', e => {
+  const t = String(e.clipboardData?.getData('text') || '');
+  const chars = [...t].filter(c => GAN.includes(c) || ZHI.includes(c));
+  if(chars.length < SLOTS * 2) return;
+  for(let i = 0; i < SLOTS; i++){
+    const g = chars[i * 2], z = chars[i * 2 + 1];
+    const gi = GAN.indexOf(g), zi = ZHI.indexOf(z);
+    if(gi < 0 || zi < 0 || (gi % 2) !== (zi % 2)) return;   // 不是合法的六十甲子
+    picked[i] = { g, z };
+  }
+  slot = SLOTS - 1; stage = 'gan'; curGan = -1; render();
+});
+
+render();
+})();
+</script>
+</body>
+</html>
