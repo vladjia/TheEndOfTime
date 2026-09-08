@@ -93,7 +93,7 @@ h1{margin:12px 0 6px;font-size:23px;font-weight:600;letter-spacing:.16em}
 }
 .cell:hover{color:var(--ink);background:rgba(255,255,255,.06)}
 .cell.zhi{font-size:19px}
-.cell.dead{opacity:.10;pointer-events:none}
+.cell.dead{opacity:.10;cursor:not-allowed}   /* 仍可點擊，點下去會聽到「咬不到」 */
 
 .cell.gan[data-wx="木"]{color:var(--wood-yin)}
 .cell.gan[data-wx="火"]{color:var(--fire-yin)}
@@ -107,6 +107,16 @@ h1{margin:12px 0 6px;font-size:23px;font-weight:600;letter-spacing:.16em}
 .cell.gan[data-yang="1"][data-wx="水"]{color:var(--water)}
 
 .cell.lit{color:#0d1015!important;background:var(--gold);box-shadow:0 0 20px rgba(201,162,107,.55)}
+
+/* 被按住的那個輪：亮起來的字加一圈光暈，明確表示「你選的還在，我沒動」 */
+.wheel.held .cell.lit{
+  animation:hold 1.1s var(--ease);
+}
+@keyframes hold{
+  0%  {box-shadow:0 0 20px rgba(201,162,107,.55), 0 0 0 0 rgba(201,162,107,.55)}
+  55% {box-shadow:0 0 26px rgba(201,162,107,.75), 0 0 0 13px rgba(201,162,107,0)}
+  100%{box-shadow:0 0 20px rgba(201,162,107,.55), 0 0 0 0 rgba(201,162,107,0)}
+}
 .cell.gan.lit[data-wx="木"]{background:var(--wood);box-shadow:0 0 20px rgba(111,160,122,.55)}
 .cell.gan.lit[data-wx="火"]{background:var(--fire);box-shadow:0 0 20px rgba(201,81,90,.55)}
 .cell.gan.lit[data-wx="土"]{background:var(--earth);box-shadow:0 0 20px rgba(201,162,107,.55)}
@@ -182,6 +192,7 @@ button.ghost{border-color:transparent;color:var(--dim)}
   <button id="clear" class="ghost">重來</button>
   <button id="demo">隨機一枚</button>
   <button id="go" class="primary" disabled>取回時印</button>
+  <button id="mute" class="ghost" title="音效開關">🔊 音效</button>
 </div>
 
 <div class="readout" id="readout"></div>
@@ -197,9 +208,11 @@ button.ghost{border-color:transparent;color:var(--dim)}
   外圈的顏色是它自己的行，陽干亮、陰干沉。下方的分佈只是一段描述，不是能力。
 </div>
 
+<script src="../app/sfx.js"></script>
 <script>
 (() => {
 'use strict';
+const S = window.TimeSfx || null;
 
 const GAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
 const ZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
@@ -222,6 +235,7 @@ let ganDeg = 0, zhiDeg = 0;      // 累積角度，不取模，繞圈時才不�
 let picked = new Array(SLOTS).fill(null);
 let slot = 0;
 let busy = false;
+let heldWheel = null;   // 這一轉哪個輪被按住不動
 
 const curGan = () => pos % 10;
 const curZhi = () => pos % 12;
@@ -292,18 +306,50 @@ const zhiCells = ZHI.map((ch, i) => {
 })();
 
 // 兩個輪同向、同時走，比例 36:30 —— 齒輪本身。
+// 走幾格 → 每個輪該轉幾度。
+//
+// 重點在這裡：前進 10 格時，天干輪剛好轉滿 360° 回到原位。
+// 照實畫出來，使用者會看到「我選好的天干又整個重轉一遍」，
+// 像是選擇被取消了。但那個輪其實一步也沒偏。
+//
+// 所以：某個輪如果正好轉整數圈，就讓它「按住」不動，
+// 另一個輪取最短路徑。這不是作弊 —— 十齒輪和十二齒輪本來就不會轉一樣多，
+// 前進十格時天干輪的確回到原處。我只是不要再演那一圈給人看。
+function wheelDegrees(delta){
+  const g = delta * 36, z = delta * 30;
+  const shortest = d => { d %= 360; if(d > 180) d -= 360; if(d < -180) d += 360; return d; };
+  if(delta % 10 === 0) return {g:0, z:shortest(z), held:'gan'};   // 天干原地不動
+  if(delta % 12 === 0) return {g:shortest(g), z:0, held:'zhi'};   // 地支原地不動
+  return {g, z, held:null};
+}
+
 function rotate(delta){
   if(!delta){ render(); return; }
   busy = true;
   pos = ((pos + delta) % 60 + 60) % 60;
-  ganDeg -= delta * 36;
-  zhiDeg -= delta * 30;
-  const ms = Math.min(1500, 420 + Math.abs(delta) * 55);
+  const move = wheelDegrees(delta);
+  ganDeg -= move.g;
+  zhiDeg -= move.z;
+  heldWheel = move.held;
+  // 喀噠聲要對應「眼睛看得到的移動」，不是內部走了幾格。
+  // 天干按住時只有地支走 60°＝兩格，就該只響兩聲。
+  const visibleNotches = Math.max(Math.abs(move.g) / 36, Math.abs(move.z) / 30) || 1;
+  const ms = Math.min(1500, 420 + visibleNotches * 55);
   ganWheel.style.transitionDuration = zhiWheel.style.transitionDuration = ms + 'ms';
   ganWheel.style.transform = `rotate(${ganDeg}deg)`;
   zhiWheel.style.transform = `rotate(${zhiDeg}deg)`;
+  if(S){
+    // 喀噠聲要跟著緩動曲線疏密變化，不能平均分佈 —— 開頭快、結尾慢。
+    S.startRotate();
+    S.ticksAlong(Math.round(visibleNotches), ms);
+  }
   render();
-  setTimeout(() => { busy = false; render(); }, ms);
+  setTimeout(() => {
+    busy = false;
+    heldWheel = null;
+    if(S){ S.stopRotate(); S.settle(); }
+    render();
+  }, ms);
 }
 
 // 走最短的路，順逆都可以，像真的轉盤
@@ -330,6 +376,8 @@ function render(){
     box.appendChild(d);
   }
 
+  ganWheel.classList.toggle('held', heldWheel === 'gan');
+  zhiWheel.classList.toggle('held', heldWheel === 'zhi');
   ganCells.forEach((el, i) => el.classList.toggle('lit', i === curGan()));
   zhiCells.forEach((el, i) => {
     el.classList.toggle('lit', i === curZhi());
@@ -372,7 +420,8 @@ ganWheel.addEventListener('click', e => {
 
 zhiWheel.addEventListener('click', e => {
   const el = e.target.closest('.cell');
-  if(!el || busy || el.classList.contains('dead')) return;
+  if(!el || busy) return;
+  if(el.classList.contains('dead')){ if(S) S.reject(); return; }
   const zi = Number(el.dataset.i), gi = curGan();
   for(let p = 0; p < 60; p++){
     if(p % 10 === gi && p % 12 === zi){ rotate(shortest(p)); return; }
@@ -382,11 +431,13 @@ zhiWheel.addEventListener('click', e => {
 hub.addEventListener('click', () => {
   if(busy) return;
   picked[slot] = pair(pos);
+  if(S) S.strike();
   hub.classList.remove('struck');
   void hub.offsetWidth;
   hub.classList.add('struck');
   const next = picked.findIndex(p => !p);
   slot = next >= 0 ? next : slot;
+  if(S && picked.every(Boolean)) setTimeout(() => S.complete(), 260);
   render();
 });
 
@@ -429,6 +480,17 @@ document.addEventListener('paste', e => {
   slot = SLOTS - 1;
   rotate(shortest(indexOfPair(picked[SLOTS - 1])));
 });
+
+[ganWheel, zhiWheel].forEach(w => w.addEventListener('pointerover', e => {
+  if(S && e.target.closest('.cell')) S.hover();
+}));
+
+$('mute').onclick = () => {
+  if(!S) return;
+  const m = S.toggle();
+  $('mute').textContent = m ? '🔇 靜音中' : '🔊 音效';
+};
+if(S) $('mute').textContent = S.muted ? '🔇 靜音中' : '🔊 音效';
 
 render();
 })();
