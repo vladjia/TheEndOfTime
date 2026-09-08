@@ -2446,3 +2446,53 @@ body:not(.pre-entry) .time-mark-orb{
   padding:2px;
   cursor:pointer;
 }
+
+
+/* ============================================================
+   v0.18.62 · 鑄印面板：石片不要壓到控制項
+   石片是裝飾，欄位才是要點的東西。
+   石片外圍的光暈與軌道光點是 overflow:visible 的疊層，
+   在窄一點的視窗會蓋到右欄，讓色票與勾選格點不到。
+   ============================================================ */
+
+/* 整個預覽欄不吃滑鼠事件 —— 那裡本來就沒有東西要點。 */
+.time-forge-preview{
+  pointer-events:none;
+}
+
+/* 控制欄疊在上層，任何情況都點得到。 */
+.time-forge-controls{
+  position:relative;
+  z-index:3;
+}
+
+/* 兩欄之間留出光暈的空間，石片本身也收一點。 */
+.time-forge-layout{
+  gap:clamp(28px,5vw,56px);
+}
+.time-forge-preview .time-shard-asset{
+  width:min(272px,58vw);
+}
+
+/* 兩欄擠在一起之前就先換成單欄，不要硬撐。 */
+@media(max-width:860px){
+  .time-forge-layout{
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+  .time-forge-preview{
+    min-height:auto;
+  }
+  .time-forge-preview .time-shard-asset{
+    width:min(240px,54vw);
+  }
+}
+
+/* 字色色票在窄版會被壓成一條線，給它固定高度。 */
+.time-forge-controls .time-color-picker[type=color]{
+  min-height:42px;
+}
+.time-color-field.time-glyph-auto{
+  justify-content:flex-start;
+  padding-top:22px;
+}
