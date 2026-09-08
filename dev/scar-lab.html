@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>時痕實驗室 · SCAR LAB</title>
+<style>
+@font-face{
+  font-family:'TheEndOfTimeDisplay';
+  src:url('../assets/fonts/TheEndOfTimeDisplay.subset.woff2') format('woff2'),
+      url('../assets/fonts/TheEndOfTimeDisplay.subset.woff') format('woff'),
+      url('../assets/fonts/TheEndOfTimeDisplay.ttf') format('truetype');
+  font-display:block;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#080a0d;
+  color:rgba(255,255,255,.86);
+  font:13px/1.7 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;
+  min-height:100vh;
+}
+
+.lab-head{
+  padding:18px 22px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+}
+.lab-head h1{
+  margin:0;font-size:16px;letter-spacing:.22em;font-weight:600;
+}
+.lab-head small{color:rgba(255,255,255,.36);letter-spacing:.14em;font-size:10px}
+.lab-note{color:rgba(255,255,255,.42);font-size:11px;margin-left:auto}
+
+.lab-wrap{
+  display:grid;
+  grid-template-columns:320px minmax(0,1fr);
+  gap:0;
+  align-items:start;
+}
+@media(max-width:900px){ .lab-wrap{grid-template-columns:1fr} }
+
+/* ── 控制盤 ───────────────────────────── */
+.panel{
+  padding:16px 18px 40px;
+  border-right:1px solid rgba(255,255,255,.08);
+  position:sticky;top:0;max-height:100vh;overflow:auto;
+}
+@media(max-width:900px){ .panel{position:static;max-height:none;border-right:0;border-bottom:1px solid rgba(255,255,255,.08)} }
+
+.group{margin:0 0 18px}
+.group > h2{
+  margin:0 0 8px;font-size:10px;letter-spacing:.2em;
+  color:rgba(255,255,255,.34);font-weight:600;
+}
+
+.row{display:flex;align-items:center;gap:8px;margin:0 0 7px}
+.row label{flex:0 0 76px;font-size:11px;color:rgba(255,255,255,.62)}
+.row input[type=range]{flex:1;min-width:0;accent-color:#c9a26b;height:18px}
+.row output{
+  flex:0 0 46px;text-align:right;
+  font:600 11px/1 ui-monospace,SFMono-Regular,Consolas,monospace;
+  color:rgba(255,255,255,.52);
+}
+
+.field{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.field label{flex:0 0 76px;font-size:11px;color:rgba(255,255,255,.62)}
+.field input[type=text],.field select,.field input[type=color]{
+  flex:1;min-width:0;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.13);
+  color:rgba(255,255,255,.86);
+  padding:5px 7px;font:12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+  border-radius:2px;
+}
+.field input[type=color]{padding:2px;height:28px;cursor:pointer}
+.field input[type=checkbox]{accent-color:#c9a26b;width:15px;height:15px}
+
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
+button{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.78);
+  padding:6px 10px;font:11px/1 inherit;letter-spacing:.06em;
+  border-radius:2px;cursor:pointer;transition:background .16s,border-color .16s;
+}
+button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+button.on{background:rgba(201,162,107,.2);border-color:rgba(201,162,107,.6);color:#e6cfa6}
+button.primary{background:rgba(201,162,107,.16);border-color:rgba(201,162,107,.5);color:#e6cfa6}
+
+.seq{
+  width:100%;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.13);
+  color:#e6cfa6;padding:7px;border-radius:2px;
+  font:600 12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.24em;word-break:break-all;resize:vertical;min-height:56px;
+}
+
+/* ── 舞台 ─────────────────────────────── */
+.stage{padding:22px 26px 60px}
+.stage-main{
+  display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;
+}
+.shard-box{
+  position:relative;
+  width:min(420px,80vw);
+  flex:0 0 auto;
+}
+.shard-box .cap{
+  text-align:center;margin-top:8px;
+  font:10px/1.6 ui-monospace,monospace;letter-spacing:.16em;
+  color:rgba(255,255,255,.34);
+}
+
+.shard{
+  position:relative;width:100%;
+  aspect-ratio:var(--aspect,1);
+}
+.shard img,.shard canvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;object-position:center;display:block;
+}
+.shard img{opacity:0}
+.shard .c-body{z-index:2;filter:drop-shadow(0 22px 34px rgba(0,0,0,.28))}
+.shard .c-glyph{z-index:5;mix-blend-mode:screen;filter:drop-shadow(0 0 2px rgba(255,255,255,.28))}
+/* 時痕分兩層：裂口本身是「暗」的（multiply），光是從裂口透出來的（screen）。
+   兩層都在，所以不管石片被染成多亮或多暗，時痕都不會消失。 */
+.shard .c-dark{z-index:6;mix-blend-mode:multiply}
+.shard .c-scar{z-index:7;mix-blend-mode:screen}
+.shard.light .c-glyph{mix-blend-mode:multiply;filter:drop-shadow(0 0 2px rgba(0,0,0,.20))}
+
+.readout{
+  flex:1 1 260px;min-width:240px;
+  border:1px solid rgba(255,255,255,.1);
+  padding:14px 16px;border-radius:2px;
+  background:rgba(255,255,255,.02);
+}
+.readout h3{margin:0 0 10px;font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.34);font-weight:600}
+.readout pre{
+  margin:0;white-space:pre-wrap;word-break:break-all;
+  font:11px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;
+  color:rgba(255,255,255,.6);
+}
+
+.strip{margin-top:34px}
+.strip h2{
+  margin:0 0 12px;font-size:10px;letter-spacing:.2em;
+  color:rgba(255,255,255,.34);font-weight:600;
+}
+.strip-row{display:flex;gap:20px;flex-wrap:wrap}
+.strip .shard-box{width:min(190px,42vw)}
+
+.err{
+  margin:14px 26px;padding:10px 12px;
+  border:1px solid rgba(220,90,90,.4);background:rgba(220,90,90,.08);
+  color:#f0b4b4;font-size:12px;display:none;border-radius:2px;
+}
+.err.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="lab-head">
+  <h1>時痕實驗室</h1>
+  <small>SCAR LAB · 內部工具 · 不對外連結</small>
+  <span class="lab-note">拉滑桿 → 石片即時改變 → 調到滿意 → 按「輸出參數」</span>
+</div>
+
+<div class="err" id="err"></div>
+
+<div class="lab-wrap">
+
+  <!-- ══ 控制盤 ══ -->
+  <div class="panel">
+
+    <div class="group">
+      <h2>母石與光源</h2>
+      <div class="field">
+        <label>母石</label>
+        <select id="stoneSel"></select>
+      </div>
+      <div class="field">
+        <label>光源色</label>
+        <input type="color" id="colorPick" value="#7F1521">
+      </div>
+      <div class="field">
+        <label>HEX</label>
+        <input type="text" id="colorHex" value="#7F1521" spellcheck="false">
+      </div>
+      <div class="btns" id="swatches"></div>
+    </div>
+
+    <div class="group">
+      <h2>選擇序列</h2>
+      <textarea class="seq" id="seqBox" spellcheck="false"></textarea>
+      <div class="btns">
+        <button data-n="3">3</button>
+        <button data-n="8">8</button>
+        <button data-n="15">15</button>
+        <button data-n="30">30</button>
+        <button data-n="60">60</button>
+        <button id="reroll" class="primary">重新隨機</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>形狀</h2>
+      <div class="row"><label>粗細</label><input type="range" id="p_thickness" min="0.6" max="22" step="0.2"><output></output></div>
+      <div class="row"><label>擴散</label><input type="range" id="p_spread" min="0.10" max="2.00" step="0.01"><output></output></div>
+      <div class="row"><label>轉折</label><input type="range" id="p_turn" min="0" max="1.20" step="0.01"><output></output></div>
+      <div class="row"><label>收斂</label><input type="range" id="p_decay" min="0.80" max="1.00" step="0.005"><output></output></div>
+      <div class="row"><label>分岔頻率</label><input type="range" id="p_branch" min="0" max="0.95" step="0.01"><output></output></div>
+      <div class="row"><label>分岔長度</label><input type="range" id="p_branchLen" min="0.20" max="1.20" step="0.01"><output></output></div>
+      <div class="row"><label>起點距離</label><input type="range" id="p_originR" min="0" max="2.4" step="0.02"><output></output></div>
+      <div class="row"><label>起點角度</label><input type="range" id="p_startAngle" min="0" max="360" step="1"><output></output></div>
+    </div>
+
+    <div class="group">
+      <h2>光</h2>
+      <div class="row"><label>亮度</label><input type="range" id="p_brightness" min="0.10" max="1.00" step="0.01"><output></output></div>
+      <div class="row"><label>光暈</label><input type="range" id="p_glow" min="0" max="6" step="0.05"><output></output></div>
+      <div class="row"><label>刻痕深度</label><input type="range" id="p_carve" min="0" max="2.00" step="0.01"><output></output></div>
+    </div>
+
+    <div class="group">
+      <h2>呼吸</h2>
+      <div class="row"><label>呼吸速度</label><input type="range" id="p_breathSpeed" min="0" max="3" step="0.01"><output></output></div>
+      <div class="row"><label>呼吸幅度</label><input type="range" id="p_breathAmp" min="0" max="0.70" step="0.01"><output></output></div>
+      <div class="row"><label>流動</label><input type="range" id="p_pulse" min="0" max="1" step="0.01"><output></output></div>
+      <div class="row"><label>流動速度</label><input type="range" id="p_pulseSpeed" min="0.05" max="1.5" step="0.01"><output></output></div>
+      <div class="row"><label>流動寬度</label><input type="range" id="p_pulseWidth" min="0.04" max="0.60" step="0.01"><output></output></div>
+    </div>
+
+    <div class="group">
+      <h2>檢視</h2>
+      <div class="field">
+        <label>安全區</label>
+        <input type="checkbox" id="showSafe">
+      </div>
+      <div class="field">
+        <label>本命刻紋</label>
+        <input type="checkbox" id="showGeom" checked>
+      </div>
+      <div class="field">
+        <label>時辰字</label>
+        <input type="checkbox" id="showGlyph" checked>
+      </div>
+      <div class="field">
+        <label>只看時痕</label>
+        <input type="checkbox" id="soloScar">
+      </div>
+      <div class="btns">
+        <button id="btnReset">回到預設</button>
+        <button id="btnDump" class="primary">輸出參數</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ 舞台 ══ -->
+  <div class="stage">
+    <div class="stage-main">
+      <div class="shard-box">
+        <div class="shard" id="mainShard"></div>
+        <div class="cap" id="mainCap"></div>
+      </div>
+      <div class="readout">
+        <h3>目前參數</h3>
+        <pre id="dump"></pre>
+      </div>
+    </div>
+
+    <div class="strip">
+      <h2>同一組參數 · 旅程長度對照</h2>
+      <div class="strip-row" id="stripRow"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ══════════════════════════════════════════════════════════
+//  以下上色／時辰字／本命刻紋的演算法，與 app/adventure.js 相同。
+//  改這裡不會影響網站；調好之後我再把時痕那段搬進 adventure.js。
+// ══════════════════════════════════════════════════════════
+
+const ROOT = '../';
+const WORK = 768;                       // 與 SHARD_WORK_MAX 相同
+const SHICHEN = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const GLYPH_FONT = '"TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif';
+
+const clamp=(n,a,b)=>Math.min(Math.max(n,a),b);
+const hwrap=n=>((n%360)+360)%360;
+
+function normalizeHexColor(v){
+  const s=String(v||'').trim();
+  const m=/^#?([0-9a-f]{6})$/i.exec(s);
+  return m ? `#${m[1].toUpperCase()}` : '#7F1521';
+}
+function hexToRgb(hex){
+  const h=normalizeHexColor(hex).slice(1);
+  return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+}
+function rgbToHsl({r,g,b}){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h=0,s=0,l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=(g-b)/d+(g<b?6:0);break;
+      case g:h=(b-r)/d+2;break;
+      default:h=(r-g)/d+4;
+    }
+    h*=60;
+  }
+  return {h,s:s*100,l:l*100};
+}
+function hslToRgb(h,s,l){
+  h=hwrap(h)/360; s=clamp(s,0,100)/100; l=clamp(l,0,100)/100;
+  if(s===0){const v=Math.round(l*255);return{r:v,g:v,b:v};}
+  const hue2rgb=(p,q,t)=>{
+    if(t<0)t+=1;if(t>1)t-=1;
+    if(t<1/6)return p+(q-p)*6*t;
+    if(t<1/2)return q;
+    if(t<2/3)return p+(q-p)*(2/3-t)*6;
+    return p;
+  };
+  const q=l<.5?l*(1+s):l+s-l*s;
+  const p=2*l-q;
+  return {
+    r:Math.round(hue2rgb(p,q,h+1/3)*255),
+    g:Math.round(hue2rgb(p,q,h)*255),
+    b:Math.round(hue2rgb(p,q,h-1/3)*255)
+  };
+}
+// 唯一真相，與 adventure.js 同步
+function isLightShard(hex){ return rgbToHsl(hexToRgb(hex)).l>60; }
+
+function seedHash32(text){
+  let h=2166136261>>>0;
+  const s=String(text||'');
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
+  h^=h>>>16;h=Math.imul(h,0x7feb352d);h^=h>>>15;h=Math.imul(h,0x846ca68b);h^=h>>>16;
+  return h>>>0;
+}
+function seededRandom(seed){
+  let a=seedHash32(seed)||0x6d2b79f5;
+  return ()=>{
+    a|=0;a=(a+0x6D2B79F5)|0;
+    let t=a;
+    t=Math.imul(t^(t>>>15),1|t);
+    t^=t+Math.imul(t^(t>>>7),61|t);
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+
+// ── 母石本體上色（與 adventure.js recolorShardCanvas 相同）──
+function recolor(canvas,img,hex,w,h){
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.clearRect(0,0,w,h);
+  ctx.drawImage(img,0,0,w,h);
+
+  const data=ctx.getImageData(0,0,w,h);
+  const px=data.data;
+  const chosen=hexToRgb(hex);
+  const baseHsl=rgbToHsl(chosen);
+
+  const nearCool=hslToRgb(baseHsl.h+24, clamp(baseHsl.s+6,28,92), clamp(baseHsl.l+10,34,74));
+  const nearWarm=hslToRgb(baseHsl.h-18, clamp(baseHsl.s+10,32,96), clamp(baseHsl.l+8,32,72));
+  const pale=hslToRgb(baseHsl.h+5, clamp(baseHsl.s-34,8,46), 88);
+  const deep=hslToRgb(baseHsl.h-6, clamp(baseHsl.s+8,28,96), clamp(baseHsl.l-25,7,30));
+
+  const mix=(a,b,t)=>({r:a.r*(1-t)+b.r*t,g:a.g*(1-t)+b.g*t,b:a.b*(1-t)+b.b*t});
+  const mix3=(a,b,c,t1,t2)=>mix(mix(a,b,t1),c,t2);
+
+  for(let i=0;i<px.length;i+=4){
+    const a=px[i+3];
+    if(a===0) continue;
+    const pIndex=i/4;
+    const x=(pIndex%w)/Math.max(1,w-1);
+    const y=Math.floor(pIndex/w)/Math.max(1,h-1);
+    const or=px[i],og=px[i+1],ob=px[i+2];
+    const lum=(0.2126*or+0.7152*og+0.0722*ob)/255;
+    const diagonal=clamp((x*.72+(1-y)*.28),0,1);
+    const facetWave=(Math.sin((x*2.4+y*1.7)*Math.PI)+1)/2;
+    const coolAmt=clamp((diagonal-.48)*1.25,0,.42)*(.55+.45*facetWave);
+    const warmAmt=clamp((.56-diagonal)*1.15,0,.34)*(.55+.45*(1-facetWave));
+    let col={r:chosen.r,g:chosen.g,b:chosen.b};
+    const depth=Math.pow(1-lum,1.15);
+    col=mix(col,deep,depth*.48);
+    col=mix3(col,nearCool,nearWarm,coolAmt,warmAmt);
+    col=mix(col,{r:or,g:og,b:ob},.18);
+    if(lum>.58){ col=mix(col,pale,clamp((lum-.58)/.42,0,1)*.68); }
+    const glassLift=.22+lum*.90;
+    col.r*=glassLift;col.g*=glassLift;col.b*=glassLift;
+    px[i]=clamp(Math.round(col.r),0,255);
+    px[i+1]=clamp(Math.round(col.g),0,255);
+    px[i+2]=clamp(Math.round(col.b),0,255);
+  }
+  ctx.putImageData(data,0,0);
+
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  const g1=ctx.createLinearGradient(w*.12,h*.85,w*.86,h*.08);
+  g1.addColorStop(0,'rgba(255,255,255,0)');
+  g1.addColorStop(.42,`rgba(${nearWarm.r},${nearWarm.g},${nearWarm.b},0.08)`);
+  g1.addColorStop(.56,`rgba(${pale.r},${pale.g},${pale.b},0.20)`);
+  g1.addColorStop(.70,`rgba(${nearCool.r},${nearCool.g},${nearCool.b},0.10)`);
+  g1.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=g1;ctx.fillRect(0,0,w,h);
+  const rg=ctx.createRadialGradient(w*.47,h*.44,0,w*.47,h*.44,Math.max(w,h)*.45);
+  rg.addColorStop(0,`rgba(${pale.r},${pale.g},${pale.b},0.12)`);
+  rg.addColorStop(.38,`rgba(${chosen.r},${chosen.g},${chosen.b},0.05)`);
+  rg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=rg;ctx.fillRect(0,0,w,h);
+  ctx.globalCompositeOperation='destination-in';
+  ctx.drawImage(img,0,0,w,h);
+  ctx.restore();
+}
+
+// ── 時辰字（與 adventure.js drawShichenGlyph 相同）──
+function drawGlyph(ctx,w,h,layout,type,hex){
+  const glyph=SHICHEN[type-1];
+  if(!glyph) return;
+  const cx=layout.centerX*w, cy=layout.centerY*h;
+  const safeW=layout.width*w, safeH=layout.height*h;
+  const rotation=(layout.rotation*Math.PI)/180;
+  const chosen=hexToRgb(hex);
+  const light=isLightShard(hex);
+  const ink=light
+    ? {r:Math.round(chosen.r*.20),g:Math.round(chosen.g*.20),b:Math.round(chosen.b*.20)}
+    : {r:Math.round(chosen.r+(255-chosen.r)*.78),g:Math.round(chosen.g+(255-chosen.g)*.78),b:Math.round(chosen.b+(255-chosen.b)*.78)};
+  const halo=light?{r:0,g:0,b:0,a:.45}:{r:chosen.r,g:chosen.g,b:chosen.b,a:.85};
+  const rim=light?{r:255,g:255,b:255,a:.42}:{r:ink.r,g:ink.g,b:ink.b,a:.55};
+  ctx.save();
+  ctx.translate(cx,cy);ctx.rotate(rotation);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  let size=Math.min(safeW,safeH)*.62;
+  ctx.font=`700 ${size}px ${GLYPH_FONT}`;
+  const m=ctx.measureText(glyph);
+  const gw=Math.abs(m.actualBoundingBoxLeft)+Math.abs(m.actualBoundingBoxRight);
+  const gh=Math.abs(m.actualBoundingBoxAscent)+Math.abs(m.actualBoundingBoxDescent);
+  if(gw>0&&gh>0){
+    size*=Math.min((safeW*.78)/gw,(safeH*.78)/gh);
+    ctx.font=`700 ${size}px ${GLYPH_FONT}`;
+  }
+  ctx.shadowColor=`rgba(${halo.r},${halo.g},${halo.b},${halo.a})`;
+  ctx.shadowBlur=size*.20;
+  ctx.fillStyle=`rgba(${ink.r},${ink.g},${ink.b},0.90)`;
+  ctx.fillText(glyph,0,0);
+  ctx.shadowBlur=0;
+  ctx.lineWidth=Math.max(1,size*.012);
+  ctx.strokeStyle=`rgba(${rim.r},${rim.g},${rim.b},${rim.a})`;
+  ctx.strokeText(glyph,0,0);
+  ctx.restore();
+}
+
+// ── 本命刻紋（與 adventure.js drawPersonalEngravingGeometry 相同）──
+function drawGeom(ctx,w,h,layout,seed,hex){
+  const rand=seededRandom(seed);
+  const cx=layout.centerX*w, cy=layout.centerY*h;
+  const safeW=layout.width*w, safeH=layout.height*h;
+  const rotation=(layout.rotation*Math.PI)/180;
+  const baseR=Math.min(safeW,safeH)*.42;
+  const sx=safeW/(baseR*2), sy=safeH/(baseR*2);
+  const chosen=hexToRgb(hex);
+  const pale={
+    r:Math.round(chosen.r+(255-chosen.r)*.68),
+    g:Math.round(chosen.g+(255-chosen.g)*.68),
+    b:Math.round(chosen.b+(255-chosen.b)*.68)
+  };
+  ctx.save();
+  ctx.translate(cx,cy);ctx.rotate(rotation);ctx.scale(sx,sy);
+  const line=Math.max(1.25,Math.min(w,h)*.00165/Math.max(sx,sy));
+  ctx.lineWidth=line;ctx.lineCap='round';ctx.lineJoin='round';
+  const stroke=`rgba(${pale.r},${pale.g},${pale.b},0.82)`;
+  const strokeSoft=`rgba(${pale.r},${pale.g},${pale.b},0.44)`;
+  ctx.shadowColor=`rgba(${chosen.r},${chosen.g},${chosen.b},0.62)`;
+  ctx.shadowBlur=line*4.5;
+  const axes=3+Math.floor(rand()*4);
+  const phase=rand()*Math.PI*2;
+  const hubR=baseR*(.12+rand()*.05);
+  const ringCount=2+Math.floor(rand()*3);
+  ctx.strokeStyle=stroke;
+  ctx.beginPath();ctx.arc(0,0,hubR,phase+.32,phase+Math.PI*1.72);ctx.stroke();
+  for(let r=0;r<ringCount;r++){
+    const rr=baseR*(.34+r*(.16+rand()*.035));
+    const gap=.28+rand()*.55;
+    const start=phase+rand()*Math.PI*2;
+    ctx.strokeStyle=r%2?strokeSoft:stroke;
+    ctx.beginPath();ctx.arc(0,0,rr,start+gap,start+Math.PI*2-gap*.42);ctx.stroke();
+    if(rand()>.42){
+      const a=start-gap*.10, len=baseR*(.045+rand()*.055);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*(rr-len),Math.sin(a)*(rr-len));
+      ctx.lineTo(Math.cos(a)*(rr+len),Math.sin(a)*(rr+len));
+      ctx.stroke();
+    }
+  }
+  for(let i=0;i<axes;i++){
+    const a=phase+(i/axes)*Math.PI*2+(rand()-.5)*.14;
+    const inner=hubR*(1.15+rand()*.55);
+    const outer=baseR*(.62+rand()*.28);
+    ctx.strokeStyle=rand()>.30?stroke:strokeSoft;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);
+    ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);
+    ctx.stroke();
+    if(rand()>.38){
+      const anchor=inner+(outer-inner)*(.42+rand()*.30);
+      const side=rand()>.5?1:-1;
+      const branchA=a+side*(.45+rand()*.34);
+      const branchL=baseR*(.11+rand()*.10);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*anchor,Math.sin(a)*anchor);
+      ctx.lineTo(Math.cos(a)*anchor+Math.cos(branchA)*branchL,Math.sin(a)*anchor+Math.sin(branchA)*branchL);
+      ctx.stroke();
+    }
+  }
+  const nodes=2+Math.floor(rand()*5);
+  ctx.fillStyle=`rgba(${pale.r},${pale.g},${pale.b},0.88)`;
+  for(let i=0;i<nodes;i++){
+    const a=phase+rand()*Math.PI*2;
+    const rr=baseR*(.30+rand()*.56);
+    const nr=Math.max(line*1.15,baseR*(.010+rand()*.010));
+    ctx.beginPath();ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,nr,0,Math.PI*2);ctx.fill();
+  }
+  const scarA=phase+(rand()-.5)*1.15;
+  const scarR=baseR*(.28+rand()*.12);
+  const scarL=baseR*(.32+rand()*.16);
+  ctx.strokeStyle=stroke;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(scarA)*scarR,Math.sin(scarA)*scarR);
+  ctx.quadraticCurveTo(Math.cos(scarA+.55)*scarR*.55,Math.sin(scarA+.55)*scarR*.55,
+    Math.cos(scarA+.18)*scarL,Math.sin(scarA+.18)*scarL);
+  ctx.stroke();
+  ctx.restore();
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  時痕：這裡才是真正在調的東西
+//
+//  結構：一條從安全區邊緣長出去的「內部裂縫」。
+//  每一個選擇 = 主幹再長一節，方向由 L / R 決定。
+//  偶爾在轉折處迸出一條短分岔 —— 那是走得特別重的一步。
+//
+//  重點：時痕不受安全區限制。安全區是留給時辰字與本命刻紋的，
+//  時痕本來就該長到石片邊緣，最後由母石 alpha 裁掉。
+//  所以「安全區超級小」不影響時痕能有多明顯。
+// ══════════════════════════════════════════════════════════
+
+// 母石輪廓的低解析遮罩。裂縫靠它自己找路，不會長到石片外面被切掉一半。
+function buildMask(img,w,h){
+  const MW=160, MH=Math.max(1,Math.round(160*h/w));
+  const c=document.createElement('canvas');
+  c.width=MW;c.height=MH;
+  const ctx=c.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(img,0,0,MW,MH);
+  const d=ctx.getImageData(0,0,MW,MH).data;
+  const a=new Uint8Array(MW*MH);
+  for(let i=0;i<a.length;i++) a[i]=d[i*4+3]>40?1:0;
+  return {MW,MH,a,w,h};
+}
+function solid(mask,x,y){
+  if(!mask) return true;
+  const mx=Math.round(x/mask.w*mask.MW), my=Math.round(y/mask.h*mask.MH);
+  if(mx<0||my<0||mx>=mask.MW||my>=mask.MH) return false;
+  return mask.a[my*mask.MW+mx]===1;
+}
+// 端點本身在石片內，而且四周留得下線寬 —— 才算走得過去
+function walkable(mask,x,y,margin){
+  if(!solid(mask,x,y)) return false;
+  for(let k=0;k<8;k++){
+    const a=k/8*Math.PI*2;
+    if(!solid(mask,x+Math.cos(a)*margin,y+Math.sin(a)*margin)) return false;
+  }
+  return true;
+}
+
+function buildScar(seq, P, layout, w, h, mask){
+  const rand=seededRandom('scar:'+seq+':'+P.startAngle);
+  const cx=layout.centerX*w, cy=layout.centerY*h;
+  const safeW=layout.width*w, safeH=layout.height*h;
+  const rot=(layout.rotation*Math.PI)/180;
+
+  const a0=(P.startAngle*Math.PI)/180+rot;
+
+  // 起點：從安全區橢圓邊界往外推 originR 倍（時辰字讓出來的位置）
+  const er=Math.min(safeW,safeH)*.5;
+  const ox=cx+Math.cos(a0)*er*P.originR;
+  const oy=cy+Math.sin(a0)*er*P.originR;
+
+  const step0=Math.min(w,h)*.5*P.spread*.20;
+  // 邊界餘裕固定用石片尺寸算，這樣調粗細時裂縫的走向不會整條跳掉。
+  const margin=Math.max(4,Math.min(w,h)*.018);
+
+  // 想往前，但前面沒有石頭時就轉；轉不出來就縮短。
+  const TRIES=[0,.28,-.28,.6,-.6,1.0,-1.0,1.5,-1.5,2.1,-2.1,2.7,-2.7];
+  function advance(x,y,a,len){
+    for(let s=0;s<4;s++){
+      const l=len*Math.pow(.62,s);
+      for(const off of TRIES){
+        const na=a+off;
+        const nx=x+Math.cos(na)*l, ny=y+Math.sin(na)*l;
+        if(walkable(mask,nx,ny,margin)) return {x:nx,y:ny,a:na,len:l};
+      }
+    }
+    return null;
+  }
+
+  const segs=[];
+  let x=ox, y=oy, a=a0, len=step0;
+
+  for(let i=0;i<seq.length;i++){
+    const dir = seq[i]==='L' ? -1 : 1;
+    const want = a + dir*P.turn*(0.55+rand()*0.9);
+    const next = advance(x,y,want,len);
+    if(!next) break;
+    segs.push({x1:x,y1:y,x2:next.x,y2:next.y,depth:0,order:i,len:next.len});
+
+    // 分岔：往轉折的反側甩出去，像應力釋放
+    if(rand()<P.branch){
+      let bx=next.x, by=next.y, ba=next.a-dir*(0.75+rand()*0.7), bl=next.len*P.branchLen;
+      const steps=1+Math.floor(rand()*3);
+      for(let k=0;k<steps;k++){
+        const bn=advance(bx,by,ba+(rand()-.5)*.7,bl);
+        if(!bn) break;
+        segs.push({x1:bx,y1:by,x2:bn.x,y2:bn.y,depth:1+k,order:i,len:bn.len});
+        bx=bn.x;by=bn.y;ba=bn.a;bl=bn.len*0.66;
+      }
+    }
+
+    x=next.x;y=next.y;a=next.a;
+    len=next.len*P.decay;
+  }
+  return segs;
+}
+
+const widthOf=(s,base)=>Math.max(0.8, base*Math.pow(0.62,s.depth)*(1-Math.min(0.42, s.order*0.012)));
+
+// ── 第一層：裂口。這是「石頭真的裂開了」，用 multiply 疊，任何顏色都吃得住。
+function paintScarDark(ctx,segs,P,hex,w,h){
+  if(!segs.length||P.carve<=0) return;
+  const base=P.thickness*(w/768);
+  const chosen=hexToRgb(hex);
+  // 帶一點主色的暗，不是純黑；純黑會像貼上去的墨線。
+  const d={r:Math.round(chosen.r*.22),g:Math.round(chosen.g*.22),b:Math.round(chosen.b*.22)};
+
+  ctx.save();
+  ctx.lineCap='round';ctx.lineJoin='round';
+
+  // 外緣陰影：讓裂口有厚度
+  ctx.strokeStyle=`rgba(${d.r},${d.g},${d.b},${clamp(.30*P.carve,0,1)})`;
+  ctx.shadowColor=`rgba(0,0,0,${.55*P.carve})`;
+  ctx.shadowBlur=base*3.2;
+  segs.forEach(s=>{
+    ctx.lineWidth=widthOf(s,base)*2.4;
+    ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
+  });
+
+  // 裂口本體
+  ctx.shadowBlur=0;
+  ctx.strokeStyle=`rgba(${d.r},${d.g},${d.b},${clamp(.86*P.carve,0,1)})`;
+  segs.forEach(s=>{
+    ctx.lineWidth=widthOf(s,base)*1.15;
+    ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// ── 第二層：光。裂口裡透出來的東西，會呼吸的就是它。
+function paintScarLight(ctx,segs,P,hex,w,h){
+  if(!segs.length) return;
+  const base=P.thickness*(w/768);
+  const chosen=hexToRgb(hex);
+  const core={
+    r:Math.round(chosen.r+(255-chosen.r)*.88),
+    g:Math.round(chosen.g+(255-chosen.g)*.88),
+    b:Math.round(chosen.b+(255-chosen.b)*.88)
+  };
+
+  ctx.save();
+  ctx.lineCap='round';ctx.lineJoin='round';
+
+  // 暈開的光
+  if(P.glow>0){
+    ctx.shadowColor=`rgba(${chosen.r},${chosen.g},${chosen.b},${clamp(.85*P.brightness,0,1)})`;
+    ctx.shadowBlur=base*4.6*P.glow;
+    ctx.strokeStyle=`rgba(${chosen.r},${chosen.g},${chosen.b},${clamp(.42*P.brightness,0,1)})`;
+    segs.forEach(s=>{
+      ctx.lineWidth=widthOf(s,base)*1.9;
+      ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
+    });
+  }
+
+  // 芯線
+  ctx.shadowColor=`rgba(${chosen.r},${chosen.g},${chosen.b},${clamp(.9*P.brightness,0,1)})`;
+  ctx.shadowBlur=base*1.5*P.glow;
+  ctx.strokeStyle=`rgba(${core.r},${core.g},${core.b},${clamp(.98*P.brightness,0,1)})`;
+  segs.forEach(s=>{
+    ctx.lineWidth=widthOf(s,base)*.62;
+    ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
+  });
+
+  // 每一個選擇的落點：一顆小小的結
+  ctx.shadowBlur=base*2.4*P.glow;
+  ctx.fillStyle=`rgba(${core.r},${core.g},${core.b},${clamp(.92*P.brightness,0,1)})`;
+  segs.forEach(s=>{
+    if(s.depth!==0) return;
+    ctx.beginPath();ctx.arc(s.x2,s.y2,Math.max(.9,widthOf(s,base)*.58),0,Math.PI*2);ctx.fill();
+  });
+
+  ctx.restore();
+}
+
+// 流動：沿主幹跑一段更亮的光
+function paintPulse(ctx,segs,P,hex,w,h,t){
+  if(P.pulse<=0) return;
+  const trunk=segs.filter(s=>s.depth===0);
+  if(!trunk.length) return;
+  const chosen=hexToRgb(hex);
+  const core={r:255,g:255,b:255};
+  const halo={r:chosen.r,g:chosen.g,b:chosen.b};
+  const base=P.thickness*(w/768);
+
+  const head=(t*P.pulseSpeed)%1.35;   // 留一段暗場，才有「一口一口」的感覺
+  const width=P.pulseWidth;
+
+  ctx.save();
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.shadowColor=`rgba(${halo.r},${halo.g},${halo.b},.9)`;
+  trunk.forEach((s,i)=>{
+    const pos=i/Math.max(1,trunk.length-1);
+    const d=Math.abs(pos-head);
+    if(d>width) return;
+    const k=Math.pow(1-d/width,1.6)*P.pulse;
+    ctx.shadowBlur=base*3.4*P.glow*k;
+    ctx.lineWidth=Math.max(0.8,base*(1+k*1.5));
+    ctx.strokeStyle=`rgba(${core.r},${core.g},${core.b},${clamp(k*0.95,0,1)})`;
+    ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawSafeZone(ctx,layout,w,h){
+  ctx.save();
+  ctx.translate(layout.centerX*w,layout.centerY*h);
+  ctx.rotate((layout.rotation*Math.PI)/180);
+  ctx.scale(1,(layout.height*h)/(layout.width*w));
+  ctx.strokeStyle='rgba(255,255,255,.42)';
+  ctx.setLineDash([6,6]);
+  ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.arc(0,0,layout.width*w*.5,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  石片元件
+// ══════════════════════════════════════════════════════════
+
+const DEFAULTS={
+  thickness:9.0,
+  spread:0.62,
+  turn:0.46,
+  decay:0.945,
+  branch:0.30,
+  branchLen:0.62,
+  originR:1.10,
+  startAngle:70,
+  brightness:0.90,
+  glow:1.60,
+  carve:1.05,
+  breathSpeed:0.60,
+  breathAmp:0.30,
+  pulse:0.60,
+  pulseSpeed:0.34,
+  pulseWidth:0.22
+};
+
+const P={...DEFAULTS};
+let LAYOUTS={};
+let stoneType=12;
+let color='#7F1521';
+let seq='RLRLLRRLRLRLRLR';
+const view={safe:false,geom:true,glyph:true,solo:false};
+
+function layoutFor(type){
+  const key=`stone-${String(type).padStart(2,'0')}`;
+  return LAYOUTS[key]||{centerX:.5,centerY:.5,width:.38,height:.34,rotation:0};
+}
+
+class Shard{
+  constructor(host,{count=null,work=WORK,lite=false}={}){
+    this.host=host;
+    this.countOverride=count;
+    this.work=work;
+    this.lite=lite;   // 對照組只做呼吸，不做流動；省下每幀 4 次全畫布合成
+    host.innerHTML=`
+      <img crossorigin="anonymous" alt="">
+      <canvas class="c-body"></canvas>
+      <canvas class="c-glyph"></canvas>
+      <canvas class="c-dark"></canvas>
+      <canvas class="c-scar"></canvas>`;
+    this.img=host.querySelector('img');
+    this.cBody=host.querySelector('.c-body');
+    this.cGlyph=host.querySelector('.c-glyph');
+    this.cDark=host.querySelector('.c-dark');
+    this.cScar=host.querySelector('.c-scar');
+    this.scarLayer=document.createElement('canvas');
+    this.loadedType=null;
+  }
+
+  get seq(){
+    if(this.countOverride==null) return seq;
+    if(seq.length>=this.countOverride) return seq.slice(0,this.countOverride);
+    // 對照組比目前序列長時，用同一顆亂數種子補滿，才有可比性
+    const rand=seededRandom('strip:'+seq);
+    let s=seq;
+    while(s.length<this.countOverride) s+=rand()>.5?'R':'L';
+    return s;
+  }
+
+  async ensureImage(){
+    if(this.loadedType===stoneType) return;
+    const url=`${ROOT}assets/images/timemark/stones/stone-${String(stoneType).padStart(2,'0')}.png`;
+    await new Promise((res,rej)=>{
+      this.img.onload=res;
+      this.img.onerror=()=>rej(new Error('母石圖載入失敗：'+url));
+      this.img.src=url;
+    });
+    this.loadedType=stoneType;
+    const nw=this.img.naturalWidth, nh=this.img.naturalHeight;
+    const k=Math.min(1,this.work/Math.max(nw,nh));
+    this.w=Math.round(nw*k);
+    this.h=Math.round(nh*k);
+    [this.cBody,this.cGlyph,this.cDark,this.cScar,this.scarLayer].forEach(c=>{c.width=this.w;c.height=this.h;});
+    this.host.style.setProperty('--aspect',(nw/nh).toFixed(4));
+    this.mask=buildMask(this.img,this.w,this.h);
+  }
+
+  async renderBody(){
+    await this.ensureImage();
+    this.host.classList.toggle('light',isLightShard(color));
+    if(view.solo){
+      this.cBody.getContext('2d').clearRect(0,0,this.w,this.h);
+      const c=this.cBody.getContext('2d');
+      c.fillStyle='rgba(14,17,21,1)';
+      c.fillRect(0,0,this.w,this.h);
+      c.globalCompositeOperation='destination-in';
+      c.drawImage(this.img,0,0,this.w,this.h);
+      c.globalCompositeOperation='source-over';
+    }else{
+      recolor(this.cBody,this.img,color,this.w,this.h);
+    }
+  }
+
+  async renderGlyph(){
+    await this.ensureImage();
+    const ctx=this.cGlyph.getContext('2d');
+    ctx.clearRect(0,0,this.w,this.h);
+    if(view.solo){ return; }
+    const layout=layoutFor(stoneType);
+    if(view.glyph) drawGlyph(ctx,this.w,this.h,layout,stoneType,color);
+    if(view.geom)  drawGeom(ctx,this.w,this.h,layout,'LAB-SEED-0001',color);
+    if(view.safe)  drawSafeZone(ctx,layout,this.w,this.h);
+    ctx.globalCompositeOperation='destination-in';
+    ctx.drawImage(this.img,0,0,this.w,this.h);
+    ctx.globalCompositeOperation='source-over';
+  }
+
+  async bakeScar(){
+    await this.ensureImage();
+    const layout=layoutFor(stoneType);
+    this.segs=buildScar(this.seq,P,layout,this.w,this.h,this.mask);
+
+    // 裂口是靜的，畫一次就好
+    const dk=this.cDark.getContext('2d');
+    dk.clearRect(0,0,this.w,this.h);
+    paintScarDark(dk,this.segs,P,color,this.w,this.h);
+    dk.globalCompositeOperation='destination-in';
+    dk.drawImage(this.img,0,0,this.w,this.h);
+    dk.globalCompositeOperation='source-over';
+    // multiply 圖層的空白處必須是白色，否則整片石頭會被壓暗
+    dk.globalCompositeOperation='destination-over';
+    dk.fillStyle='#fff';
+    dk.fillRect(0,0,this.w,this.h);
+    dk.globalCompositeOperation='source-over';
+
+    // 光是動的，先烘成一張，每一幀只做透明度與流動
+    const ctx=this.scarLayer.getContext('2d');
+    ctx.clearRect(0,0,this.w,this.h);
+    paintScarLight(ctx,this.segs,P,color,this.w,this.h);
+    ctx.globalCompositeOperation='destination-in';
+    ctx.drawImage(this.img,0,0,this.w,this.h);
+    ctx.globalCompositeOperation='source-over';
+  }
+
+  frame(t){
+    if(!this.segs) return;
+    const ctx=this.cScar.getContext('2d');
+    ctx.clearRect(0,0,this.w,this.h);
+    // 1 → 1-amp → 1，正弦來回，沒有「啪」的一下
+    const breathe=1-P.breathAmp*(1-Math.cos(t*P.breathSpeed*Math.PI*2))*0.5;
+    ctx.globalAlpha=clamp(breathe,0.05,1);
+    ctx.drawImage(this.scarLayer,0,0);
+    ctx.globalAlpha=1;
+    if(P.pulse>0 && !this.lite){
+      paintPulse(ctx,this.segs,P,color,this.w,this.h,t);
+      ctx.globalCompositeOperation='destination-in';
+      ctx.drawImage(this.img,0,0,this.w,this.h);
+      ctx.globalCompositeOperation='source-over';
+    }
+  }
+
+  async full(){ await this.renderBody(); await this.renderGlyph(); await this.bakeScar(); }
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  接線
+// ══════════════════════════════════════════════════════════
+
+const $=id=>document.getElementById(id);
+const errBox=$('err');
+function fail(msg){ errBox.textContent=msg; errBox.classList.add('show'); }
+
+const main=new Shard($('mainShard'),{work:WORK});
+const STRIP=[3,8,15,30];
+const strips=STRIP.map(n=>{
+  const box=document.createElement('div');
+  box.className='shard-box';
+  box.innerHTML=`<div class="shard"></div><div class="cap">${n} 個選擇</div>`;
+  $('stripRow').appendChild(box);
+  return new Shard(box.querySelector('.shard'),{count:n,work:380,lite:true});
+});
+const all=()=>[main,...strips];
+
+// 母石選單
+const sel=$('stoneSel');
+SHICHEN.forEach((g,i)=>{
+  const o=document.createElement('option');
+  o.value=String(i+1);
+  o.textContent=`${String(i+1).padStart(2,'0')} · ${g}時`;
+  sel.appendChild(o);
+});
+sel.value=String(stoneType);
+
+// 常用色
+const SWATCH=['#7F1521','#1F3A93','#0E6E5C','#6B2E8F','#C8A24B','#E8E2D6','#FFFFFF','#111318'];
+SWATCH.forEach(hex=>{
+  const b=document.createElement('button');
+  b.style.background=hex;
+  b.style.width='26px';b.style.height='22px';b.style.padding='0';
+  b.title=hex;
+  b.onclick=()=>{ setColor(hex); };
+  $('swatches').appendChild(b);
+});
+
+// 滑桿
+const SLIDERS=['thickness','spread','turn','decay','branch','branchLen','originR','startAngle',
+               'brightness','glow','carve','breathSpeed','breathAmp','pulse','pulseSpeed','pulseWidth'];
+SLIDERS.forEach(k=>{
+  const el=$('p_'+k);
+  el.value=String(P[k]);
+  const out=el.parentElement.querySelector('output');
+  const show=()=>{ out.textContent=Number(el.value).toFixed(el.step.includes('.')?(el.step.split('.')[1].length):0); };
+  show();
+  el.addEventListener('input',()=>{
+    P[k]=Number(el.value);
+    show();
+    queueScar();
+    dump();
+  });
+});
+function syncSliders(){
+  SLIDERS.forEach(k=>{
+    const el=$('p_'+k);
+    el.value=String(P[k]);
+    el.parentElement.querySelector('output').textContent=
+      Number(el.value).toFixed(el.step.includes('.')?(el.step.split('.')[1].length):0);
+  });
+}
+
+// 顏色
+function setColor(hex){
+  color=normalizeHexColor(hex);
+  $('colorPick').value=color;
+  $('colorHex').value=color;
+  queueFull();
+  dump();
+}
+$('colorPick').addEventListener('input',e=>setColor(e.target.value));
+$('colorHex').addEventListener('change',e=>setColor(e.target.value));
+
+sel.addEventListener('change',()=>{
+  stoneType=Number(sel.value);
+  all().forEach(s=>{s.loadedType=null;});
+  queueFull();
+  dump();
+});
+
+// 選擇序列
+const seqBox=$('seqBox');
+seqBox.value=seq;
+function normSeq(v){
+  const s=String(v||'').toUpperCase().replace(/[^LR]/g,'');
+  return s||'R';
+}
+seqBox.addEventListener('input',()=>{
+  seq=normSeq(seqBox.value);
+  queueScar();
+  dump();
+});
+function randomSeq(n){
+  const rand=seededRandom('seq:'+Date.now()+':'+n);
+  let s='';
+  for(let i=0;i<n;i++) s+=rand()>.5?'R':'L';
+  return s;
+}
+document.querySelectorAll('.btns [data-n]').forEach(b=>{
+  b.onclick=()=>{
+    seq=randomSeq(Number(b.dataset.n));
+    seqBox.value=seq;
+    queueScar();dump();
+  };
+});
+$('reroll').onclick=()=>{
+  seq=randomSeq(seq.length);
+  seqBox.value=seq;
+  queueScar();dump();
+};
+
+// 檢視
+$('showSafe').onchange=e=>{view.safe=e.target.checked;queueGlyph();};
+$('showGeom').onchange=e=>{view.geom=e.target.checked;queueGlyph();};
+$('showGlyph').onchange=e=>{view.glyph=e.target.checked;queueGlyph();};
+$('soloScar').onchange=e=>{view.solo=e.target.checked;queueFull();};
+
+$('btnReset').onclick=()=>{
+  Object.assign(P,DEFAULTS);
+  syncSliders();queueScar();dump();
+};
+$('btnDump').onclick=async()=>{
+  const text=dumpText();
+  try{ await navigator.clipboard.writeText(text); $('btnDump').textContent='已複製 ✓'; }
+  catch(_){ $('btnDump').textContent='請手動複製 →'; }
+  setTimeout(()=>{$('btnDump').textContent='輸出參數';},1600);
+};
+
+function dumpText(){
+  return `// 時痕參數 · SCAR LAB
+const SCAR = {
+  thickness   : ${P.thickness},
+  spread      : ${P.spread},
+  turn        : ${P.turn},
+  decay       : ${P.decay},
+  branch      : ${P.branch},
+  branchLen   : ${P.branchLen},
+  originR     : ${P.originR},
+  startAngle  : ${P.startAngle},
+  brightness  : ${P.brightness},
+  glow        : ${P.glow},
+  carve       : ${P.carve},
+  breathSpeed : ${P.breathSpeed},
+  breathAmp   : ${P.breathAmp},
+  pulse       : ${P.pulse},
+  pulseSpeed  : ${P.pulseSpeed},
+  pulseWidth  : ${P.pulseWidth}
+};
+// 當時的檢視條件
+// 母石 stone-${String(stoneType).padStart(2,'0')}（${SHICHEN[stoneType-1]}時） 光源 ${color}
+// 選擇序列 ${seq}（${seq.length} 個選擇）`;
+}
+function dump(){
+  $('dump').textContent=dumpText();
+  $('mainCap').textContent=`${seq.length} 個選擇 · ${color} · ${SHICHEN[stoneType-1]}時`;
+}
+
+// 重繪排程：上色很貴，時痕很便宜，分開排
+let needFull=false, needGlyph=false, needScar=false, busy=false;
+function queueFull(){ needFull=true; pump(); }
+function queueGlyph(){ needGlyph=true; pump(); }
+function queueScar(){ needScar=true; pump(); }
+
+async function pump(){
+  if(busy) return;
+  busy=true;
+  try{
+    while(needFull||needGlyph||needScar){
+      if(needFull){
+        needFull=false;needGlyph=false;needScar=false;
+        for(const s of all()) await s.full();
+      }else if(needGlyph){
+        needGlyph=false;
+        for(const s of all()) await s.renderGlyph();
+      }else{
+        needScar=false;
+        for(const s of all()) await s.bakeScar();
+      }
+      await new Promise(r=>requestAnimationFrame(r));
+    }
+  }catch(e){
+    fail(e?.message||String(e));
+  }finally{
+    busy=false;
+  }
+}
+
+// 動畫
+let t0=performance.now();
+function loop(now){
+  const t=(now-t0)/1000;
+  all().forEach(s=>{ try{ s.frame(t); }catch(_){ } });
+  requestAnimationFrame(loop);
+}
+
+// 啟動
+(async()=>{
+  try{
+    const r=await fetch(`${ROOT}data/timemark/stone-layouts.json`,{cache:'no-cache'});
+    if(!r.ok) throw new Error('stone-layouts.json '+r.status);
+    LAYOUTS=(await r.json())?.stones||{};
+  }catch(e){
+    fail('刻紋座標載入失敗，改用中央安全區。'+(e?.message?'（'+e.message+'）':''));
+  }
+  try{ await document.fonts.load(`700 64px ${GLYPH_FONT}`,SHICHEN.join('')); }catch(_){}
+  dump();
+  queueFull();
+  requestAnimationFrame(loop);
+})();
+
+// file:// 開啟時 Canvas 會被污染，getImageData 直接爆掉 —— 先講清楚
+if(location.protocol==='file:'){
+  fail('請不要用 file:// 直接打開。瀏覽器會擋住 Canvas 讀取，整頁會黑掉。請開 https://vladjia.github.io/TheEndOfTime/dev/scar-lab.html');
+}
+
+})();
+</script>
+</body>
+</html>

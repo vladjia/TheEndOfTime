@@ -149,6 +149,15 @@ setMyDevPreviewOff()
 
 > `resetMyDevTimeMarkCompletely()` 只重置試算表，瀏覽器快取需另外清除；函式執行後會印出所需指令。
 
+### 時痕實驗室
+
+`dev/scar-lab.html` — 時痕刻印的參數調校台。拉滑桿即時重畫石片，含呼吸與流動動畫。
+
+<https://vladjia.github.io/TheEndOfTime/dev/scar-lab.html>
+
+> 內部工具，不從網站任何地方連出去，也不影響線上功能。
+> 必須從網址開啟；用 `file://` 直接開會被瀏覽器擋住 Canvas 讀取。
+
 ---
 
 ## 版本來源
