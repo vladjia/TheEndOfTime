@@ -715,8 +715,11 @@ window.EndOfTimeAdventure = (() => {
 
   // 石片明暗判定的唯一真相：刻紋顏色與 CSS 混合模式都以它為準。
   // 門檻調低 → 更多顏色會被視為亮石片（走暗刻 + multiply）。
+  //
+  // 60 的取法：上色演算法會把石片提得比 base 色亮很多，所以不能用直覺的中間值。
+  // 實測飽和色（紅紫藍，明度 25～50）亮刻仍清楚；粉彩與米白（60 以上）就撐不住。
   function isLightShard(hex){
-    return rgbToHsl(hexToRgb(hex)).l>68;
+    return rgbToHsl(hexToRgb(hex)).l>60;
   }
 
   // 拖色盤會連續觸發，用 rAF 合併成每幀最多一次重畫。
