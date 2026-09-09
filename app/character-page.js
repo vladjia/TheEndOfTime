@@ -1012,7 +1012,16 @@ async function initCharacterPage(){
 
     window.EndOfTimeSealEffects?.bindCharacterVisual?.(document,id);
 
+    // 角色表指定的預設主視覺優先；沒指定才退回 Drive 檔名評分。
+    const pinnedId = String(char.portraitId || '').trim();
+    const pinned = pinnedId
+      ? ((data.images || []).find(x => String(x.id || '').trim() === pinnedId)
+         || { id:pinnedId, name:'', mediaType:'image',
+              url:`https://drive.google.com/thumbnail?id=${encodeURIComponent(pinnedId)}&sz=w2000` })
+      : null;
+
     const main = characterContentImage(data,id,adventureData)
+      || pinned
       || bestCharacterImage(data.images || [],id,{zero:false});
     mountImage($('#characterHero'), main, `${char.fullName || char.name} 主視覺`);
 
