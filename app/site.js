@@ -26,6 +26,9 @@ function copyText(copy,key,fallback=''){
 }
 
 async function loadAdventureForCharacterContent(){
+  // 迎賓頁不載 adventure.js，這裡如果照樣等 40 次 × 50ms，
+  // 就會白白卡在 Loading 兩秒。沒有那支 script 就直接不等。
+  if(!document.querySelector('script[src*="adventure.js"]')) return null;
   for(let i=0;i<40;i++){
     const A=window.EndOfTimeAdventure;
     if(A?.load){
@@ -36,18 +39,12 @@ async function loadAdventureForCharacterContent(){
   return null;
 }
 
+// 階段覆蓋規則統一放在 app/character-fields.js（角色頁／角色列表頁／這裡共用同一份）。
+// 這裡以前也自己抄了一份，而且同樣只蓋三個欄位——是第三個爆雷點。
 function applyCharacterContent(chars,adventureData){
-  const map=adventureData?.characterContent || {};
-  (chars || []).forEach(char=>{
-    const fields=map[char.id] || {};
-    Object.keys(fields).forEach(fieldId=>{
-      const value=String(fields[fieldId]?.value || '').trim();
-      if(!value) return;
-      if(fieldId==='publicIntro') char.publicIntro=value;
-      if(fieldId==='coreLine') char.coreLine=value;
-      if(fieldId==='publicDetail') char.publicDetail=value;
-    });
-  });
+  const 角色欄位=window.EndOfTimeCharacterFields;
+  if(!角色欄位) throw new Error('[時盡] 沒載到 app/character-fields.js —— 階段覆蓋會失效，寧可讓頁面空掉也不能爆雷。');
+  角色欄位.applyAll(chars,adventureData);
 }
 
 function applyCopy(copy){
@@ -378,7 +375,13 @@ function initWelcomeExperienceV2(){
 
   const gate = document.getElementById('welcomeGate');
 
+  // 迎賓頁獨立成一頁之後，gate 會帶 data-enter-href。
+  // 有它就代表「這一頁只有迎賓」，進入＝跳到那個網址，而不是原地把 gate 淡掉。
+  const enterHref = (gate && gate.dataset.enterHref || '').trim();
+
   if(skipWelcome){
+    // 舊書籤／舊快取還指著 index.html?skipWelcome=1 時，直接送去首頁。
+    if(enterHref){ window.location.replace(enterHref); return; }
     if(gate) gate.remove();
     document.body.classList.remove('pre-entry');
     document.body.classList.add('site-entered');
@@ -641,16 +644,21 @@ function initWelcomeExperienceV2(){
     requestAnimationFrame(renderCanvas);
   }
 
+  function 進入網站(){
+    if(enterHref){ window.location.href = enterHref; return; }
+    gate.classList.add('is-leaving');
+    document.body.classList.remove('pre-entry');
+    document.body.classList.add('site-entered');
+  }
+
   function dissolve(){
     if(clicked) return;
     clicked=true;
     hovering=false;
 
     if(reduceMotion){
-      gate.classList.add('is-leaving');
-      document.body.classList.remove('pre-entry');
-      document.body.classList.add('site-entered');
-      setTimeout(()=>gate.remove(),120);
+      進入網站();
+      if(!enterHref) setTimeout(()=>gate.remove(),120);
       return;
     }
 
@@ -679,13 +687,10 @@ function initWelcomeExperienceV2(){
     };
     requestAnimationFrame(tick);
 
-    setTimeout(()=>{
-      gate.classList.add('is-leaving');
-      document.body.classList.remove('pre-entry');
-      document.body.classList.add('site-entered');
-    },1760);
+    // 崩解動畫大約 1.5 秒跑完，1.76 秒才離開，字才不會消到一半就換頁。
+    setTimeout(進入網站,1760);
 
-    setTimeout(()=>gate.remove(),2580);
+    if(!enterHref) setTimeout(()=>gate.remove(),2580);
   }
 
   button.addEventListener('mouseenter',()=>hovering=true);

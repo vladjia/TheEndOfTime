@@ -35,9 +35,11 @@
 <link rel="stylesheet" href="app/site.css?v=0.18.43">
   <link rel="icon" type="image/png" href="assets/images/favicon.png?v=0.17.3">
   <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=0.17.3">
-<link rel="stylesheet" href="app/adventure.css?v=0.18.59">
 </head>
-<body class="pre-entry home-page" id="top">
+<!-- 迎賓頁。這一頁只有一件事：讓人輕觸「時盡」。
+     沒有導覽列、沒有主視覺、沒有入口卡片——那些都在 home.html。
+     點下去之後才會走進網站，網址也才會變。 -->
+<body class="pre-entry welcome-page" id="top">
 <div class="site-loading" id="siteLoading" aria-live="polite" aria-busy="true">
   <div class="site-loading-inner">
     <div class="loading-hourglass loading-frame-sequence" aria-hidden="true">
@@ -52,7 +54,7 @@
   </div>
 </div>
 
-  <div id="welcomeGate" class="welcome-gate welcome-v2" aria-label="進入《時盡》">
+  <div id="welcomeGate" class="welcome-gate welcome-v2" data-enter-href="home.html" aria-label="進入《時盡》">
     <div class="welcome-v2-inner">
       <button id="welcomeCanvasButton" class="welcome-canvas-button" type="button" aria-label="輕觸時盡，進入網站">
         <canvas id="welcomeTitleCanvas" class="welcome-title-canvas" aria-hidden="true"></canvas>
@@ -65,66 +67,9 @@
 
 <div class="time-sand"></div>
 
-<header class="topbar topbar-v3 home-topbar">
-  <a class="brand brand-v3" href="#top" aria-label="時盡首頁">
-    <img class="brand-logo" src="assets/images/the-end-of-time-logo.png" alt="時盡 Logo">
-    <strong id="brandTitle">時盡</strong>
-  </a>
-
-  <nav class="main-nav" aria-label="主導覽">
-    <a href="story/index.html" data-copy="site.nav.story">故事</a>
-    <a href="characters/index.html" data-copy="site.nav.characters">角色</a>
-    <a href="world/index.html" data-copy="site.nav.world">世界觀</a>
-  </nav>
-
-  <button class="nav-status time-mark-toggle time-mark-orb" type="button" data-time-mark aria-label="開啟時印" title="時印">
-    <span class="time-mark-orb-media" aria-hidden="true">
-      <video class="time-mark-orb-video" src="assets/video/time-mark-shard.webm?v=0.18.19" autoplay muted loop playsinline preload="metadata"></video>
-    </span>
-    <span class="time-mark-orb-label">時印</span>
-  </button>
-</header>
-
-<main>
-  <section class="hero hero-cover">
-    <div class="hero-copy">
-      <div class="eyebrow hero-reveal hero-reveal-1" data-copy="site.home.eyebrow">THE END OF TIME</div>
-      <h1 class="hero-reveal hero-reveal-2">時盡</h1>
-      <p class="lead hero-reveal hero-reveal-3" id="tagline" data-copy="site.home.tagline">他活過世界的終點，卻沒能逃過那些早已注定的結局。</p>
-      <div class="quote hero-reveal hero-reveal-4" data-copy="site.home.law">「過程可以改變，結果不能。」</div>
-    </div>
-    <div class="hero-art hero-art-reveal" id="hero" aria-label="《時盡》首頁封面"></div>
-  </section>
-
-  <section class="home-portals" aria-label="網站主要入口">
-    <a class="home-portal" href="story/index.html">
-      <small>01 / STORY</small>
-      <h2 data-copy="site.home.portal.story.title">故事</h2>
-      <p data-copy="site.home.portal.story.desc">從章與節開始，沿著時間留下的裂縫讀下去。</p>
-      <span data-copy="site.home.portal.enter">ENTER →</span>
-    </a>
-
-    <a class="home-portal" href="characters/index.html">
-      <small>02 / CHARACTERS</small>
-      <h2 data-copy="site.home.portal.characters.title">角色</h2>
-      <p data-copy="site.home.portal.characters.desc">閱讀人物檔案、武器、能力與彼此留下的痕跡。</p>
-      <span data-copy="site.home.portal.enter">ENTER →</span>
-    </a>
-
-    <a class="home-portal" href="world/index.html">
-      <small>03 / WORLD</small>
-      <h2 data-copy="site.home.portal.world.title">世界觀</h2>
-      <p data-copy="site.home.portal.world.desc">理解時之沙漏、血族與這個世界運行的法則。</p>
-      <span data-copy="site.home.portal.enter">ENTER →</span>
-    </a>
-  </section>
-</main>
-
-<footer class="footer">《時盡》STORY / CHARACTER / WORLD</footer>
 <script src="app/loading.js?v=0.18.9" defer></script>
 <script src="app/scrollbar.js?v=0.17.3" defer></script>
-<script src="app/site.js?v=0.18.44" defer></script>
-<script src="app/image-viewer.js?v=0.17.3" defer></script>
-<script src="app/adventure.js?v=0.18.59" defer></script>
+<script src="app/character-fields.js?v=0.18.83" defer></script>
+<script src="app/site.js?v=0.18.83" defer></script>
 </body>
 </html>

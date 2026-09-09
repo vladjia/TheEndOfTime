@@ -146,7 +146,7 @@ function swapActionsToCta(){
   const actions = document.querySelector('.timemark-actions-main');
   if(!actions) return;
   actions.innerHTML = `
-    <a class="time-mark-btn primary" href="../index.html">留下你自己的時印</a>
+    <a class="time-mark-btn primary" href="../home.html">留下你自己的時印</a>
     <a class="time-mark-btn" href="../story/index.html">從故事開始</a>`;
 }
 

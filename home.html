@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>時盡｜THE END OF TIME</title>
+<meta name="description" content="《時盡》是一個關於時間、命運、血與選擇的原創世界。他活過世界的終點，卻沒能逃過那些早已注定的結局。">
+<meta name="theme-color" content="#07090d">
+
+<meta name="robots" content="index,follow">
+
+<!-- Open Graph：LINE / Facebook / Discord 等社群預覽 -->
+<meta property="og:locale" content="zh_TW">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="時盡">
+<meta property="og:title" content="時盡｜THE END OF TIME">
+<meta property="og:description" content="一個關於時間、命運、血與選擇的原創世界。他活過世界的終點，卻沒能逃過那些早已注定的結局。">
+<!-- 正式上線後，把 YOUR-GITHUB-USERNAME / YOUR-REPO 改成實際 GitHub Pages 網址 -->
+<meta property="og:url" content="https://vladjia.github.io/TheEndOfTime/home.html">
+<meta property="og:image" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.jpg">
+<meta property="og:image:secure_url" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="《時盡》世界觀網站預覽圖">
+
+<!-- X / Twitter card；部分平台也會取這組 -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="時盡｜故事・角色・世界觀">
+<meta name="twitter:description" content="他活過世界的終點，卻沒能逃過那些早已注定的結局。">
+<meta name="twitter:image" content="https://vladjia.github.io/TheEndOfTime/assets/images/og-cover.jpg">
+
+<link rel="canonical" href="https://vladjia.github.io/TheEndOfTime/home.html">
+<link rel="stylesheet" href="app/site.css?v=0.18.43">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png?v=0.17.3">
+  <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=0.17.3">
+<link rel="stylesheet" href="app/adventure.css?v=0.18.59">
+</head>
+<!-- 真正的首頁。進入點是 index.html（迎賓頁），所以這一頁直接就是 site-entered，
+     不再有 welcome gate，主視覺動畫一載入就跑。 -->
+<body class="home-page site-entered" id="top">
+<div class="site-loading" id="siteLoading" aria-live="polite" aria-busy="true">
+  <div class="site-loading-inner">
+    <div class="loading-hourglass loading-frame-sequence" aria-hidden="true">
+      <img
+        class="loading-frame-image"
+        src="assets/images/loading/loading-01.png"
+        data-loading-base="assets/images/loading/"
+        alt="">
+    </div>
+    <div class="site-loading-title">時盡</div>
+    <div class="site-loading-text">讀取時序資料中……</div>
+  </div>
+</div>
+
+<div class="time-sand"></div>
+
+<header class="topbar topbar-v3 home-topbar">
+  <a class="brand brand-v3" href="#top" aria-label="時盡首頁">
+    <img class="brand-logo" src="assets/images/the-end-of-time-logo.png" alt="時盡 Logo">
+    <strong id="brandTitle">時盡</strong>
+  </a>
+
+  <nav class="main-nav" aria-label="主導覽">
+    <a href="story/index.html" data-copy="site.nav.story">故事</a>
+    <a href="characters/index.html" data-copy="site.nav.characters">角色</a>
+    <a href="world/index.html" data-copy="site.nav.world">世界觀</a>
+  </nav>
+
+  <button class="nav-status time-mark-toggle time-mark-orb" type="button" data-time-mark aria-label="開啟時印" title="時印">
+    <span class="time-mark-orb-media" aria-hidden="true">
+      <video class="time-mark-orb-video" src="assets/video/time-mark-shard.webm?v=0.18.19" autoplay muted loop playsinline preload="metadata"></video>
+    </span>
+    <span class="time-mark-orb-label">時印</span>
+  </button>
+</header>
+
+<main>
+  <section class="hero hero-cover">
+    <div class="hero-copy">
+      <div class="eyebrow hero-reveal hero-reveal-1" data-copy="site.home.eyebrow">THE END OF TIME</div>
+      <h1 class="hero-reveal hero-reveal-2">時盡</h1>
+      <p class="lead hero-reveal hero-reveal-3" id="tagline" data-copy="site.home.tagline">他活過世界的終點，卻沒能逃過那些早已注定的結局。</p>
+      <div class="quote hero-reveal hero-reveal-4" data-copy="site.home.law">「過程可以改變，結果不能。」</div>
+    </div>
+    <div class="hero-art hero-art-reveal" id="hero" aria-label="《時盡》首頁封面"></div>
+  </section>
+
+  <section class="home-portals" aria-label="網站主要入口">
+    <a class="home-portal" href="story/index.html">
+      <small>01 / STORY</small>
+      <h2 data-copy="site.home.portal.story.title">故事</h2>
+      <p data-copy="site.home.portal.story.desc">從章與節開始，沿著時間留下的裂縫讀下去。</p>
+      <span data-copy="site.home.portal.enter">ENTER →</span>
+    </a>
+
+    <a class="home-portal" href="characters/index.html">
+      <small>02 / CHARACTERS</small>
+      <h2 data-copy="site.home.portal.characters.title">角色</h2>
+      <p data-copy="site.home.portal.characters.desc">閱讀人物檔案、武器、能力與彼此留下的痕跡。</p>
+      <span data-copy="site.home.portal.enter">ENTER →</span>
+    </a>
+
+    <a class="home-portal" href="world/index.html">
+      <small>03 / WORLD</small>
+      <h2 data-copy="site.home.portal.world.title">世界觀</h2>
+      <p data-copy="site.home.portal.world.desc">理解時之沙漏、血族與這個世界運行的法則。</p>
+      <span data-copy="site.home.portal.enter">ENTER →</span>
+    </a>
+  </section>
+</main>
+
+<footer class="footer">《時盡》STORY / CHARACTER / WORLD</footer>
+<script src="app/loading.js?v=0.18.9" defer></script>
+<script src="app/scrollbar.js?v=0.17.3" defer></script>
+<script src="app/character-fields.js?v=0.18.83" defer></script>
+<script src="app/site.js?v=0.18.83" defer></script>
+<script src="app/image-viewer.js?v=0.17.3" defer></script>
+<script src="app/adventure.js?v=0.18.59" defer></script>
+</body>
+</html>
