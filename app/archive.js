@@ -20,13 +20,34 @@ function applyCopy(copy){
   });
 }
 
+// 角色列表卡片上的每一格，都要能被「角色認知內容」按階段覆蓋。
+// 這份清單必須跟 character-page.js 的 CHARACTER_OVERRIDABLE 完全一致，
+// 少一個欄位就是少一個爆雷點——列表頁曾經只蓋三格，
+// 結果嬰兒階段的檔案頁寫「那個孩子」，列表卡片卻直接寫「家式」。
+const CHARACTER_OVERRIDABLE = [
+  'name',          // 角色名（卡片大標）
+  'title',         // 正式稱號
+  'fullName',      // 完整稱呼
+  'role',          // 角色定位
+  'coreLine',      // 核心句
+  'publicIntro',   // 公開介紹
+  'publicDetail',  // 公開詳述
+  'seal',          // 印記
+  'poem'           // 詩號
+];
+
 function applyCharacterContent(chars,progress){
   const map=progress?.characterContent || {};
   (chars || []).forEach(char=>{
     const fields=map[char.id] || {};
-    ['publicIntro','coreLine','publicDetail'].forEach(fieldId=>{
-      const value=String(fields[fieldId]?.value || '').trim();
-      if(value) char[fieldId]=value;
+    const value=fieldId=>String(fields?.[fieldId]?.value || '').trim();
+
+    // 跟角色頁同一條規則：看那一列在不在，不是看內容空不空。
+    // 「這個階段就是沒有稱號」和「這個階段沒設定，沿用預設」是兩件事。
+    const 有覆蓋=fieldId=>!!fields && Object.prototype.hasOwnProperty.call(fields,fieldId);
+
+    CHARACTER_OVERRIDABLE.forEach(key=>{
+      if(有覆蓋(key)) char[key]=value(key);
     });
   });
 }
@@ -54,7 +75,7 @@ function renderCharacters(chars){
       a.innerHTML=`
         <div class="archive-character-seal">${c.seal || ''}</div>
         <small>${c.role || ''}</small>
-        <h2>${c.fullName || c.name || ''}</h2>
+        <h2>${c.name || c.fullName || ''}</h2>
         <p>${c.publicIntro || ''}</p>
         <span>VIEW FILE →</span>`;
       box.appendChild(a);
