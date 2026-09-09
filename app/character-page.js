@@ -850,18 +850,27 @@ function applyCharacterContent(char,characterId,adventureData){
   const fields=adventureData?.characterContent?.[characterId] || {};
   const value=fieldId=>String(fields?.[fieldId]?.value || '').trim();
 
+  // 判斷「有沒有覆蓋」要看那一列在不在，不能看內容空不空。
+  // 空內容是有意義的：「這個階段就是沒有正式稱號」跟「這個階段沒設定，沿用預設」
+  // 是兩件不同的事，只看空不空就分不出來。
+  const 有覆蓋=fieldId=>!!fields && Object.prototype.hasOwnProperty.call(fields,fieldId);
+
   CHARACTER_OVERRIDABLE.forEach(key=>{
-    const v=value(key);
-    if(v) char[key]=v;
+    if(有覆蓋(key)) char[key]=value(key);
   });
 
   const intro=[];
+  let 有介紹覆蓋=false;
   for(let i=1;i<=CHARACTER_INTRO_SLOTS;i++){
-    const title=value(`introField${i}Title`);
-    const content=value(`introField${i}`);
+    const tk=`introField${i}Title`, ck=`introField${i}`;
+    if(!有覆蓋(tk) && !有覆蓋(ck)) continue;
+    有介紹覆蓋=true;
+    const title=有覆蓋(tk)?value(tk):'';
+    const content=有覆蓋(ck)?value(ck):'';
     if(title || content) intro.push({title:title,value:content});
   }
-  if(intro.length) char.introFields=intro;
+  // 有覆蓋就整組換掉——包含「這個階段一格介紹欄都沒有」這種情況
+  if(有介紹覆蓋) char.introFields=intro;
 }
 
 function setKnowledgeVisible(target,visible){
