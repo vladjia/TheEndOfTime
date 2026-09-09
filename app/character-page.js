@@ -840,52 +840,14 @@ function characterKnowledgeSet(adventureData,characterId){
   return new Set(Array.isArray(map?.[characterId]) ? map[characterId] : []);
 }
 
-// 角色頁上每一格文字，都要能被「角色認知內容」按階段覆蓋。
-// 規則只有一條：平面的「角色」表是預設值，角色認知內容有填就蓋掉。
-//
-// 所以「角色」表要填的是【讀者第一次看到這個角色時該看到的樣子】，
-// 不是最完整的樣子。忘記設定的欄位會退回預設——預設必須是最保守的那版，
-// 不然每一個漏掉的欄位都是一次爆雷。
-const CHARACTER_OVERRIDABLE = [
-  'name',          // 角色名（大標）
-  'title',         // 正式稱號
-  'fullName',      // 完整稱呼
-  'role',          // 角色定位 → IDENTITY
-  'coreLine',      // 核心句 → CORE LINE
-  'publicIntro',   // 公開介紹
-  'publicDetail',  // 公開詳述 → 角色簡介本文
-  'seal',          // 印記
-  'poem'           // 詩號
-];
-
-// 介紹欄位不再固定三格。填幾格就出現幾格，中間留空也會被壓掉。
-const CHARACTER_INTRO_SLOTS = 6;
+// 階段覆蓋規則統一放在 app/character-fields.js，角色列表頁跟這裡共用同一份。
+// 要新增可覆蓋欄位請改那一支，不要在這裡再抄一份。
+const CHARACTER_INTRO_SLOTS = window.EndOfTimeCharacterFields?.CHARACTER_INTRO_SLOTS || 6;
 
 function applyCharacterContent(char,characterId,adventureData){
-  const fields=adventureData?.characterContent?.[characterId] || {};
-  const value=fieldId=>String(fields?.[fieldId]?.value || '').trim();
-
-  // 判斷「有沒有覆蓋」要看那一列在不在，不能看內容空不空。
-  // 空內容是有意義的：「這個階段就是沒有正式稱號」跟「這個階段沒設定，沿用預設」
-  // 是兩件不同的事，只看空不空就分不出來。
-  const 有覆蓋=fieldId=>!!fields && Object.prototype.hasOwnProperty.call(fields,fieldId);
-
-  CHARACTER_OVERRIDABLE.forEach(key=>{
-    if(有覆蓋(key)) char[key]=value(key);
-  });
-
-  const intro=[];
-  let 有介紹覆蓋=false;
-  for(let i=1;i<=CHARACTER_INTRO_SLOTS;i++){
-    const tk=`introField${i}Title`, ck=`introField${i}`;
-    if(!有覆蓋(tk) && !有覆蓋(ck)) continue;
-    有介紹覆蓋=true;
-    const title=有覆蓋(tk)?value(tk):'';
-    const content=有覆蓋(ck)?value(ck):'';
-    if(title || content) intro.push({title:title,value:content});
-  }
-  // 有覆蓋就整組換掉——包含「這個階段一格介紹欄都沒有」這種情況
-  if(有介紹覆蓋) char.introFields=intro;
+  const 角色欄位=window.EndOfTimeCharacterFields;
+  if(!角色欄位) throw new Error('[時盡] 沒載到 app/character-fields.js —— 階段覆蓋會失效，寧可讓頁面空掉也不能爆雷。');
+  角色欄位.applyOverrides(char,角色欄位.fieldsFor(adventureData,characterId));
 }
 
 function setKnowledgeVisible(target,visible){

@@ -20,36 +20,12 @@ function applyCopy(copy){
   });
 }
 
-// 角色列表卡片上的每一格，都要能被「角色認知內容」按階段覆蓋。
-// 這份清單必須跟 character-page.js 的 CHARACTER_OVERRIDABLE 完全一致，
-// 少一個欄位就是少一個爆雷點——列表頁曾經只蓋三格，
-// 結果嬰兒階段的檔案頁寫「那個孩子」，列表卡片卻直接寫「家式」。
-const CHARACTER_OVERRIDABLE = [
-  'name',          // 角色名（卡片大標）
-  'title',         // 正式稱號
-  'fullName',      // 完整稱呼
-  'role',          // 角色定位
-  'coreLine',      // 核心句
-  'publicIntro',   // 公開介紹
-  'publicDetail',  // 公開詳述
-  'seal',          // 印記
-  'poem'           // 詩號
-];
-
+// 階段覆蓋規則統一放在 app/character-fields.js，角色頁跟這裡共用同一份。
+// 以前兩邊各抄一份，結果這裡少覆蓋六個欄位，卡片直接寫出「家式」爆雷。
 function applyCharacterContent(chars,progress){
-  const map=progress?.characterContent || {};
-  (chars || []).forEach(char=>{
-    const fields=map[char.id] || {};
-    const value=fieldId=>String(fields?.[fieldId]?.value || '').trim();
-
-    // 跟角色頁同一條規則：看那一列在不在，不是看內容空不空。
-    // 「這個階段就是沒有稱號」和「這個階段沒設定，沿用預設」是兩件事。
-    const 有覆蓋=fieldId=>!!fields && Object.prototype.hasOwnProperty.call(fields,fieldId);
-
-    CHARACTER_OVERRIDABLE.forEach(key=>{
-      if(有覆蓋(key)) char[key]=value(key);
-    });
-  });
+  const 角色欄位=window.EndOfTimeCharacterFields;
+  if(!角色欄位) throw new Error('[時盡] 沒載到 app/character-fields.js —— 階段覆蓋會失效，寧可讓頁面空掉也不能爆雷。');
+  角色欄位.applyAll(chars,progress);
 }
 
 function renderCharacters(chars){
