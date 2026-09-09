@@ -77,18 +77,21 @@
   font-family:var(--font-title);font-size:22px;font-weight:500
 }
 .character-meta{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);
+  /* 欄數由 JS 依實際填了幾格設定，不要再固定三欄留空盒子 */
+  display:grid;grid-template-columns:repeat(var(--cols,3),1fr);gap:1px;background:var(--line-soft);
   border:1px solid var(--line-soft)
 }
+.character-meta[hidden]{display:none}
 .character-meta>div{background:#0b0f15;padding:16px 17px}
 .character-meta small{display:block;color:#707b89;font-size:9px;letter-spacing:.16em}
 .character-meta strong{display:block;margin-top:4px;font-size:13px;color:#dde1e6}
 
 .character-strip{
   margin:32px 0 82px;
-  display:grid;grid-template-columns:repeat(4,1fr);
+  display:grid;grid-template-columns:repeat(var(--cols,4),1fr);
   border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)
 }
+.character-strip[hidden]{display:none}
 .character-strip>div{padding:17px 18px;border-right:1px solid var(--line-soft)}
 .character-strip>div:last-child{border-right:0}
 .character-strip span{display:block;font-size:8px;color:#687380;letter-spacing:.18em}

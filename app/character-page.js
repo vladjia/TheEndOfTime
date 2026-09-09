@@ -318,42 +318,44 @@ function renderMeta(char){
   const box = $('#characterMeta');
   if(!box) return;
 
-  const fields = Array.isArray(char.introFields)
-    ? char.introFields.filter(item => item && (item.title || item.value)).slice(0,3)
-    : [];
+  // 固定畫三格，沒填的那格就是一個空盒子。改成填幾格畫幾格。
+  const fields = (Array.isArray(char.introFields) ? char.introFields : [])
+    .filter(item => item && (item.title || item.value))
+    .slice(0, CHARACTER_INTRO_SLOTS);
 
   box.innerHTML = '';
+  box.hidden = fields.length === 0;
+  box.style.setProperty('--cols', String(Math.min(fields.length, 3) || 1));
 
-  for(let i = 0; i < 3; i++){
-    const item = fields[i] || {title:'', value:''};
-
+  fields.forEach(item => {
     const cell = document.createElement('div');
-
     if(item.title){
       const small = document.createElement('small');
       small.textContent = item.title;
       cell.appendChild(small);
     }
-
     if(item.value){
       const strong = document.createElement('strong');
       strong.textContent = item.value;
       cell.appendChild(strong);
     }
-
     box.appendChild(cell);
-  }
+  });
 }
 
 function renderStrip(char){
   const box = $('#characterStrip');
   if(!box) return;
 
+  // 原本這裡也印 char.coreLine，跟上面的 CORE LINE 是同一格資料，
+  // 同一句話在一頁上出現兩次。拿掉，這條只放身分相關的東西。
   const rows = [
     ['IDENTITY',char.role],
-    ['CORE',char.coreLine]
+    ['SEAL',char.seal]
   ].filter(([,value])=>value);
 
+  box.hidden = rows.length === 0;
+  box.style.setProperty('--cols', String(rows.length || 1));
   box.innerHTML = rows.map(([label,value])=>
     `<div><span>${label}</span><strong>${value}</strong></div>`
   ).join('');
@@ -823,26 +825,43 @@ function characterKnowledgeSet(adventureData,characterId){
   return new Set(Array.isArray(map?.[characterId]) ? map[characterId] : []);
 }
 
+// 角色頁上每一格文字，都要能被「角色認知內容」按階段覆蓋。
+// 規則只有一條：平面的「角色」表是預設值，角色認知內容有填就蓋掉。
+//
+// 所以「角色」表要填的是【讀者第一次看到這個角色時該看到的樣子】，
+// 不是最完整的樣子。忘記設定的欄位會退回預設——預設必須是最保守的那版，
+// 不然每一個漏掉的欄位都是一次爆雷。
+const CHARACTER_OVERRIDABLE = [
+  'name',          // 角色名（大標）
+  'title',         // 正式稱號
+  'fullName',      // 完整稱呼
+  'role',          // 角色定位 → IDENTITY
+  'coreLine',      // 核心句 → CORE LINE
+  'publicIntro',   // 公開介紹
+  'publicDetail',  // 公開詳述 → 角色簡介本文
+  'seal',          // 印記
+  'poem'           // 詩號
+];
+
+// 介紹欄位不再固定三格。填幾格就出現幾格，中間留空也會被壓掉。
+const CHARACTER_INTRO_SLOTS = 6;
+
 function applyCharacterContent(char,characterId,adventureData){
   const fields=adventureData?.characterContent?.[characterId] || {};
   const value=fieldId=>String(fields?.[fieldId]?.value || '').trim();
 
-  const publicIntro=value('publicIntro');
-  const coreLine=value('coreLine');
-  const publicDetail=value('publicDetail');
-
-  if(publicIntro) char.publicIntro=publicIntro;
-  if(coreLine) char.coreLine=coreLine;
-  if(publicDetail) char.publicDetail=publicDetail;
-
-  [1,2,3].forEach(index=>{
-    const title=value(`introField${index}Title`);
-    const content=value(`introField${index}`);
-    if(!Array.isArray(char.introFields)) char.introFields=[];
-    if(title || content){
-      char.introFields[index-1]={title:title,value:content};
-    }
+  CHARACTER_OVERRIDABLE.forEach(key=>{
+    const v=value(key);
+    if(v) char[key]=v;
   });
+
+  const intro=[];
+  for(let i=1;i<=CHARACTER_INTRO_SLOTS;i++){
+    const title=value(`introField${i}Title`);
+    const content=value(`introField${i}`);
+    if(title || content) intro.push({title:title,value:content});
+  }
+  if(intro.length) char.introFields=intro;
 }
 
 function setKnowledgeVisible(target,visible){
