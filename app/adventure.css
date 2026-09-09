@@ -2735,10 +2735,16 @@ body:not(.pre-entry) .time-mark-orb{
   background:linear-gradient(90deg,rgba(255,255,255,.24),transparent);
 }
 
+/* 本命用顯示字型 —— 跟石片上的時辰字同一套。
+   注意：子集必須含十天干（甲乙丙丁戊己庚辛壬癸），
+   否則地支用顯示字型、天干退回 Noto Serif TC，兩個字會不同臉。 */
 .tw-native strong{
   display:block;
-  font:400 34px/1.15 "Noto Serif TC","Songti TC",serif;
-  letter-spacing:.08em;
+  font-family:var(--font-display);
+  font-size:38px;
+  font-weight:400;
+  line-height:1.12;
+  letter-spacing:.10em;
   text-shadow:0 0 26px currentColor;
 }
 .tw-native span{

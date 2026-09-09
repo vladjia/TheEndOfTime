@@ -1,7 +1,15 @@
 
-/* 顯示字型：已子集化為網站實際用字（847 字），15MB → 607KB。
-   母檔 TheEndOfTimeDisplay_補字完成.ttf 保存在 Drive，不放進 repo。
-   之後新增角色詩號或招式名，需重新產生子集。 */
+/* 顯示字型：已子集化為網站實際用字（1246 字）。
+   母檔 TheEndOfTimeDisplay_補字完成_v6.ttf 保存在 Drive，不放進 repo。
+
+   子集必須包含十天干與十二地支 —— 時印是六十甲子，
+   時印幻境的「本命」用這套字型顯示。少一個天干就會有一半的玩家看到不同臉的字。
+
+   之後新增角色詩號、招式名、或任何用顯示字型排的新文案，需重新產生子集：
+     pyftsubset 母檔.ttf --text-file=字集.txt \
+       --output-file=TheEndOfTimeDisplay.subset.woff2 \
+       --flavor=woff2 --layout-features='*' --no-hinting --desubroutinize
+   字集＝診斷_產生字型字集() 的輸出 ＋ 甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥 */
 @font-face{
   font-family:"TheEndOfTimeDisplay";
   src:url("../assets/fonts/TheEndOfTimeDisplay.subset.woff2?v=0.18.51") format("woff2"),
