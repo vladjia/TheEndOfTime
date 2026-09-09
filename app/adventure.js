@@ -2393,20 +2393,287 @@ window.EndOfTimeAdventure = (() => {
     };
   }
 
+
+  // ══════════════════════════════════════════════════════════
+  //  六十甲子盤
+  //
+  //  指針不動，盤在動。轉一格，天干走 36°、地支走 30°，同向；
+  //  十和十二的最小公倍數是六十，所以轉六十格回到原點。
+  //
+  //  「甲丑」不是被擋掉的 —— 兩個輪咬在一起，盤上根本沒有那個位置。
+  //  字沿徑向刻，所以走到指針底下的那一個剛好是正的。
+  // ══════════════════════════════════════════════════════════
+
+  // 音效模組是選配。沒有 sfx.js 也要能用，只是安靜。
+  let sfxRequested = false;
+  const ADVENTURE_SRC = (document.currentScript && document.currentScript.src) || '';
+  function ensureSfx(){
+    if(sfxRequested || window.TimeSfx || !ADVENTURE_SRC) return;
+    sfxRequested = true;
+    try{
+      const el = document.createElement('script');
+      el.src = new URL('sfx.js', ADVENTURE_SRC).href;
+      el.async = true;
+      document.head.appendChild(el);
+    }catch(_){}
+  }
+  const sfx = () => window.TimeSfx || null;
+
+  function buildJiaziDial(host, {onChange} = {}){
+    const SLOTS = TM_PAIRS;
+    const WX = ['木','火','土','金','水'];
+    const WX_HEX = {木:'#6FA07A', 火:'#C9515A', 土:'#C9A26B', 金:'#D8DCE2', 水:'#6E97C0'};
+    const wxOf = gi => WX[Math.floor(gi / 2)];
+    const yangOf = gi => gi % 2 === 0;
+
+    let pos = 0, ganDeg = 0, zhiDeg = 0, slot = 0, busy = false, held = null;
+    const picked = new Array(SLOTS).fill(null);
+    const pairAt = p => TM_GAN[p % 10] + TM_ZHI[p % 12];
+
+    host.innerHTML = `
+      <div class="jz-slots" data-jz-slots></div>
+      <div class="jz-wrap">
+        <div class="jz-frame a"></div>
+        <div class="jz-frame b"></div>
+        <div class="jz-wheel" data-jz-gan><svg class="jz-wuxing" viewBox="0 0 100 100"></svg></div>
+        <div class="jz-wheel" data-jz-zhi></div>
+        <button type="button" class="jz-hub" data-jz-hub></button>
+        <div class="jz-pointer"></div>
+      </div>
+      <p class="jz-hint" data-jz-hint></p>`;
+
+    const slotBox = host.querySelector('[data-jz-slots]');
+    const ganWheel = host.querySelector('[data-jz-gan]');
+    const zhiWheel = host.querySelector('[data-jz-zhi]');
+    const hub = host.querySelector('[data-jz-hub]');
+    const hint = host.querySelector('[data-jz-hint]');
+
+    const place = (el, deg, r) => {
+      const a = (deg - 90) * Math.PI / 180;
+      el.style.left = `${50 + Math.cos(a) * r}%`;
+      el.style.top  = `${50 + Math.sin(a) * r}%`;
+      el.style.transform = `rotate(${deg}deg)`;     // 徑向刻字
+    };
+
+    const ganCells = [...TM_GAN].map((ch, i) => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'jz-cell jz-gan';
+      el.textContent = ch;
+      el.dataset.i = String(i);
+      el.dataset.wx = wxOf(i);
+      el.dataset.yang = yangOf(i) ? '1' : '0';
+      el.setAttribute('aria-label', `${ch}　${wxOf(i)}　${yangOf(i) ? '陽' : '陰'}`);
+      place(el, i * 36, 41);
+      ganWheel.appendChild(el);
+      return el;
+    });
+
+    const zhiCells = [...TM_ZHI].map((ch, i) => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'jz-cell jz-zhi';
+      el.textContent = ch;
+      el.dataset.i = String(i);
+      place(el, i * 30, 27);
+      zhiWheel.appendChild(el);
+      return el;
+    });
+
+    // 五行弧跟著天干輪一起轉 —— 五行本來就是天干的
+    (function drawWuxing(){
+      const svg = ganWheel.querySelector('.jz-wuxing');
+      const R = 47.4;
+      const pt = (deg, r) => {
+        const a = (deg - 90) * Math.PI / 180;
+        return [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
+      };
+      WX.forEach((wx, k) => {
+        const mid = k * 72 + 18;               // 甲 0°、乙 36° → 木在 18°
+        const arc = (a, b) => {
+          const [x1, y1] = pt(a, R), [x2, y2] = pt(b, R);
+          const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('d', `M ${x1} ${y1} A ${R} ${R} 0 0 1 ${x2} ${y2}`);
+          path.setAttribute('fill','none');
+          path.setAttribute('stroke', WX_HEX[wx]);
+          path.setAttribute('stroke-width','1');
+          path.setAttribute('opacity','.40');
+          svg.appendChild(path);
+        };
+        arc(mid - 26, mid - 7);
+        arc(mid + 7,  mid + 26);
+        const [lx, ly] = pt(mid, R);
+        const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+        t.setAttribute('x', lx); t.setAttribute('y', ly + 1.25);
+        t.setAttribute('text-anchor','middle');
+        t.setAttribute('transform', `rotate(${mid} ${lx} ${ly})`);
+        t.setAttribute('fill', WX_HEX[wx]);
+        t.textContent = wx;
+        svg.appendChild(t);
+      });
+    })();
+
+    // 走幾格 → 每個輪該轉幾度。
+    // 前進 10 格時天干輪剛好轉滿一圈回到原位；照實畫出來，
+    // 使用者會以為自己選的天干被重轉了。所以整數圈的那個輪按住不動。
+    function wheelDegrees(delta){
+      const shortest = d => { d %= 360; if(d > 180) d -= 360; if(d < -180) d += 360; return d; };
+      if(delta % 10 === 0) return {g:0, z:shortest(delta * 30), held:'gan'};
+      if(delta % 12 === 0) return {g:shortest(delta * 36), z:0, held:'zhi'};
+      return {g:delta * 36, z:delta * 30, held:null};
+    }
+
+    function rotate(delta){
+      if(!delta){ paint(); return; }
+      busy = true;
+      pos = ((pos + delta) % 60 + 60) % 60;
+      const mv = wheelDegrees(delta);
+      ganDeg -= mv.g; zhiDeg -= mv.z; held = mv.held;
+      // 喀噠聲對應「眼睛看得到的移動」，不是內部走了幾格
+      const notches = Math.max(Math.abs(mv.g) / 36, Math.abs(mv.z) / 30) || 1;
+      const ms = Math.min(1500, 420 + notches * 55);
+      ganWheel.style.transitionDuration = zhiWheel.style.transitionDuration = ms + 'ms';
+      ganWheel.style.transform = `rotate(${ganDeg}deg)`;
+      zhiWheel.style.transform = `rotate(${zhiDeg}deg)`;
+      const S = sfx();
+      if(S){ S.startRotate(); S.ticksAlong(Math.round(notches), ms); }
+      paint();
+      setTimeout(() => {
+        busy = false; held = null;
+        const s2 = sfx();
+        if(s2){ s2.stopRotate(); s2.settle(); }
+        paint();
+      }, ms);
+    }
+
+    const shortestTo = target => {
+      let d = (target - pos + 60) % 60;
+      return d > 30 ? d - 60 : d;
+    };
+    const indexOfPair = str => {
+      for(let p = 0; p < 60; p++) if(pairAt(p) === str) return p;
+      return 0;
+    };
+
+    function paint(){
+      slotBox.innerHTML = '';
+      for(let i = 0; i < SLOTS; i++){
+        const d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'jz-slot' + (picked[i] ? ' is-filled' : '') + (i === slot ? ' is-active' : '');
+        d.dataset.n = String(i + 1);
+        d.innerHTML = `<span>${picked[i] ? picked[i][0] + '<br>' + picked[i][1] : '－<br>－'}</span>`;
+        d.onclick = () => {
+          if(busy) return;
+          slot = i;
+          if(picked[i]) rotate(shortestTo(indexOfPair(picked[i]))); else paint();
+        };
+        slotBox.appendChild(d);
+      }
+
+      const gi = pos % 10, zi = pos % 12;
+      ganWheel.classList.toggle('is-held', held === 'gan');
+      zhiWheel.classList.toggle('is-held', held === 'zhi');
+      ganCells.forEach((el, i) => el.classList.toggle('is-lit', i === gi));
+      zhiCells.forEach((el, i) => {
+        el.classList.toggle('is-lit', i === zi);
+        el.classList.toggle('is-dead', (i % 2) !== (gi % 2));
+      });
+
+      hub.innerHTML = `<b>${pairAt(pos)}</b><small>第 ${slot + 1} 格<br>點此刻下</small>`;
+      hint.innerHTML =
+        `<i style="color:${WX_HEX[wxOf(gi)]}">${TM_GAN[gi]}</i> ${wxOf(gi)}・${yangOf(gi) ? '陽' : '陰'}` +
+        `　只咬得到 ${[...TM_ZHI].filter((_, k) => k % 2 === gi % 2).join('、')}`;
+
+      if(onChange) onChange(picked.every(Boolean) ? TM_PREFIX + picked.join('') : '');
+    }
+
+    ganWheel.addEventListener('click', e => {
+      const el = e.target.closest('.jz-cell'); if(!el || busy) return;
+      const gi = Number(el.dataset.i);
+      let bd = 99;
+      for(let p = 0; p < 60; p++){
+        if(p % 10 !== gi) continue;
+        const d = shortestTo(p);
+        if(Math.abs(d) < Math.abs(bd)) bd = d;
+      }
+      rotate(bd);
+    });
+
+    zhiWheel.addEventListener('click', e => {
+      const el = e.target.closest('.jz-cell'); if(!el || busy) return;
+      if(el.classList.contains('is-dead')){ const S = sfx(); if(S) S.reject(); return; }
+      const zi = Number(el.dataset.i), gi = pos % 10;
+      for(let p = 0; p < 60; p++){
+        if(p % 10 === gi && p % 12 === zi){ rotate(shortestTo(p)); return; }
+      }
+    });
+
+    hub.addEventListener('click', () => {
+      if(busy) return;
+      picked[slot] = pairAt(pos);
+      const S = sfx();
+      if(S){
+        S.strike();
+        if(picked.every(Boolean)) setTimeout(() => S.complete(), 260);
+      }
+      hub.classList.remove('is-struck');
+      void hub.offsetWidth;
+      hub.classList.add('is-struck');
+      const next = picked.findIndex(x => !x);
+      slot = next >= 0 ? next : slot;
+      paint();
+    });
+
+    [ganWheel, zhiWheel].forEach(w => w.addEventListener('pointerover', e => {
+      const S = sfx();
+      if(S && e.target.closest('.jz-cell')) S.hover();
+    }));
+
+    ensureSfx();
+    paint();
+
+    return {
+      // 整枚貼上就自動填滿八格 —— 平常大家還是用貼的，轉盤是沒有剪貼簿時用的
+      fill(token){
+        const t = normalizeTimeMarkInput(token);
+        if(!t || !t.startsWith(TM_PREFIX)) return false;
+        const body = t.slice(TM_PREFIX.length);
+        for(let i = 0; i < SLOTS; i++) picked[i] = body.slice(i * 2, i * 2 + 2);
+        slot = SLOTS - 1;
+        rotate(shortestTo(indexOfPair(picked[SLOTS - 1])));
+        return true;
+      },
+      clear(){ picked.fill(null); slot = 0; paint(); },
+      back(){
+        if(busy) return;
+        if(!picked[slot] && slot > 0) slot--;
+        picked[slot] = null;
+        paint();
+      }
+    };
+  }
+
   function openRestoreDialog(){
     if(isCritical()) return;
     const o=overlay(`
       <div data-restore-form>
         <div class="time-mark-kicker">RESTORE TIME MARK</div>
         <h2>取回其他時印</h2>
-        <p>只有需要切換另一段旅程時，才需要在這裡輸入時印。<br>整枚貼上即可，空白與前綴都可以省略。</p>
-        <div class="time-mark-field">
-          <label for="restoreTimeMark">輸入另一枚時印</label>
-          <input id="restoreTimeMark" autocomplete="off" placeholder="時印　甲子 乙丑 丙寅 丁卯 戊辰 己巳 庚午 辛未">
+        <p>指針不動，盤在動。點外圈的天干，再點內圈的地支，最後點中心刻下。<br>整枚複製起來直接貼上，八格會自動填滿。</p>
+
+        <div class="time-jiazi-dial" data-jz-root></div>
+
+        <div class="time-mark-field" data-restore-typed hidden>
+          <label for="restoreTimeMark">直接輸入時印</label>
+          <input id="restoreTimeMark" autocomplete="off" spellcheck="false" placeholder="時印　甲子 乙丑 丙寅 丁卯 戊辰 己巳 庚午 辛未">
         </div>
+
         <p class="time-mark-status" id="restoreTimeMarkStatus"></p>
         <div class="time-mark-actions">
-          <button class="time-mark-btn primary" type="button" data-restore-time>取回時印</button>
+          <button class="time-mark-btn primary" type="button" data-restore-time disabled>取回時印</button>
+          <button class="time-mark-btn" type="button" data-jz-back>退一格</button>
+          <button class="time-mark-btn" type="button" data-jz-typed>改用輸入</button>
           <button class="time-mark-btn" type="button" data-time-close>返回</button>
         </div>
       </div>
@@ -2432,6 +2699,12 @@ window.EndOfTimeAdventure = (() => {
       </div>
     `);
     const form=o.querySelector('[data-restore-form]');
+    const typedBox=o.querySelector('[data-restore-typed]');
+    const dialRoot=o.querySelector('[data-jz-root]');
+    const backBtnJz=o.querySelector('[data-jz-back]');
+    const typedToggle=o.querySelector('[data-jz-typed]');
+    let typedMode=false;
+    let dialToken='';
     const confirmation=o.querySelector('[data-restore-confirmation]');
     const field=o.querySelector('#restoreTimeMark');
     const status=o.querySelector('#restoreTimeMarkStatus');
@@ -2441,10 +2714,52 @@ window.EndOfTimeAdventure = (() => {
     const confirmBtn=o.querySelector('[data-restore-confirm]');
     const backBtn=o.querySelector('[data-restore-back]');
 
+    const dial=buildJiaziDial(dialRoot,{
+      onChange:(t)=>{
+        dialToken=t;
+        if(!typedMode) restoreBtn.disabled=!t;
+      }
+    });
+
+    // 舊格式（TET-）只能用打的，轉盤刻不出來 —— 所以輸入模式一定要留著。
+    const setTypedMode=(on)=>{
+      typedMode=on;
+      typedBox.hidden=!on;
+      dialRoot.hidden=on;
+      backBtnJz.hidden=on;
+      typedToggle.textContent=on?'改用轉盤':'改用輸入';
+      restoreBtn.disabled = on ? !normalizeTimeMarkInput(field.value) : !dialToken;
+      status.textContent='';
+      if(on) requestAnimationFrame(()=>field.focus());
+    };
+    typedToggle.onclick=()=>setTypedMode(!typedMode);
+    backBtnJz.onclick=()=>dial.back();
+    field.addEventListener('input',()=>{
+      restoreBtn.disabled=!normalizeTimeMarkInput(field.value);
+      status.textContent='';
+    });
+
+    // 貼上：在轉盤模式會自動填滿八格，在輸入模式就照常貼進欄位
+    form.addEventListener('paste',(e)=>{
+      if(typedMode) return;
+      const text=String(e.clipboardData?.getData('text')||'');
+      if(!text) return;
+      if(dial.fill(text)){
+        e.preventDefault();
+        status.textContent='已從剪貼簿填入。';
+      }else if(normalizeTimeMarkInput(text)){
+        e.preventDefault();
+        setTypedMode(true);
+        field.value=text.trim();
+        restoreBtn.disabled=false;
+        status.textContent='這是舊格式的時印，已切換為輸入模式。';
+      }
+    });
+
     const showForm=()=>{
       confirmation.hidden=true;
       form.hidden=false;
-      requestAnimationFrame(()=>field.focus());
+      if(typedMode) requestAnimationFrame(()=>field.focus());
     };
 
     // 畫面顯示排版過的樣子，實際要送出的是正規化後的字串。
@@ -2493,7 +2808,7 @@ window.EndOfTimeAdventure = (() => {
 
     restoreBtn.onclick=()=>{
       if(restoreBtn.disabled || isCritical()) return;
-      const wanted=normalizeTimeMarkInput(field.value);
+      const wanted=typedMode ? normalizeTimeMarkInput(field.value) : dialToken;
       if(wanted && wanted===token()){
         status.textContent='這枚時印已經在這台裝置上使用中。';
         field.select();return;

@@ -2532,3 +2532,161 @@ body:not(.pre-entry) .time-mark-orb{
   letter-spacing:.06em;
   opacity:.42;
 }
+
+
+/* ============================================================
+   v0.18.66 · 取回時印：六十甲子盤
+   十干咬十二支，轉六十下回到原點。轉不出來的組合本來就不存在。
+   ============================================================ */
+.time-jiazi-dial{
+  --jz-wood:#6FA07A;  --jz-wood-yin:#4E7C59;
+  --jz-fire:#C9515A;  --jz-fire-yin:#8F2B34;
+  --jz-earth:#C9A26B; --jz-earth-yin:#96754A;
+  --jz-metal:#D8DCE2; --jz-metal-yin:#9AA1AB;
+  --jz-water:#6E97C0; --jz-water-yin:#47698C;
+  --jz-gold:#c9a26b;
+  --jz-line:rgba(255,255,255,.10);
+  --jz-ease:cubic-bezier(.16,.9,.24,1);
+  margin:20px 0 4px;
+}
+
+/* ── 八格 ── */
+.jz-slots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 0 18px}
+.jz-slot{
+  width:52px;height:58px;padding:0;
+  border:1px solid var(--jz-line);
+  background:rgba(255,255,255,.02);
+  display:grid;place-items:center;position:relative;cursor:pointer;
+  font:400 18px/1.22 "Noto Serif TC","Songti TC",serif;
+  color:rgba(238,240,244,.34);
+  transition:border-color .2s,background .2s,color .2s,transform .2s;
+}
+.jz-slot span{display:block;text-align:center}
+.jz-slot.is-filled{color:rgba(238,240,244,.9);background:rgba(201,162,107,.07)}
+.jz-slot.is-active{
+  border-color:rgba(201,162,107,.62);
+  background:rgba(201,162,107,.16);
+  color:var(--jz-gold);
+  transform:translateY(-3px);
+}
+.jz-slot::after{
+  content:attr(data-n);position:absolute;top:2px;left:4px;
+  font:600 8px/1 ui-monospace,monospace;color:rgba(255,255,255,.20);
+}
+
+/* ── 盤 ── */
+.jz-wrap{position:relative;width:min(360px,84vw);aspect-ratio:1;margin:0 auto}
+.jz-frame{position:absolute;border-radius:50%;border:1px solid var(--jz-line);pointer-events:none}
+.jz-frame.a{inset:2%}
+.jz-frame.b{inset:21%}
+
+.jz-pointer{position:absolute;inset:0;pointer-events:none;z-index:6}
+.jz-pointer::before{
+  content:'';position:absolute;left:50%;top:-1px;transform:translateX(-50%);
+  border-left:6px solid transparent;border-right:6px solid transparent;
+  border-top:11px solid var(--jz-gold);
+  filter:drop-shadow(0 0 6px rgba(201,162,107,.6));
+}
+.jz-pointer::after{
+  content:'';position:absolute;left:50%;top:2%;width:1px;height:34%;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg,rgba(201,162,107,.55),rgba(201,162,107,0));
+}
+
+/* 兩個輪都是整片，內圈那片會蓋住外圈的字：輪不吃事件，只有字吃。 */
+.jz-wheel{
+  position:absolute;inset:0;
+  transition:transform 1.1s var(--jz-ease);
+  will-change:transform;
+  pointer-events:none;
+}
+
+.jz-cell{
+  position:absolute;left:50%;top:50%;
+  width:38px;height:38px;margin:-19px 0 0 -19px;padding:0;
+  display:grid;place-items:center;border:0;border-radius:50%;
+  background:transparent;
+  font:400 18px/1 "Noto Serif TC","Songti TC",serif;
+  color:rgba(238,240,244,.34);
+  cursor:pointer;user-select:none;pointer-events:auto;
+  transition:color .22s,background .22s,opacity .32s,box-shadow .22s;
+}
+.jz-cell:hover{color:rgba(238,240,244,.9);background:rgba(255,255,255,.06)}
+.jz-cell.jz-zhi{font-size:17px}
+.jz-cell.is-dead{opacity:.10;cursor:not-allowed}
+
+.jz-cell.jz-gan[data-wx="木"]{color:var(--jz-wood-yin)}
+.jz-cell.jz-gan[data-wx="火"]{color:var(--jz-fire-yin)}
+.jz-cell.jz-gan[data-wx="土"]{color:var(--jz-earth-yin)}
+.jz-cell.jz-gan[data-wx="金"]{color:var(--jz-metal-yin)}
+.jz-cell.jz-gan[data-wx="水"]{color:var(--jz-water-yin)}
+.jz-cell.jz-gan[data-yang="1"][data-wx="木"]{color:var(--jz-wood)}
+.jz-cell.jz-gan[data-yang="1"][data-wx="火"]{color:var(--jz-fire)}
+.jz-cell.jz-gan[data-yang="1"][data-wx="土"]{color:var(--jz-earth)}
+.jz-cell.jz-gan[data-yang="1"][data-wx="金"]{color:var(--jz-metal)}
+.jz-cell.jz-gan[data-yang="1"][data-wx="水"]{color:var(--jz-water)}
+
+.jz-cell.is-lit{color:#0d1015!important;background:var(--jz-gold);box-shadow:0 0 18px rgba(201,162,107,.55)}
+.jz-cell.jz-gan.is-lit[data-wx="木"]{background:var(--jz-wood);box-shadow:0 0 18px rgba(111,160,122,.55)}
+.jz-cell.jz-gan.is-lit[data-wx="火"]{background:var(--jz-fire);box-shadow:0 0 18px rgba(201,81,90,.55)}
+.jz-cell.jz-gan.is-lit[data-wx="土"]{background:var(--jz-earth);box-shadow:0 0 18px rgba(201,162,107,.55)}
+.jz-cell.jz-gan.is-lit[data-wx="金"]{background:var(--jz-metal);box-shadow:0 0 18px rgba(216,220,226,.45)}
+.jz-cell.jz-gan.is-lit[data-wx="水"]{background:var(--jz-water);box-shadow:0 0 18px rgba(110,151,192,.55)}
+
+/* 被按住的輪：亮起來的字擴一圈光暈，表示「你選的還在，我沒動」 */
+.jz-wheel.is-held .jz-cell.is-lit{animation:jzHold 1.1s var(--jz-ease)}
+@keyframes jzHold{
+  0%  {box-shadow:0 0 18px rgba(201,162,107,.55), 0 0 0 0 rgba(201,162,107,.55)}
+  55% {box-shadow:0 0 24px rgba(201,162,107,.75), 0 0 0 12px rgba(201,162,107,0)}
+  100%{box-shadow:0 0 18px rgba(201,162,107,.55), 0 0 0 0 rgba(201,162,107,0)}
+}
+
+.jz-wuxing{position:absolute;inset:0;pointer-events:none}
+.jz-wuxing text{font:600 3.4px/1 "Noto Serif TC",serif;opacity:.72}
+
+/* ── 中心的轂 ── */
+.jz-hub{
+  position:absolute;inset:36%;padding:0;
+  border-radius:50%;
+  border:1px solid rgba(201,162,107,.30);
+  background:
+    radial-gradient(circle at 50% 40%,rgba(201,162,107,.10),transparent 70%),
+    #0b0e14;
+  box-shadow:0 0 30px rgba(0,0,0,.72) inset;
+  display:grid;place-items:center;text-align:center;
+  cursor:pointer;z-index:5;
+  transition:border-color .3s,transform .3s;
+}
+.jz-hub:hover{border-color:rgba(201,162,107,.7)}
+.jz-hub.is-struck{animation:jzStrike .5s var(--jz-ease)}
+@keyframes jzStrike{0%{transform:scale(1)}34%{transform:scale(1.09)}100%{transform:scale(1)}}
+.jz-hub b{
+  display:block;
+  font:400 30px/1.2 "Noto Serif TC","Songti TC",serif;letter-spacing:.06em;
+  color:rgba(238,240,244,.92);text-shadow:0 0 24px rgba(201,162,107,.36);
+}
+.jz-hub small{
+  display:block;margin-top:6px;
+  font:600 9px/1.5 ui-monospace,monospace;letter-spacing:.16em;
+  color:rgba(255,255,255,.30);
+}
+
+.jz-hint{
+  margin:14px 0 0;text-align:center;min-height:20px;
+  font:11.5px/1.7 "Noto Serif TC",serif;
+  color:rgba(255,255,255,.32);
+}
+.jz-hint i{font-style:normal;font-weight:600}
+
+@media(max-width:480px){
+  .jz-slot{width:44px;height:52px;font-size:16px}
+  .jz-cell{width:34px;height:34px;margin:-17px 0 0 -17px;font-size:16px}
+  .jz-hub b{font-size:25px}
+}
+
+/* 使用者偏好低動態時不要轉，直接到位 */
+@media(prefers-reduced-motion:reduce){
+  .jz-wheel{transition:none}
+  .jz-hub.is-struck{animation:none}
+  .jz-wheel.is-held .jz-cell.is-lit{animation:none}
+}
