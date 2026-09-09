@@ -165,23 +165,35 @@ function renderWuxing(A){
   const n = wx.native;
 
   const box = document.createElement('section');
-  box.className = 'timemark-wuxing';
+  box.className = 'timemark-wuxing is-armed';
   box.innerHTML = `
     <div class="tw-native">
       <small>本命</small>
       <strong style="color:${n.hex}">${n.gan}${n.zhi}</strong>
       <span>${n.wuxing}・${n.yang ? '陽' : '陰'}</span>
-      <p>時印的第一組與你的母石同源——你是那個時辰來的。</p>
+      <p>${n.gan}${n.zhi}既落，此生之時，便自此而始。</p>
     </div>
     <div class="tw-tally">
       <small>時印五行</small>
       <div class="tw-bars">
-        ${wx.order.map(w => `
-          <i class="${wx.tally[w] ? 'has' : ''}" style="--wx:${wx.hex[w]}">
+        ${wx.order.map((w, i) => `
+          <i class="${wx.tally[w] ? 'has' : ''}" style="--wx:${wx.hex[w]};--d:${i * 70}ms">
             <b>${w}</b><em>${CN[wx.tally[w]]}</em>
           </i>`).join('')}
       </div>
-      <p>其餘七組是時空給的，不是你選的。</p>
+      <p>餘印既落，各循其序；來處已定，無從更易。</p>
     </div>`;
   stage.insertAdjacentElement('afterend', box);
+
+  // 破碎進入。
+  // 載入畫面是全部渲染完才收的，所以這塊本來就已經在位置上 ——
+  // 不是為了遮住「跳出來」，是等畫面真的露出來之後才開始演。
+  const reduced = (() => {
+    try{ return window.matchMedia('(prefers-reduced-motion:reduce)').matches; }
+    catch(_){ return false; }
+  })();
+  if(reduced){ box.classList.remove('is-armed'); return; }
+  setTimeout(() => {
+    requestAnimationFrame(() => box.classList.remove('is-armed'));
+  }, 460);
 }

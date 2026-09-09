@@ -2718,11 +2718,21 @@ body:not(.pre-entry) .time-mark-orb{
   color:rgba(255,255,255,.28);
   margin-bottom:9px;
 }
+/* 這兩句是碑文，不是說明文字 —— 用襯線、放寬、字距拉開。 */
 .timemark-wuxing p{
-  margin:10px 0 0;
-  font-size:11.5px;
-  line-height:1.8;
-  color:rgba(255,255,255,.36);
+  margin:14px 0 0;
+  font:400 13px/2.05 "Noto Serif TC","Songti TC","PingFang TC",serif;
+  letter-spacing:.14em;
+  color:rgba(238,240,244,.50);
+  text-indent:0;
+}
+.timemark-wuxing p::before{
+  content:'';
+  display:block;
+  width:26px;
+  height:1px;
+  margin:0 0 12px;
+  background:linear-gradient(90deg,rgba(255,255,255,.24),transparent);
 }
 
 .tw-native strong{
@@ -2763,4 +2773,75 @@ body:not(.pre-entry) .time-mark-orb{
   font-style:normal;
   font:400 12px/1 "Noto Serif TC",serif;
   color:rgba(238,240,244,.58);
+}
+
+
+/* ============================================================
+   v0.18.72 · 時印五行「破碎進入」
+   干支是光穿過琉璃：折開、位移、再合回來。
+   碑文是刻痕：不碎，只是浮出來。
+   兩種材質，兩種動作。
+   ============================================================ */
+.timemark-wuxing.is-armed .tw-native strong,
+.timemark-wuxing.is-armed .tw-bars i,
+.timemark-wuxing.is-armed .tw-native span,
+.timemark-wuxing.is-armed p{
+  opacity:0;
+}
+
+/* 本命：碎裂歸位 —— 色散撕開再收合 */
+.timemark-wuxing:not(.is-armed) .tw-native strong{
+  animation:twShatter .92s cubic-bezier(.18,.86,.24,1) both;
+}
+@keyframes twShatter{
+  0%{
+    opacity:0;
+    transform:translate3d(-14px,7px,0) scale(1.12) skewX(7deg);
+    filter:blur(9px);
+    text-shadow:16px -7px 0 rgba(110,151,192,.55), -16px 7px 0 rgba(201,81,90,.55);
+  }
+  42%{
+    opacity:1;
+    filter:blur(2.4px);
+    text-shadow:6px -3px 0 rgba(110,151,192,.34), -6px 3px 0 rgba(201,81,90,.34);
+  }
+  100%{
+    opacity:1;
+    transform:translate3d(0,0,0) scale(1) skewX(0);
+    filter:blur(0);
+    text-shadow:0 0 26px currentColor;
+  }
+}
+
+.timemark-wuxing:not(.is-armed) .tw-native span{
+  animation:twRise .7s ease both .34s;
+}
+
+/* 五行：一格一格落定 */
+.timemark-wuxing:not(.is-armed) .tw-bars i{
+  animation:twDrop .62s cubic-bezier(.2,.9,.25,1) both;
+  animation-delay:var(--d,0ms);
+}
+@keyframes twDrop{
+  0%  {opacity:0;transform:translate3d(0,-9px,0) scale(.9);filter:blur(5px)}
+  100%{opacity:1;transform:none;filter:blur(0)}
+}
+
+/* 碑文：不碎，浮出來。而且晚一拍，像是先看到印，才讀到字。 */
+.timemark-wuxing:not(.is-armed) .tw-native p{animation:twRise .95s ease both .58s}
+.timemark-wuxing:not(.is-armed) .tw-tally p{animation:twRise .95s ease both .82s}
+@keyframes twRise{
+  0%  {opacity:0;transform:translate3d(0,7px,0)}
+  100%{opacity:1;transform:none}
+}
+.timemark-wuxing:not(.is-armed) p::before{
+  animation:twLine .8s ease both .5s;
+}
+@keyframes twLine{
+  0%  {opacity:0;width:0}
+  100%{opacity:1;width:26px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .timemark-wuxing *{animation:none!important;opacity:1!important;filter:none!important;transform:none!important}
 }
