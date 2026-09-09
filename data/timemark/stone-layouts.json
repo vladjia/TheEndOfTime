@@ -28,10 +28,10 @@
       "maskAlphaThreshold": 24
     },
     "stone-03": {
-      "centerX": 0.5614,
-      "centerY": 0.4795,
-      "width": 0.225,
-      "height": 0.3,
+      "centerX": 0.551,
+      "centerY": 0.4668,
+      "width": 0.1959,
+      "height": 0.2822,
       "rotation": -22.0,
       "padding": 0.1,
       "maskAlphaThreshold": 24
@@ -46,8 +46,8 @@
       "maskAlphaThreshold": 24
     },
     "stone-05": {
-      "centerX": 0.4968,
-      "centerY": 0.5047,
+      "centerX": 0.5049,
+      "centerY": 0.4876,
       "width": 0.2077,
       "height": 0.3151,
       "rotation": 22.0,
@@ -55,8 +55,8 @@
       "maskAlphaThreshold": 24
     },
     "stone-06": {
-      "centerX": 0.5766,
-      "centerY": 0.4912,
+      "centerX": 0.5634,
+      "centerY": 0.4425,
       "width": 0.2584,
       "height": 0.3514,
       "rotation": -22.0,
@@ -73,8 +73,8 @@
       "maskAlphaThreshold": 24
     },
     "stone-08": {
-      "centerX": 0.5546,
-      "centerY": 0.477,
+      "centerX": 0.5271,
+      "centerY": 0.4638,
       "width": 0.2814,
       "height": 0.3324,
       "rotation": -22.0,
@@ -82,8 +82,8 @@
       "maskAlphaThreshold": 24
     },
     "stone-09": {
-      "centerX": 0.5259,
-      "centerY": 0.4898,
+      "centerX": 0.5381,
+      "centerY": 0.4911,
       "width": 0.2352,
       "height": 0.3422,
       "rotation": 22.0,
@@ -100,8 +100,8 @@
       "maskAlphaThreshold": 24
     },
     "stone-11": {
-      "centerX": 0.5136,
-      "centerY": 0.4785,
+      "centerX": 0.5202,
+      "centerY": 0.468,
       "width": 0.2706,
       "height": 0.3385,
       "rotation": 22.0,
@@ -109,8 +109,8 @@
       "maskAlphaThreshold": 24
     },
     "stone-12": {
-      "centerX": 0.5167,
-      "centerY": 0.492,
+      "centerX": 0.5378,
+      "centerY": 0.4565,
       "width": 0.2656,
       "height": 0.3416,
       "rotation": 22.0,

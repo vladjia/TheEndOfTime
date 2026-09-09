@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>時辰字位調校台</title>
+<style>
+@font-face{
+  font-family:'TheEndOfTimeDisplay';
+  src:url('../assets/fonts/TheEndOfTimeDisplay.subset.woff2') format('woff2'),
+      url('../assets/fonts/TheEndOfTimeDisplay.subset.woff') format('woff'),
+      url('../assets/fonts/TheEndOfTimeDisplay.ttf') format('truetype');
+  font-display:block;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#080a0e;color:rgba(255,255,255,.86);
+  font:13px/1.7 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;
+  min-height:100vh;
+}
+.head{padding:16px 22px 12px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.head h1{margin:0;font-size:15px;letter-spacing:.22em;font-weight:600}
+.head small{color:rgba(255,255,255,.36);letter-spacing:.14em;font-size:10px}
+.head .note{margin-left:auto;color:rgba(255,255,255,.42);font-size:11px}
+
+.wrap{display:grid;grid-template-columns:300px minmax(0,1fr);align-items:start}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+.panel{padding:16px 18px 40px;border-right:1px solid rgba(255,255,255,.08);position:sticky;top:0;max-height:100vh;overflow:auto}
+@media(max-width:900px){.panel{position:static;max-height:none;border-right:0;border-bottom:1px solid rgba(255,255,255,.08)}}
+.group{margin:0 0 16px}
+.group>h2{margin:0 0 8px;font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.34);font-weight:600}
+.row{display:flex;align-items:center;gap:8px;margin:0 0 7px}
+.row label{flex:0 0 62px;font-size:11px;color:rgba(255,255,255,.62)}
+.row input[type=range]{flex:1;min-width:0;accent-color:#c9a26b;height:18px}
+.row output{flex:0 0 54px;text-align:right;font:600 11px/1 ui-monospace,monospace;color:rgba(255,255,255,.52)}
+.field{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.field label{flex:0 0 62px;font-size:11px;color:rgba(255,255,255,.62)}
+.field select,.field input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);
+  color:rgba(255,255,255,.86);padding:5px 7px;font:12px/1.4 ui-monospace,monospace;border-radius:2px}
+.field input[type=color]{padding:2px;height:28px;cursor:pointer}
+.field input[type=checkbox]{flex:0 0 15px;width:15px;height:15px;accent-color:#c9a26b}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.78);
+  padding:6px 10px;font:11px/1 inherit;letter-spacing:.06em;border-radius:2px;cursor:pointer}
+button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+button.primary{background:rgba(201,162,107,.16);border-color:rgba(201,162,107,.5);color:#e6cfa6}
+
+.stage{padding:20px 26px 60px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.shard{position:relative;width:min(460px,84vw);aspect-ratio:var(--aspect,1)}
+.shard img,.shard canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.shard img{opacity:0}
+.c-body{z-index:2}
+.c-glyph{z-index:5;mix-blend-mode:screen}
+.shard.light .c-glyph{mix-blend-mode:multiply}
+.c-guide{z-index:9;pointer-events:none}
+
+.side{flex:1 1 260px;min-width:250px}
+.card{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);padding:13px 15px;margin:0 0 14px}
+.card h3{margin:0 0 8px;font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.34);font-weight:600}
+.card pre{margin:0;white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,monospace;color:rgba(255,255,255,.62)}
+.big{font:600 22px/1.2 ui-monospace,monospace;letter-spacing:.02em}
+.ok{color:#6FA07A}.warn{color:#C9A26B}.bad{color:#C9515A}
+.hint{font-size:11px;line-height:1.8;color:rgba(255,255,255,.34);margin:8px 0 0}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>時辰字位調校台</h1>
+  <small>GLYPH LAB · 內部工具</small>
+  <span class="note">拖滑桿 → 字即時移動 → 十二顆都調完 → 按「輸出 JSON」</span>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="group">
+      <h2>母石與光源</h2>
+      <div class="field"><label>母石</label><select id="stoneSel"></select></div>
+      <div class="field"><label>光源色</label><input type="color" id="colorPick" value="#A00000"></div>
+      <div class="btns" id="swatches"></div>
+    </div>
+
+    <div class="group">
+      <h2>安全區</h2>
+      <div class="row"><label>中心 X</label><input type="range" id="p_centerX" min="0.30" max="0.70" step="0.0005"><output></output></div>
+      <div class="row"><label>中心 Y</label><input type="range" id="p_centerY" min="0.30" max="0.70" step="0.0005"><output></output></div>
+      <div class="row"><label>寬</label><input type="range" id="p_width" min="0.10" max="0.40" step="0.0005"><output></output></div>
+      <div class="row"><label>高</label><input type="range" id="p_height" min="0.10" max="0.45" step="0.0005"><output></output></div>
+      <div class="row"><label>旋轉</label><input type="range" id="p_rotation" min="-60" max="60" step="0.5"><output></output></div>
+      <div class="btns">
+        <button id="reset">回到原始</button>
+        <button id="autofit" class="primary">挪最少塞進去</button>
+        <button id="autofitSafe">離邊緣最遠</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>檢視</h2>
+      <div class="field"><label>標紅溢出</label><input type="checkbox" id="showSpill" checked></div>
+      <div class="field"><label>安全區框</label><input type="checkbox" id="showBox" checked></div>
+      <div class="field"><label>石身邊界</label><input type="checkbox" id="showEdge"></div>
+      <div class="field"><label>只看遮罩</label><input type="checkbox" id="maskOnly"></div>
+      <div class="row"><label>石身門檻</label><input type="range" id="p_solid" min="0" max="255" step="5"><output></output></div>
+      <div class="row"><label>合併半徑</label><input type="range" id="p_merge" min="0" max="24" step="1"><output></output></div>
+      <p class="hint">「石身門檻」決定多亮才算石頭，拉高＝只算實心的部分。<br>
+      「合併半徑」決定看多大一圈：石頭內部的暗裂紋會被填起來，邊緣的細蛛網會被抹掉。<br>
+      打開「只看遮罩」可以直接看到目前判定的石身長什麼樣。</p>
+    </div>
+
+    <div class="group">
+      <h2>輸出</h2>
+      <div class="btns">
+        <button id="dumpOne">這一顆</button>
+        <button id="dumpAll" class="primary">全部十二顆 JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="shard" id="shard"></div>
+    <div class="side">
+      <div class="card">
+        <h3>字有多少在石身上</h3>
+        <div class="big" id="fitPct">—</div>
+        <p class="hint" id="fitNote"></p>
+      </div>
+      <div class="card">
+        <h3>目前這一顆</h3>
+        <pre id="dump"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const ROOT='../';
+const SHICHEN=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const GLYPH_FONT='"TheEndOfTimeDisplay","Noto Serif TC","DFKai-SB","KaiTi",serif';
+const clamp=(n,a,b)=>Math.min(Math.max(n,a),b);
+const hwrap=n=>((n%360)+360)%360;
+
+function normalizeHexColor(v){
+  const s=String(v||'').trim();
+  const m=/^#?([0-9a-f]{6})$/i.exec(s);
+  return m ? `#${m[1].toUpperCase()}` : '#7F1521';
+}
+function hexToRgb(hex){
+  const h=normalizeHexColor(hex).slice(1);
+  return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+}
+function rgbToHsl({r,g,b}){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h=0,s=0,l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=(g-b)/d+(g<b?6:0);break;
+      case g:h=(b-r)/d+2;break;
+      default:h=(r-g)/d+4;
+    }
+    h*=60;
+  }
+  return {h,s:s*100,l:l*100};
+}
+function hslToRgb(h,s,l){
+  h=hwrap(h)/360; s=clamp(s,0,100)/100; l=clamp(l,0,100)/100;
+  if(s===0){const v=Math.round(l*255);return{r:v,g:v,b:v};}
+  const hue2rgb=(p,q,t)=>{
+    if(t<0)t+=1;if(t>1)t-=1;
+    if(t<1/6)return p+(q-p)*6*t;
+    if(t<1/2)return q;
+    if(t<2/3)return p+(q-p)*(2/3-t)*6;
+    return p;
+  };
+  const q=l<.5?l*(1+s):l+s-l*s;
+  const p=2*l-q;
+  return {
+    r:Math.round(hue2rgb(p,q,h+1/3)*255),
+    g:Math.round(hue2rgb(p,q,h)*255),
+    b:Math.round(hue2rgb(p,q,h-1/3)*255)
+  };
+}
+// 唯一真相，與 adventure.js 同步
+function isLightShard(hex){ return rgbToHsl(hexToRgb(hex)).l>60; }
+
+function hexOf({r,g,b}){
+  const t=n=>clamp(Math.round(n),0,255).toString(16).padStart(2,'0').toUpperCase();
+  return `#${t(r)}${t(g)}${t(b)}`;
+}
+function shiftHue(hex,deg){
+  const c=rgbToHsl(hexToRgb(hex));
+  return hexOf(hslToRgb(c.h+deg,c.s,c.l));
+}
+// 上色演算法會把石片提得比 base 色亮很多，判斷對比要用「提亮後」的明度。
+function stoneLightness(hex){ return clamp(rgbToHsl(hexToRgb(hex)).l*.55+34,0,100); }
+
+// 時辰字最後用什麼顏色畫、要走亮刻還是暗刻。
+//   pick 為空 → 沿用原本的自動配色（依石片明暗決定深字或淺字）
+//   pick 有值 → 玩家自選；只保證一件事：跟石片的明度差不得小於 MIN，
+//              否則會有人選出「白字白石片」這種等於沒畫的組合。
+const GLYPH_MIN_CONTRAST=22;
+function resolveGlyphInk(stoneHex,pick){
+  const stoneL=stoneLightness(stoneHex);
+  if(!pick){
+    const c=hexToRgb(stoneHex);
+    const light=isLightShard(stoneHex);
+    const ink=light
+      ? {r:Math.round(c.r*.20),g:Math.round(c.g*.20),b:Math.round(c.b*.20)}
+      : {r:Math.round(c.r+(255-c.r)*.78),g:Math.round(c.g+(255-c.g)*.78),b:Math.round(c.b+(255-c.b)*.78)};
+    return {hex:hexOf(ink),dark:light,auto:true,adjusted:false};
+  }
+  const g=rgbToHsl(hexToRgb(pick));
+  let dark=g.l<stoneL;
+  let L=g.l, adjusted=false;
+  if(Math.abs(g.l-stoneL)<GLYPH_MIN_CONTRAST){
+    // 往「離石片比較遠」的那一側推開，推得動哪邊就走哪邊
+    const down=stoneL-GLYPH_MIN_CONTRAST, up=stoneL+GLYPH_MIN_CONTRAST;
+    dark = (down>=4) ? (up>96 ? true : (g.l<=stoneL)) : false;
+    L = dark ? Math.max(4,down) : Math.min(96,up);
+    adjusted=true;
+  }
+  return {hex:hexOf(hslToRgb(g.h,g.s,L)),dark,auto:false,adjusted};
+}
+
+function seedHash32(text){
+  let h=2166136261>>>0;
+  const s=String(text||'');
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
+  h^=h>>>16;h=Math.imul(h,0x7feb352d);h^=h>>>15;h=Math.imul(h,0x846ca68b);h^=h>>>16;
+  return h>>>0;
+}
+function seededRandom(seed){
+  let a=seedHash32(seed)||0x6d2b79f5;
+  return ()=>{
+    a|=0;a=(a+0x6D2B79F5)|0;
+    let t=a;
+    t=Math.imul(t^(t>>>15),1|t);
+    t^=t+Math.imul(t^(t>>>7),61|t);
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+
+// ── 母石本體上色（與 adventure.js recolorShardCanvas 相同）──
+function recolor(canvas,img,hex,w,h){
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.clearRect(0,0,w,h);
+  ctx.drawImage(img,0,0,w,h);
+
+  const data=ctx.getImageData(0,0,w,h);
+  const px=data.data;
+  const chosen=hexToRgb(hex);
+  const baseHsl=rgbToHsl(chosen);
+
+  const nearCool=hslToRgb(baseHsl.h+24, clamp(baseHsl.s+6,28,92), clamp(baseHsl.l+10,34,74));
+  const nearWarm=hslToRgb(baseHsl.h-18, clamp(baseHsl.s+10,32,96), clamp(baseHsl.l+8,32,72));
+  const pale=hslToRgb(baseHsl.h+5, clamp(baseHsl.s-34,8,46), 88);
+  const deep=hslToRgb(baseHsl.h-6, clamp(baseHsl.s+8,28,96), clamp(baseHsl.l-25,7,30));
+
+  const mix=(a,b,t)=>({r:a.r*(1-t)+b.r*t,g:a.g*(1-t)+b.g*t,b:a.b*(1-t)+b.b*t});
+  const mix3=(a,b,c,t1,t2)=>mix(mix(a,b,t1),c,t2);
+
+  for(let i=0;i<px.length;i+=4){
+    const a=px[i+3];
+    if(a===0) continue;
+    const pIndex=i/4;
+    const x=(pIndex%w)/Math.max(1,w-1);
+    const y=Math.floor(pIndex/w)/Math.max(1,h-1);
+    const or=px[i],og=px[i+1],ob=px[i+2];
+    const lum=(0.2126*or+0.7152*og+0.0722*ob)/255;
+    const diagonal=clamp((x*.72+(1-y)*.28),0,1);
+    const facetWave=(Math.sin((x*2.4+y*1.7)*Math.PI)+1)/2;
+    const coolAmt=clamp((diagonal-.48)*1.25,0,.42)*(.55+.45*facetWave);
+    const warmAmt=clamp((.56-diagonal)*1.15,0,.34)*(.55+.45*(1-facetWave));
+    let col={r:chosen.r,g:chosen.g,b:chosen.b};
+    const depth=Math.pow(1-lum,1.15);
+    col=mix(col,deep,depth*.48);
+    col=mix3(col,nearCool,nearWarm,coolAmt,warmAmt);
+    col=mix(col,{r:or,g:og,b:ob},.18);
+    if(lum>.58){ col=mix(col,pale,clamp((lum-.58)/.42,0,1)*.68); }
+    const glassLift=.22+lum*.90;
+    col.r*=glassLift;col.g*=glassLift;col.b*=glassLift;
+    px[i]=clamp(Math.round(col.r),0,255);
+    px[i+1]=clamp(Math.round(col.g),0,255);
+    px[i+2]=clamp(Math.round(col.b),0,255);
+  }
+  ctx.putImageData(data,0,0);
+
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  const g1=ctx.createLinearGradient(w*.12,h*.85,w*.86,h*.08);
+  g1.addColorStop(0,'rgba(255,255,255,0)');
+  g1.addColorStop(.42,`rgba(${nearWarm.r},${nearWarm.g},${nearWarm.b},0.08)`);
+  g1.addColorStop(.56,`rgba(${pale.r},${pale.g},${pale.b},0.20)`);
+  g1.addColorStop(.70,`rgba(${nearCool.r},${nearCool.g},${nearCool.b},0.10)`);
+  g1.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=g1;ctx.fillRect(0,0,w,h);
+  const rg=ctx.createRadialGradient(w*.47,h*.44,0,w*.47,h*.44,Math.max(w,h)*.45);
+  rg.addColorStop(0,`rgba(${pale.r},${pale.g},${pale.b},0.12)`);
+  rg.addColorStop(.38,`rgba(${chosen.r},${chosen.g},${chosen.b},0.05)`);
+  rg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=rg;ctx.fillRect(0,0,w,h);
+  ctx.globalCompositeOperation='destination-in';
+  ctx.drawImage(img,0,0,w,h);
+  ctx.restore();
+}
+
+// ── 時辰字（與 adventure.js drawShichenGlyph 相同）──
+function drawGlyph(ctx,w,h,layout,type,stoneHex,pick){
+  const glyph=SHICHEN[type-1];
+  if(!glyph) return;
+  const cx=layout.centerX*w, cy=layout.centerY*h;
+  const safeW=layout.width*w, safeH=layout.height*h;
+  const rotation=(layout.rotation*Math.PI)/180;
+  const chosen=hexToRgb(stoneHex);
+  const res=resolveGlyphInk(stoneHex,pick);
+  const ink=hexToRgb(res.hex);
+  const dark=res.dark;
+  // 暗刻用暗光暈做凹陷深度、白邊做反光；亮刻用主色光暈做透光感。
+  const halo=dark?{r:0,g:0,b:0,a:.45}:{r:chosen.r,g:chosen.g,b:chosen.b,a:.85};
+  const rim=dark?{r:255,g:255,b:255,a:.42}:{r:ink.r,g:ink.g,b:ink.b,a:.55};
+  ctx.save();
+  ctx.translate(cx,cy);ctx.rotate(rotation);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  let size=Math.min(safeW,safeH)*.62;
+  ctx.font=`700 ${size}px ${GLYPH_FONT}`;
+  const m=ctx.measureText(glyph);
+  const gw=Math.abs(m.actualBoundingBoxLeft)+Math.abs(m.actualBoundingBoxRight);
+  const gh=Math.abs(m.actualBoundingBoxAscent)+Math.abs(m.actualBoundingBoxDescent);
+  if(gw>0&&gh>0){
+    size*=Math.min((safeW*.78)/gw,(safeH*.78)/gh);
+    ctx.font=`700 ${size}px ${GLYPH_FONT}`;
+  }
+  ctx.shadowColor=`rgba(${halo.r},${halo.g},${halo.b},${halo.a})`;
+  ctx.shadowBlur=size*.20;
+  ctx.fillStyle=`rgba(${ink.r},${ink.g},${ink.b},0.90)`;
+  ctx.fillText(glyph,0,0);
+  ctx.shadowBlur=0;
+  ctx.lineWidth=Math.max(1,size*.012);
+  ctx.strokeStyle=`rgba(${rim.r},${rim.g},${rim.b},${rim.a})`;
+  ctx.strokeText(glyph,0,0);
+  ctx.restore();
+}
+
+
+
+// ── 狀態 ──
+let LAYOUTS={}, ORIG={}, type=3, color='#A00000', solid=180, merge=8;
+const view={box:true,edge:false,maskOnly:false,spill:true};
+const KEYS=['centerX','centerY','width','height','rotation'];
+const $=id=>document.getElementById(id);
+
+const host=$('shard');
+host.innerHTML=`<img crossorigin="anonymous" alt="">
+  <canvas class="c-body"></canvas><canvas class="c-glyph"></canvas><canvas class="c-guide"></canvas>`;
+const img=host.querySelector('img');
+const cBody=host.querySelector('.c-body');
+const cGlyph=host.querySelector('.c-glyph');
+const cGuide=host.querySelector('.c-guide');
+let W=0,H=0,maskData=null,loadedType=null;
+
+const key=t=>`stone-${String(t).padStart(2,'0')}`;
+const cur=()=>LAYOUTS[key(type)];
+
+async function ensureImage(){
+  if(loadedType===type) return;
+  await new Promise((res,rej)=>{
+    img.onload=res; img.onerror=()=>rej(new Error('母石載入失敗'));
+    img.src=`${ROOT}assets/images/timemark/stones/${key(type)}.png`;
+  });
+  loadedType=type;
+  const nw=img.naturalWidth, nh=img.naturalHeight;
+  const k=Math.min(1,760/Math.max(nw,nh));
+  W=Math.round(nw*k); H=Math.round(nh*k);
+  [cBody,cGlyph,cGuide].forEach(c=>{c.width=W;c.height=H;});
+  host.style.setProperty('--aspect',(nw/nh).toFixed(4));
+  const t=document.createElement('canvas'); t.width=W; t.height=H;
+  const tx=t.getContext('2d',{willReadFrequently:true});
+  tx.drawImage(img,0,0,W,H);
+  maskData=tx.getImageData(0,0,W,H).data;
+  mcv.width=W; mcv.height=H;
+  rebuildSolid();
+}
+// 量測專用畫布：重複用同一張，不要每次量都 new 一個
+const mcv=document.createElement('canvas');
+const mctx=mcv.getContext('2d',{willReadFrequently:true});
+
+// 石身：不透明「而且」夠亮。邊緣那些薄蛛網 alpha 高但很暗，要排除。
+// 每個像素只算一次，存成 0/1 的表。自動塞入會查它幾百萬次，現算會卡死。
+let solidMask=null;
+function rebuildSolid(){
+  if(!maskData){ solidMask=null; distMask=null; return; }
+  // 第一步：夠不透明、而且夠亮的像素。
+  const raw=new Uint8Array(W*H);
+  for(let p=0,i=0;p<raw.length;p++,i+=4){
+    if(maskData[i+3]<40) continue;
+    const lum=0.2126*maskData[i]+0.7152*maskData[i+1]+0.0722*maskData[i+2];
+    if(lum>=solid) raw[p]=1;
+  }
+  if(merge<=0){ solidMask=raw; distMask=null; return; }
+
+  // 第二步：看鄰近一圈的密度。
+  // 石頭內部有暗的裂紋，逐點看會被切成一塊一塊；邊緣的蜘蛛網很細，
+  // 逐點看反而算「有」。用密度就兩個問題一起解決：裂紋被填起來，細網被抹掉。
+  const w1=W+1;
+  const S=new Int32Array(w1*(H+1));
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    S[(y+1)*w1+x+1]=raw[y*W+x]+S[y*w1+x+1]+S[(y+1)*w1+x]-S[y*w1+x];
+  }
+  const m=new Uint8Array(W*H);
+  for(let y=0;y<H;y++){
+    const y0=Math.max(0,y-merge), y1=Math.min(H-1,y+merge);
+    for(let x=0;x<W;x++){
+      const x0=Math.max(0,x-merge), x1=Math.min(W-1,x+merge);
+      const sum=S[(y1+1)*w1+x1+1]-S[y0*w1+x1+1]-S[(y1+1)*w1+x0]+S[y0*w1+x0];
+      if(sum*2>=(x1-x0+1)*(y1-y0+1)) m[y*W+x]=1;
+    }
+  }
+  solidMask=m;
+  distMask=null;
+}
+
+// 每個石身像素離最近的「非石身」有多遠。自動塞入用它挑「最有餘裕」的位置，
+// 而不是隨便挑第一個塞得下的 —— 差別就是字看起來有沒有被擠到邊上。
+let distMask=null;
+function buildDist(){
+  const D=new Float32Array(W*H);
+  const INF=1e9, R2=Math.SQRT2;
+  for(let p=0;p<D.length;p++) D[p]=solidMask[p]?INF:0;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    const p=y*W+x; if(D[p]===0) continue;
+    let v=D[p];
+    if(x>0)          v=Math.min(v,D[p-1]+1);
+    if(y>0)          v=Math.min(v,D[p-W]+1);
+    if(x>0&&y>0)     v=Math.min(v,D[p-W-1]+R2);
+    if(x<W-1&&y>0)   v=Math.min(v,D[p-W+1]+R2);
+    D[p]=v;
+  }
+  for(let y=H-1;y>=0;y--) for(let x=W-1;x>=0;x--){
+    const p=y*W+x; if(D[p]===0) continue;
+    let v=D[p];
+    if(x<W-1)          v=Math.min(v,D[p+1]+1);
+    if(y<H-1)          v=Math.min(v,D[p+W]+1);
+    if(x<W-1&&y<H-1)   v=Math.min(v,D[p+W+1]+R2);
+    if(x>0&&y<H-1)     v=Math.min(v,D[p+W-1]+R2);
+    D[p]=v;
+  }
+  distMask=D;
+  return D;
+}
+function isSolid(x,y){
+  x=Math.round(x); y=Math.round(y);
+  if(x<0||y<0||x>=W||y>=H||!solidMask) return false;
+  return solidMask[y*W+x]===1;
+}
+
+function drawGuide(outPx){
+  const ctx=cGuide.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const L=cur();
+  // 石身邊界（綠）和溢出的筆畫（紅）畫在同一張 ImageData 上，
+  // 分兩次 putImageData 的話後面那次會把前面那次整片蓋掉。
+  const spill=view.spill && outPx && outPx.length;
+  if(view.edge || spill){
+    const im=ctx.createImageData(W,H);
+    if(view.edge && solidMask){
+      for(let y=2;y<H-2;y++) for(let x=2;x<W-2;x++){
+        const p=y*W+x;
+        if(solidMask[p]!==1) continue;
+        if(solidMask[p+2]===1&&solidMask[p-2]===1&&solidMask[p+2*W]===1&&solidMask[p-2*W]===1) continue;
+        const i=p*4;
+        im.data[i]=111;im.data[i+1]=160;im.data[i+2]=122;im.data[i+3]=230;
+      }
+    }
+    if(spill){
+      // 掉在石身外的筆畫，直接標紅。滑桿一動就跟著變，不用再猜。
+      for(let n=0;n<outPx.length;n++){
+        const i=outPx[n]*4;
+        im.data[i]=255; im.data[i+1]=64; im.data[i+2]=72; im.data[i+3]=245;
+      }
+    }
+    ctx.putImageData(im,0,0);
+  }
+  if(view.box){
+    ctx.save();
+    ctx.translate(L.centerX*W,L.centerY*H);
+    ctx.rotate(L.rotation*Math.PI/180);
+    ctx.strokeStyle='rgba(201,162,107,.85)'; ctx.lineWidth=2; ctx.setLineDash([7,6]);
+    ctx.strokeRect(-L.width*W/2,-L.height*H/2,L.width*W,L.height*H);
+    ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(201,162,107,.35)';
+    ctx.strokeRect(-L.width*W*.39,-L.height*H*.39,L.width*W*.78,L.height*H*.78);
+    ctx.fillStyle='rgba(201,162,107,.9)';
+    ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// 量：畫出來的墨，有多少落在石身上。
+// 順便把「掉在外面」的像素位置留下來，畫成紅色 —— 這才是你眼睛要看的東西。
+function measureFit(layout,keepOut){
+  const L=layout||cur();
+  mctx.clearRect(0,0,W,H);
+  drawGlyph(mctx,W,H,L,type,'#FFFFFF');
+  const d=mctx.getImageData(0,0,W,H).data;
+  let ink=0,on=0;
+  const out=keepOut?[]:null;
+  for(let i=3,p=0;i<d.length;i+=4,p++){
+    if(d[i]<=30) continue;
+    ink++;
+    if(solidMask && solidMask[p]===1) on++;
+    else if(out) out.push(p);
+  }
+  return ink? {ink,on,out,pct:on/ink*100} : {ink:0,on:0,out,pct:100};
+}
+
+// 取出這個版面的墨點座標，之後只靠平移去試位置，不必重畫。
+function inkPoints(layout){
+  mctx.clearRect(0,0,W,H);
+  drawGlyph(mctx,W,H,layout,type,'#FFFFFF');
+  const d=mctx.getImageData(0,0,W,H).data;
+  const xs=[],ys=[];
+  for(let i=3,p=0;i<d.length;i+=4,p++){
+    if(d[i]<=30) continue;
+    xs.push(p%W); ys.push((p/W)|0);
+  }
+  // 離中心最遠的先試 —— 會掉出石身的通常是那些，早退才快
+  const cx=layout.centerX*W, cy=layout.centerY*H;
+  const idx=xs.map((_,k)=>k).sort((a,b)=>
+    ((xs[b]-cx)**2+(ys[b]-cy)**2)-((xs[a]-cx)**2+(ys[a]-cy)**2));
+  return {x:Int16Array.from(idx,k=>xs[k]), y:Int16Array.from(idx,k=>ys[k])};
+}
+function ptsFit(pts,ox,oy){
+  const n=pts.x.length;
+  for(let k=0;k<n;k++){
+    const x=pts.x[k]+ox, y=pts.y[k]+oy;
+    if(x<0||y<0||x>=W||y>=H||solidMask[y*W+x]!==1) return false;
+  }
+  return true;
+}
+// 這個位置最貼近邊緣的那一筆，離石身邊緣還有幾像素。越大越安穩。
+// floor 是目前最好的成績；還沒掃完就已經比不上就直接放棄，省掉大半的計算。
+function ptsClearance(pts,ox,oy,floor){
+  const n=pts.x.length; let min=Infinity;
+  for(let k=0;k<n;k++){
+    const x=pts.x[k]+ox, y=pts.y[k]+oy;
+    if(x<0||y<0||x>=W||y>=H) return -1;
+    const d=distMask[y*W+x];
+    if(d<=floor) return -1;
+    if(d<min) min=d;
+  }
+  return min;
+}
+
+function paint(){
+  const ctx=cBody.getContext('2d',{willReadFrequently:true});
+  if(view.maskOnly){
+    ctx.clearRect(0,0,W,H);
+    const im=ctx.createImageData(W,H);
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const i=(y*W+x)*4;
+      if(isSolid(x,y)){ im.data[i]=im.data[i+1]=im.data[i+2]=225; im.data[i+3]=255; }
+    }
+    ctx.putImageData(im,0,0);
+  }else{
+    recolor(cBody,img,color,W,H);
+  }
+  host.classList.toggle('light',isLightShard(color));
+
+  const gx=cGlyph.getContext('2d');
+  gx.clearRect(0,0,W,H);
+  drawGlyph(gx,W,H,cur(),type,color);
+  gx.globalCompositeOperation='destination-in';
+  gx.drawImage(img,0,0,W,H);
+  gx.globalCompositeOperation='source-over';
+
+  const f=measureFit(null,true);
+
+  drawGuide(f.out);
+
+  const el=$('fitPct');
+  el.textContent=f.pct.toFixed(1)+' %';
+  el.className='big '+(f.pct>=99.9?'ok':f.pct>=98?'warn':'bad');
+  $('fitNote').textContent = f.pct>=99.9
+    ? '整個字都在石身上。'
+    : `有 ${(100-f.pct).toFixed(1)}%（約 ${f.ink-f.on} 像素）落在石身之外。`;
+  dumpOne();
+}
+
+function dumpOne(){
+  const L=cur();
+  $('dump').textContent =
+`"${key(type)}": {
+  "centerX": ${L.centerX.toFixed(4)},
+  "centerY": ${L.centerY.toFixed(4)},
+  "width": ${L.width.toFixed(4)},
+  "height": ${L.height.toFixed(4)},
+  "rotation": ${L.rotation.toFixed(1)},
+  "padding": 0.1,
+  "maskAlphaThreshold": 24
+}`;
+}
+
+// 自動：從原始大小開始一級一級縮，找出「不用縮太多就塞得下」的最大尺寸。
+// 尺寸定了之後，位置有兩種挑法：
+//   'near' —— 塞得進去的位置裡，離你原本擺的地方最近的那個。字位是你排的版，能不動就不動。
+//   'safe' —— 離石身邊緣最有餘裕的那個。適合你本來就沒排過、或整個要重來的石頭。
+const AUTOFIT_MARGIN=6;      // 至少要離邊緣幾像素才算「真的進去了」
+function autofit(mode){
+  const L=cur(), o=ORIG[key(type)];
+  const sx=L.centerX, sy=L.centerY, rot=L.rotation;
+  if(!distMask) buildDist();
+  const RMAX=Math.round(0.16*W);
+  let scale=null, pts=null;
+
+  for(let k=1.00;k>=0.50;k-=0.02){
+    const probe={centerX:sx,centerY:sy,width:o.width*k,height:o.height*k,rotation:rot};
+    const p=inkPoints(probe);
+    if(!p.x.length) continue;
+    let hit=false;
+    for(let rp=0;rp<=RMAX && !hit;rp+=2){
+      const steps=rp===0?1:Math.max(8,Math.round(rp*1.6));
+      for(let s=0;s<steps;s++){
+        const a=s/steps*Math.PI*2;
+        const ox=Math.round(Math.cos(a)*rp), oy=Math.round(Math.sin(a)*rp);
+        if(ptsClearance(p,ox,oy,AUTOFIT_MARGIN)>0){ hit=true; break; }
+      }
+    }
+    if(hit){ scale={w:probe.width,h:probe.height,k}; pts=p; break; }
+  }
+
+  if(!scale){
+    $('fitNote').textContent='縮到一半都還塞不進去 —— 「石身門檻」可能拉太高，或「合併半徑」太小。';
+    return;
+  }
+
+  let bx=0,by=0,bc=-1;
+  if(mode==='safe'){
+    for(let oy=-RMAX;oy<=RMAX;oy+=2) for(let ox=-RMAX;ox<=RMAX;ox+=2){
+      if(ox*ox+oy*oy>RMAX*RMAX) continue;
+      const c=ptsClearance(pts,ox,oy,bc);
+      if(c>bc){ bc=c; bx=ox; by=oy; }
+    }
+    // 粗掃 2px 一格，再用 1px 在贏家附近補一次
+    for(let oy=by-2;oy<=by+2;oy++) for(let ox=bx-2;ox<=bx+2;ox++){
+      const c=ptsClearance(pts,ox,oy,bc);
+      if(c>bc){ bc=c; bx=ox; by=oy; }
+    }
+  }else{
+    // 由近而遠，第一個過關的就是挪最少的
+    outer:
+    for(let rp=0;rp<=RMAX;rp++){
+      const steps=rp===0?1:Math.max(8,Math.round(rp*6.3));
+      for(let s=0;s<steps;s++){
+        const a=s/steps*Math.PI*2;
+        const ox=Math.round(Math.cos(a)*rp), oy=Math.round(Math.sin(a)*rp);
+        const c=ptsClearance(pts,ox,oy,AUTOFIT_MARGIN);
+        if(c>0){ bc=c; bx=ox; by=oy; break outer; }
+      }
+    }
+    if(bc<0){ $('fitNote').textContent='找不到位置。'; return; }
+  }
+
+  Object.assign(L,{centerX:sx+bx/W,centerY:sy+by/H,width:scale.w,height:scale.h});
+  sync(); paint();
+  const moved=Math.round(Math.hypot(bx,by));
+  $('fitNote').textContent =
+    `整個字都在石身上。（縮到 ${(scale.k*100).toFixed(0)}%，挪了 ${moved} 像素，離邊緣最少還有 ${bc.toFixed(0)} 像素）`;
+}
+
+function sync(){
+  const L=cur();
+  KEYS.forEach(k=>{
+    const el=$('p_'+k); el.value=String(L[k]);
+    el.parentElement.querySelector('output').textContent =
+      k==='rotation'? L[k].toFixed(1)+'°' : L[k].toFixed(4);
+  });
+}
+
+// ── 接線 ──
+const sel=$('stoneSel');
+SHICHEN.forEach((g,i)=>{
+  const o=document.createElement('option');
+  o.value=String(i+1); o.textContent=`${String(i+1).padStart(2,'0')} · ${g}時`;
+  sel.appendChild(o);
+});
+sel.value=String(type);
+sel.onchange=async()=>{ type=Number(sel.value); loadedType=null; await ensureImage(); sync(); paint(); };
+
+['#A00000','#7F1521','#1F3A93','#0E6E5C','#6B2E8F','#C8A24B','#E8E2D6','#FFFFFF'].forEach(hex=>{
+  const b=document.createElement('button');
+  b.style.cssText='background:'+hex+';width:24px;height:20px;padding:0';
+  b.title=hex;
+  b.onclick=()=>{ color=hex; $('colorPick').value=hex; paint(); };
+  $('swatches').appendChild(b);
+});
+$('colorPick').oninput=e=>{ color=normalizeHexColor(e.target.value); paint(); };
+
+KEYS.forEach(k=>{
+  $('p_'+k).addEventListener('input',e=>{ cur()[k]=Number(e.target.value); sync(); paint(); });
+});
+$('p_solid').value=String(solid);
+$('p_solid').parentElement.querySelector('output').textContent=solid;
+$('p_solid').addEventListener('input',e=>{
+  solid=Number(e.target.value);
+  e.target.parentElement.querySelector('output').textContent=solid;
+  rebuildSolid();
+  paint();
+});
+$('p_solid').addEventListener('change',()=>{ buildDist(); });
+$('p_merge').value=String(merge);
+$('p_merge').parentElement.querySelector('output').textContent=merge;
+$('p_merge').addEventListener('input',e=>{
+  merge=Number(e.target.value);
+  e.target.parentElement.querySelector('output').textContent=merge;
+  rebuildSolid();
+  paint();
+});
+$('p_merge').addEventListener('change',()=>{ buildDist(); });
+$('showSpill').onchange=e=>{view.spill=e.target.checked;paint();};
+$('showBox').onchange=e=>{view.box=e.target.checked;paint();};
+$('showEdge').onchange=e=>{view.edge=e.target.checked;paint();};
+$('maskOnly').onchange=e=>{view.maskOnly=e.target.checked;paint();};
+$('reset').onclick=()=>{ Object.assign(cur(),ORIG[key(type)]); sync(); paint(); };
+$('autofit').onclick=()=>autofit('near');
+$('autofitSafe').onclick=()=>autofit('safe');
+$('dumpOne').onclick=async()=>{
+  try{ await navigator.clipboard.writeText($('dump').textContent); $('dumpOne').textContent='已複製 ✓'; }catch(_){}
+  setTimeout(()=>{$('dumpOne').textContent='這一顆';},1400);
+};
+$('dumpAll').onclick=async()=>{
+  const out={version:'1.0',
+    coordinateSystem:'normalized 0..1 against original PNG canvas',
+    purpose:'personal time-mark engraving safe zone',
+    notes:['centerX/centerY are normalized engraving centers.',
+           'width/height are normalized safe-zone ellipse bounds.',
+           'rotation is degrees.',
+           'Final engraving rendering must still be clipped by the actual PNG alpha mask.'],
+    stones:{}};
+  Object.keys(LAYOUTS).sort().forEach(k=>{
+    const L=LAYOUTS[k];
+    out.stones[k]={centerX:+L.centerX.toFixed(4),centerY:+L.centerY.toFixed(4),
+      width:+L.width.toFixed(4),height:+L.height.toFixed(4),
+      rotation:+L.rotation.toFixed(1),padding:0.1,maskAlphaThreshold:24};
+  });
+  const text=JSON.stringify(out,null,2);
+  $('dump').textContent=text;
+  try{ await navigator.clipboard.writeText(text); $('dumpAll').textContent='已複製 ✓'; }catch(_){}
+  setTimeout(()=>{$('dumpAll').textContent='全部十二顆 JSON';},1600);
+};
+
+(async()=>{
+  const r=await fetch(`${ROOT}data/timemark/stone-layouts.json`,{cache:'no-cache'});
+  const j=await r.json();
+  LAYOUTS=j.stones;
+  ORIG=JSON.parse(JSON.stringify(j.stones));
+  try{ await document.fonts.load(`700 80px ${GLYPH_FONT}`,SHICHEN.join('')); }catch(_){}
+  await ensureImage();
+  sync(); paint();
+})();
+})();
+</script>
+</body>
+</html>
