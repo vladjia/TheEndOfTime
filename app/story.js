@@ -139,6 +139,18 @@ function renderToc(story,copy,progress){
   });
 }
 
+function endOfStoryHtml(){
+  return `
+    <div class="reader-end">
+      <div class="reader-end-mark">未完待續</div>
+      <p class="reader-end-note">故事目前寫到這裡。時印已經記下你走過的地方。</p>
+      <div class="reader-end-links">
+        <a href="index.html">回到目錄</a>
+        <a href="../journey/index.html">我的旅程</a>
+      </div>
+    </div>`;
+}
+
 function renderReader(story,copy,id,progress){
   const article = $('#readerArticle');
   if(!article) return;
@@ -149,6 +161,13 @@ function renderReader(story,copy,id,progress){
 
   const index = rows.findIndex(x=>x.id===id);
   const item = rows[index];
+
+  // 「還有沒有下一節」要問全部已開放的章節，不能只問目前可見的那幾筆。
+  // rows 只含「已讀 + 下一節」，拿它判斷會把「還沒解鎖」誤判成「作者還沒寫」。
+  const published = allRows.filter(x=>x.isReadable);
+  const publishedIndex = published.findIndex(x=>x.id===id);
+  const hasMore = publishedIndex >= 0 && publishedIndex < published.length - 1;
+  const alreadyRead = new Set(progress?.storyRead || []).has(id);
 
   if(!item){
     article.innerHTML = `
@@ -171,7 +190,7 @@ function renderReader(story,copy,id,progress){
 
   article.innerHTML = `
     <header class="reader-head">
-      <div class="reader-chapter">${chapterLabel(item)}${item.chapterTitle ? `｜${item.chapterTitle}` : ''}</div>
+      <div class="reader-chapter">${chapterLabel(item)}${item.chapterTitle && item.chapterTitle !== chapterLabel(item) ? `｜${item.chapterTitle}` : ''}</div>
       <div class="reader-section">${sectionLabel(item)}</div>
       <h1>${item.sectionTitle || '未命名篇章'}</h1>
       ${item.subtitle ? `<div class="reader-subtitle">${item.subtitle}</div>` : ''}
@@ -184,9 +203,12 @@ function renderReader(story,copy,id,progress){
         return `<p>${p.replace(/\n/g,'<br>')}</p>`;
       }).join('')}
     </div>
-    <div class="reader-complete-wrap">
-      <button class="reader-complete-btn" id="completeStoryButton" type="button">繼續前行</button>
-      <div class="reader-complete-hint" id="completeStoryHint">讀完此節後，將這一刻留在時印中。</div>
+    <div class="reader-complete-wrap" id="completeStoryWrap">
+      ${alreadyRead && !hasMore ? endOfStoryHtml() : `
+      <button class="reader-complete-btn" id="completeStoryButton" type="button">${hasMore ? '繼續前行' : '記下這一刻'}</button>
+      <div class="reader-complete-hint" id="completeStoryHint">${hasMore
+        ? '讀完此節後，將這一刻留在時印中。'
+        : '這是目前寫到的最後一節。留下此刻，故事會在這裡等你。'}</div>`}
     </div>
   `;
 
@@ -204,10 +226,14 @@ function renderReader(story,copy,id,progress){
         if(nextReadable){
           setTimeout(()=>{ location.href=readerHref(nextReadable); },650);
         }else{
-          setTimeout(()=>{ location.href='../journey/index.html'; },650);
+          // 沒有下一節就不要把人丟去旅程頁。留在原地，明白告訴他寫到這裡。
+          setTimeout(()=>{
+            const wrap=$('#completeStoryWrap');
+            if(wrap) wrap.innerHTML = endOfStoryHtml();
+          },700);
         }
       }catch(err){
-        completeBtn.disabled=false;completeBtn.textContent='繼續前行';
+        completeBtn.disabled=false;completeBtn.textContent=hasMore?'繼續前行':'記下這一刻';
         const hint=$('#completeStoryHint');if(hint)hint.textContent=err.message||'這一刻暫時無法寫入時印。';
       }
     });

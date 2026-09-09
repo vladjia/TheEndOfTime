@@ -2851,3 +2851,41 @@ body:not(.pre-entry) .time-mark-orb{
 @media(prefers-reduced-motion:reduce){
   .timemark-wuxing *{animation:none!important;opacity:1!important;filter:none!important;transform:none!important}
 }
+
+/* v0.18.75 未完待續 ───────────────────────────────────────────
+   沒有下一節時，不要把讀者丟去旅程頁。留在原地，明講故事寫到這裡。 */
+.reader-end{padding:6px 0 4px;text-align:center}
+.reader-end-mark{
+  font-family:var(--font-title);
+  font-size:20px;
+  letter-spacing:.42em;
+  text-indent:.42em;          /* 補回字距在最後一個字右邊多出來的空白 */
+  color:#c9a26b;
+  opacity:.9;
+}
+.reader-end-mark::after{
+  content:'';
+  display:block;
+  width:34px;height:1px;
+  margin:16px auto 0;
+  background:linear-gradient(90deg,transparent,#6d2834,transparent);
+}
+.reader-end-note{
+  margin:16px 0 0;
+  font-size:13px;
+  line-height:2;
+  color:rgba(255,255,255,.44);
+}
+.reader-end-links{
+  display:flex;gap:26px;justify-content:center;flex-wrap:wrap;
+  margin-top:20px;
+}
+.reader-end-links a{
+  color:rgba(255,255,255,.62);
+  font-size:12px;
+  letter-spacing:.16em;
+  text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,.16);
+  padding-bottom:4px;
+}
+.reader-end-links a:hover{color:#e8d2ab;border-bottom-color:rgba(201,162,107,.6)}

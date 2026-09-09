@@ -140,15 +140,19 @@ a.toc-section-item:hover{
 .reader-head h1{
   margin:0;
   font-family:var(--font-title);
-  font-size:clamp(38px,6vw,62px);
+  font-size:clamp(34px,5.2vw,54px);
   font-weight:500;
   letter-spacing:.05em;
 }
 .reader-subtitle{
-  margin-top:18px;
-  color:#6f7884;
-  letter-spacing:.18em;
-  font-size:11px;
+  /* 副標會放一整句話，不是標籤。11px＋.18em 的字距會讓它讀起來像圖說。 */
+  margin:22px auto 0;
+  max-width:26em;
+  color:#8b95a3;
+  font-family:var(--font-title);
+  letter-spacing:.06em;
+  font-size:15px;
+  line-height:1.9;
 }
 .reader-body{
   width:min(720px,100%);
@@ -156,11 +160,14 @@ a.toc-section-item:hover{
   color:#d3d7dd;
   font-family:var(--font-body);
   font-size:18px;
-  line-height:2.12;
+  line-height:1.95;
   letter-spacing:.025em;
 }
 .reader-body p{
-  margin:0 0 1.75em;
+  /* 這裡的正文大量使用單行成段。段距如果跟一般文章一樣寬，
+     連續的短句會被拉成一根等距的梯子，節奏就消失了。
+     壓到 1.15em，短句會自己聚成一組，真正的換場交給 .scene-break。 */
+  margin:0 0 1.15em;
 }
 .scene-break{
   display:flex;
@@ -263,7 +270,8 @@ a.story-preview-item:hover{
   }
   .toc-section-status{justify-self:start}
   .reader-shell{width:min(100% - 30px,860px);padding-top:56px}
-  .reader-body{font-size:17px;line-height:2.05}
+  .reader-body{font-size:17px;line-height:1.9}
+  .reader-subtitle{font-size:14px}
   .reader-nav{grid-template-columns:1fr 1fr}
   .reader-toc-link{grid-column:1/-1;grid-row:1;text-align:center}
   #prevStory{grid-column:1}
