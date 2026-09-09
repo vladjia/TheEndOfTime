@@ -132,20 +132,35 @@ function bestCharacterImage(images,id,opts={}){
 
 function characterContentImage(data,characterId,adventureData){
   const fields=adventureData?.characterContent?.[characterId] || {};
+  // gallery 是陣列，取第一張。這個階段有自己的圖誌卻沒指定主視覺時，
+  // 用它的第一張，總比退回角色表那張成年主圖好。
+  const gallery=Array.isArray(fields?.gallery)?fields.gallery:[];
   const imageId = [
     fields?.portrait?.imageId,
     fields?.portrait?.imageID,
     fields?.publicIntro?.imageId,
     fields?.publicIntro?.imageID,
     fields?.profile?.imageId,
-    fields?.profile?.imageID
+    fields?.profile?.imageID,
+    gallery[0]?.imageId,
+    gallery[0]?.imageID
   ].map(value=>String(value || '').trim()).find(Boolean);
 
   if(!imageId) return null;
 
-  return (data?.images || []).find(item=>[
+  const found=(data?.images || []).find(item=>[
     item?.id,item?.assetId,item?.assetID,item?.driveId,item?.driveID,item?.fileId,item?.fileID
-  ].some(value=>String(value || '').trim()===imageId)) || null;
+  ].some(value=>String(value || '').trim()===imageId));
+  if(found) return found;
+
+  // 「圖片」表沒有登記到這個檔案時，不要放棄——Drive 檔案 ID 本身就足以組出網址。
+  // 找不到就靜靜退回上一個階段的圖，是這裡最難查的一種錯。
+  return {
+    id:imageId,
+    name:'',
+    mediaType:'image',
+    url:`https://drive.google.com/thumbnail?id=${encodeURIComponent(imageId)}&sz=w2000`
+  };
 }
 
 function getWeaponImages(images, weaponId){
