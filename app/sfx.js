@@ -33,6 +33,15 @@ window.TimeSfx = (() => {
   const MUTE_KEY = 'theEndOfTime.sfx.muted';
   const DEFAULT_ON = true;      // 想預設靜音就改成 false
 
+  // 可調參數。dev/jiazi-dial.html 的調校台會即時改這裡，
+  // 調定之後把數字寫回這個物件就是最終設定。
+  const CONFIG = {
+    master:      1.00,   // 總音量
+    tickGain:    1.00,   // 喀噠聲音量
+    tickMinGap:  0,      // 兩聲喀噠之間至少幾毫秒；0 = 每一格都響
+    bedGain:     1.00    // 滑行床音音量；0 = 不播
+  };
+
   let ctx = null;
   let master = null;
   const buffers = {};           // name -> [AudioBuffer]
@@ -65,7 +74,7 @@ window.TimeSfx = (() => {
     if(!AC) return null;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = muted ? 0 : 1;
+    master.gain.value = muted ? 0 : CONFIG.master;
     master.connect(ctx.destination);
     return ctx;
   }
@@ -144,20 +153,25 @@ window.TimeSfx = (() => {
 
   function ticksAlong(steps, durationMs){
     const c = ensureCtx();
-    if(!c || muted || !steps) return;
+    if(!c || muted || !steps || CONFIG.tickGain <= 0) return;
     const n = Math.min(Math.abs(steps), 60);
     const t0 = c.currentTime;
+    const gap = Math.max(0, CONFIG.tickMinGap) / 1000;
+    let last = -1;
     for(let k = 1; k <= n; k++){
       const at = EASE(k / n) * durationMs / 1000;
-      // 越後面越輕，像真的在減速
-      tick(t0 + at, 0.55 + 0.45 * (1 - k / n));
+      // 緩動曲線開頭很快，前幾格會擠在幾十毫秒內糊成一片。
+      // 間隔不夠就跳過這一聲 —— 最後一聲一定要留，那是「到位」。
+      if(gap > 0 && last >= 0 && (at - last) < gap && k !== n) continue;
+      last = at;
+      tick(t0 + at, (0.55 + 0.45 * (1 - k / n)) * CONFIG.tickGain);
     }
   }
 
   // ── 滑行床音：跟著旋轉長度淡入淡出 ────────────────
   function startRotate(){
     const c = ensureCtx();
-    if(!c || muted) return;
+    if(!c || muted || CONFIG.bedGain <= 0) return;
     stopRotate(0.05);
     const list = buffers.rotate;
     if(!list || !list[0]) return;
@@ -166,7 +180,7 @@ window.TimeSfx = (() => {
     s.loop = true;
     const g = c.createGain();
     g.gain.setValueAtTime(0, c.currentTime);
-    g.gain.linearRampToValueAtTime(1, c.currentTime + 0.09);
+    g.gain.linearRampToValueAtTime(CONFIG.bedGain, c.currentTime + 0.09);
     s.connect(g).connect(master);
     s.start();
     rotateNode = {source:s, gain:g};
@@ -197,13 +211,22 @@ window.TimeSfx = (() => {
     complete: () => src('complete'),
     reject:   () => src('reject'),
     hover:    () => src('hover', {gain:1}),
+    get config(){ return Object.assign({}, CONFIG); },
+    tune(patch){
+      Object.assign(CONFIG, patch || {});
+      if(master && ctx && !muted){
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.linearRampToValueAtTime(CONFIG.master, ctx.currentTime + 0.05);
+      }
+      return api.config;
+    },
     get muted(){ return muted; },
     setMuted(v){
       muted = !!v;
       writeMuted(muted);
       if(master && ctx){
         master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.linearRampToValueAtTime(muted ? 0 : 1, ctx.currentTime + 0.08);
+        master.gain.linearRampToValueAtTime(muted ? 0 : CONFIG.master, ctx.currentTime + 0.08);
       }
       if(muted) stopRotate(0.08);
     },

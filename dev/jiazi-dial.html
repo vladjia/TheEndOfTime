@@ -147,6 +147,23 @@ button.primary{background:rgba(201,162,107,.15);border-color:rgba(201,162,107,.5
 button.primary:disabled{opacity:.34;cursor:not-allowed}
 button.ghost{border-color:transparent;color:var(--dim)}
 
+.tuner{
+  margin-top:22px;width:min(430px,92vw);
+  border:1px solid var(--line);background:rgba(255,255,255,.02);
+  padding:14px 16px 16px;
+}
+.tuner h3{margin:0 0 4px;font:600 10px/1 ui-monospace,monospace;letter-spacing:.2em;color:rgba(255,255,255,.34)}
+.tuner-lead{margin:0 0 12px;font-size:11px;color:rgba(255,255,255,.34);line-height:1.7}
+.trow{display:flex;align-items:center;gap:8px;margin:0 0 7px}
+.trow label{flex:0 0 72px;font-size:11px;color:rgba(255,255,255,.62)}
+.trow input[type=range]{flex:1;min-width:0;accent-color:var(--gold);height:18px}
+.trow output{flex:0 0 44px;text-align:right;font:600 11px/1 ui-monospace,monospace;color:rgba(255,255,255,.52)}
+.tuner .btns{margin-top:10px}
+.tuner-note{
+  margin:10px 0 0;font:11px/1.7 ui-monospace,monospace;
+  color:rgba(255,255,255,.40);white-space:pre-wrap;word-break:break-all;
+}
+
 .readout{margin-top:18px;padding:12px 16px;border:1px solid var(--line);background:rgba(255,255,255,.02);font:13px/1.9 "Noto Serif TC",serif;letter-spacing:.14em;color:var(--ink);text-align:center;min-width:min(430px,92vw)}
 .readout small{display:block;font:600 9px/1 ui-monospace,monospace;letter-spacing:.24em;color:rgba(255,255,255,.26);margin-bottom:7px}
 .readout .none{color:rgba(255,255,255,.20);letter-spacing:.3em}
@@ -193,6 +210,23 @@ button.ghost{border-color:transparent;color:var(--dim)}
   <button id="demo">隨機一枚</button>
   <button id="go" class="primary" disabled>取回時印</button>
   <button id="mute" class="ghost" title="音效開關">🔊 音效</button>
+</div>
+
+<div class="tuner">
+  <h3>音效調校台</h3>
+  <p class="tuner-lead">按「轉最遠」聽最密的情況 —— 那是喀噠會不會太吵的極限。</p>
+  <div class="trow"><label>喀噠音量</label><input type="range" id="t_tickGain" min="0" max="1.4" step="0.02"><output></output></div>
+  <div class="trow"><label>最小間隔</label><input type="range" id="t_tickMinGap" min="0" max="140" step="2"><output></output></div>
+  <div class="trow"><label>床音音量</label><input type="range" id="t_bedGain" min="0" max="1.4" step="0.02"><output></output></div>
+  <div class="trow"><label>總音量</label><input type="range" id="t_master" min="0" max="1.4" step="0.02"><output></output></div>
+  <div class="btns">
+    <button id="spinFar">轉最遠（30 格）</button>
+    <button id="spinMid">轉 8 格</button>
+    <button id="spinOne">轉 1 格</button>
+    <button id="tReset" class="ghost">回到預設</button>
+    <button id="tDump" class="primary">輸出設定</button>
+  </div>
+  <p class="tuner-note" id="tunerNote"></p>
 </div>
 
 <div class="readout" id="readout"></div>
@@ -491,6 +525,50 @@ $('mute').onclick = () => {
   $('mute').textContent = m ? '🔇 靜音中' : '🔊 音效';
 };
 if(S) $('mute').textContent = S.muted ? '🔇 靜音中' : '🔊 音效';
+
+// ── 音效調校台 ────────────────────────────────
+const TKEYS=['tickGain','tickMinGap','bedGain','master'];
+const TDEF={tickGain:1,tickMinGap:0,bedGain:1,master:1};
+function tPaint(){
+  TKEYS.forEach(k=>{
+    const el=$('t_'+k), out=el.parentElement.querySelector('output');
+    out.textContent = k==='tickMinGap' ? Math.round(el.value)+'ms' : Number(el.value).toFixed(2);
+  });
+}
+TKEYS.forEach(k=>{
+  const el=$('t_'+k);
+  el.value=String(TDEF[k]);
+  el.addEventListener('input',()=>{
+    tPaint();
+    if(S) S.tune({[k]: Number(el.value)});
+  });
+});
+tPaint();
+
+const spin=(n)=>{ if(!busy) rotate(shortest(((pos+n)%60+60)%60)===0 ? n : n); };
+$('spinFar').onclick=()=>{ if(!busy) rotate(30); };
+$('spinMid').onclick=()=>{ if(!busy) rotate(8); };
+$('spinOne').onclick=()=>{ if(!busy) rotate(1); };
+$('tReset').onclick=()=>{
+  TKEYS.forEach(k=>{ $('t_'+k).value=String(TDEF[k]); });
+  tPaint();
+  if(S) S.tune(TDEF);
+  $('tunerNote').textContent='';
+};
+$('tDump').onclick=async()=>{
+  const cfg={};
+  TKEYS.forEach(k=>cfg[k]=Number($('t_'+k).value));
+  const text=`const CONFIG = {
+  master:      ${cfg.master.toFixed(2)},
+  tickGain:    ${cfg.tickGain.toFixed(2)},
+  tickMinGap:  ${Math.round(cfg.tickMinGap)},
+  bedGain:     ${cfg.bedGain.toFixed(2)}
+};`;
+  $('tunerNote').textContent=text;
+  try{ await navigator.clipboard.writeText(text); $('tDump').textContent='已複製 ✓'; }
+  catch(_){ $('tDump').textContent='請手動複製 ↓'; }
+  setTimeout(()=>{$('tDump').textContent='輸出設定';},1600);
+};
 
 render();
 })();

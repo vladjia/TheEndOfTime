@@ -81,6 +81,8 @@ async function renderPersonal(A){
     ? `上一次，你停在第${last.chapterNumber||''}章${last.chapterTitle?'｜'+last.chapterTitle:''}${last.sectionNumber?'・第'+last.sectionNumber+'節':''}${last.sectionTitle?'｜'+last.sectionTitle:''}`
     : '你的旅程尚未留下第一道可返回的時間裂縫。';
 
+  renderWuxing(A);
+
   // 只有本人看得到「複製分享連結」
   const actions = document.querySelector('.timemark-actions-main');
   if(actions && stone.relayCode){
@@ -146,4 +148,40 @@ function swapActionsToCta(){
   actions.innerHTML = `
     <a class="time-mark-btn primary" href="../index.html">留下你自己的時印</a>
     <a class="time-mark-btn" href="../story/index.html">從故事開始</a>`;
+}
+
+
+// ── 時印五行 ────────────────────────────────────────────
+// 只出現在個人頁。公開展示頁拿不到 token（後端刻意不回傳），
+// 所以那裡本來就算不出來 —— 這個界線是對的，不要繞過去。
+function renderWuxing(A){
+  const wx = A.tokenWuxing(A.token());
+  if(!wx || !wx.native) return;
+
+  const stage = document.querySelector('.timemark-records') || document.getElementById('timemarkStage');
+  if(!stage) return;
+
+  const CN = ['〇','一','二','三','四','五','六','七','八'];
+  const n = wx.native;
+
+  const box = document.createElement('section');
+  box.className = 'timemark-wuxing';
+  box.innerHTML = `
+    <div class="tw-native">
+      <small>本命</small>
+      <strong style="color:${n.hex}">${n.gan}${n.zhi}</strong>
+      <span>${n.wuxing}・${n.yang ? '陽' : '陰'}</span>
+      <p>時印的第一組與你的母石同源——你是那個時辰來的。</p>
+    </div>
+    <div class="tw-tally">
+      <small>時印五行</small>
+      <div class="tw-bars">
+        ${wx.order.map(w => `
+          <i class="${wx.tally[w] ? 'has' : ''}" style="--wx:${wx.hex[w]}">
+            <b>${w}</b><em>${CN[wx.tally[w]]}</em>
+          </i>`).join('')}
+      </div>
+      <p>其餘七組是時空給的，不是你選的。</p>
+    </div>`;
+  stage.insertAdjacentElement('afterend', box);
 }

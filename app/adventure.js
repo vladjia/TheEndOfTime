@@ -116,6 +116,43 @@ window.EndOfTimeAdventure = (() => {
 
   function isValidTimeMark(value){ return !!normalizeTimeMarkInput(value); }
 
+  // 十天干＝五行各分陰陽。這不是我配的，順序本來就是這樣排的。
+  const TM_WUXING = ['木','火','土','金','水'];
+  const TM_WX_HEX = {木:'#6FA07A', 火:'#C9515A', 土:'#C9A26B', 金:'#D8DCE2', 水:'#6E97C0'};
+
+  // 時印的五行。
+  //
+  //   第一組是「本命」：地支＝你進站的時辰（與母石同源），
+  //   天干是從咬得到的五個裡面來的。這一組講得出所以然。
+  //
+  //   其餘七組是亂數。分佈只是紋理，不代表這個人 ——
+  //   端出去的時候必須講清楚，不然就變成拿雜訊算命。
+  function tokenWuxing(value){
+    const t = normalizeTimeMarkInput(value);
+    if(!t || !t.startsWith(TM_PREFIX)) return null;
+    const body = t.slice(TM_PREFIX.length);
+    const tally = {};
+    TM_WUXING.forEach(w => tally[w] = 0);
+
+    const pairs = [];
+    for(let i = 0; i < body.length; i += 2){
+      const gi = TM_GAN.indexOf(body[i]);
+      const zi = TM_ZHI.indexOf(body[i + 1]);
+      if(gi < 0 || zi < 0) return null;
+      const wx = TM_WUXING[Math.floor(gi / 2)];
+      tally[wx]++;
+      pairs.push({gan:TM_GAN[gi], zhi:TM_ZHI[zi], wuxing:wx, yang:gi % 2 === 0, hex:TM_WX_HEX[wx]});
+    }
+    return {
+      pairs,
+      tally,
+      order: TM_WUXING.slice(),
+      hex: Object.assign({}, TM_WX_HEX),
+      native: pairs[0] || null,          // 本命：唯一講得出所以然的那一組
+      stoneType: stoneTypeFromToken(t)
+    };
+  }
+
   // 顯示用：八組之間留空，看得出是八個字對
   function formatTimeMark(value){
     const t = String(value || '').trim();
@@ -2645,6 +2682,8 @@ window.EndOfTimeAdventure = (() => {
         return true;
       },
       clear(){ picked.fill(null); slot = 0; paint(); },
+      step(n){ if(!busy) rotate(n); },
+      strike(){ if(!busy) hub.click(); },
       back(){
         if(busy) return;
         if(!picked[slot] && slot > 0) slot--;
@@ -2674,6 +2713,7 @@ window.EndOfTimeAdventure = (() => {
           <button class="time-mark-btn primary" type="button" data-restore-time disabled>取回時印</button>
           <button class="time-mark-btn" type="button" data-jz-back>退一格</button>
           <button class="time-mark-btn" type="button" data-jz-typed>改用輸入</button>
+          <button class="time-mark-btn" type="button" data-jz-mute aria-pressed="false">音效</button>
           <button class="time-mark-btn" type="button" data-time-close>返回</button>
         </div>
       </div>
@@ -2703,6 +2743,7 @@ window.EndOfTimeAdventure = (() => {
     const dialRoot=o.querySelector('[data-jz-root]');
     const backBtnJz=o.querySelector('[data-jz-back]');
     const typedToggle=o.querySelector('[data-jz-typed]');
+    const muteBtn=o.querySelector('[data-jz-mute]');
     let typedMode=false;
     let dialToken='';
     const confirmation=o.querySelector('[data-restore-confirmation]');
@@ -2732,6 +2773,24 @@ window.EndOfTimeAdventure = (() => {
       status.textContent='';
       if(on) requestAnimationFrame(()=>field.focus());
     };
+    // 音效預設是開的，所以一定要給得出關掉的地方。
+    const paintMute=()=>{
+      const S=sfx();
+      const m=S?S.muted:true;
+      muteBtn.textContent=m?'音效 關':'音效 開';
+      muteBtn.setAttribute('aria-pressed',m?'true':'false');
+    };
+    muteBtn.onclick=()=>{
+      const S=sfx();
+      if(!S){ paintMute(); return; }
+      S.toggle();
+      paintMute();
+    };
+    // sfx.js 是動態載入的，載完才知道目前狀態
+    paintMute();
+    setTimeout(paintMute,600);
+    setTimeout(paintMute,1800);
+
     typedToggle.onclick=()=>setTypedMode(!typedMode);
     backBtnJz.onclick=()=>dial.back();
     field.addEventListener('input',()=>{
@@ -2755,6 +2814,23 @@ window.EndOfTimeAdventure = (() => {
         status.textContent='這是舊格式的時印，已切換為輸入模式。';
       }
     });
+
+    // 鍵盤：左右一格一格轉，Enter 刻下。
+    // 輸入模式或確認畫面時要讓開，不然會搶走打字。
+    const onKey=(e)=>{
+      if(typedMode || !confirmation.hidden) return;
+      if(e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+      if(e.key==='ArrowRight'){ e.preventDefault(); dial.step(1); }
+      else if(e.key==='ArrowLeft'){ e.preventDefault(); dial.step(-1); }
+      else if(e.key==='Enter'){ e.preventDefault(); dial.strike(); }
+      else if(e.key==='Backspace'){ e.preventDefault(); dial.back(); }
+    };
+    document.addEventListener('keydown',onKey);
+    // overlay 關掉時要拆掉，不然會殘留在全域
+    const mo=new MutationObserver(()=>{
+      if(!o.isConnected){ document.removeEventListener('keydown',onKey); mo.disconnect(); }
+    });
+    mo.observe(document.body,{childList:true});
 
     const showForm=()=>{
       confirmation.hidden=true;
@@ -3271,7 +3347,7 @@ window.EndOfTimeAdventure = (() => {
   }
 
   document.addEventListener('DOMContentLoaded',init);
-  return {token, maskToken, formatTimeMark, normalizeTimeMarkInput, isValidTimeMark,
+  return {token, maskToken, formatTimeMark, normalizeTimeMarkInput, isValidTimeMark, tokenWuxing,
           stoneTypeFromToken, stoneTypeFromHour, generateToken,
           bindTokenReveal, resolveGlyphInk, stoneLightness, SCAR, relayLoad, shareUrlFor, copyShareUrl, isLightShard, buildShareCard, ensure, load, restore, forgeShard, completeStory, touchPosition, openManager, openForge, openRestoreDialog, showResumePrompt, showRestoreSuccess, playTimeRiftTransition, copyToken, downloadTimeMarkCard, shardPalette, applyShardPalette, renderShardEngraving, serialLabel, shardPreviewMarkup, stoneAssetUrl, stoneAspectRatio, stoneVisualOffset, refreshProgressInBackground, normalizeHexColor};
 })();
