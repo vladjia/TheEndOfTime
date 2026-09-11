@@ -154,11 +154,19 @@ function endOfStoryHtml(){
 // 節末圖。放在正文之後、「繼續前行」之前——
 // 讀者剛讀完最後一句，往下捲，畫面在那裡。那是落幕，不是插圖。
 //
+// 一節可以放好幾張：圖片ID 一行一個（逗號也可以），由上到下依序顯示。
+// 圖片說明一行對一張，可以留空行。
+//
 // 圖片解鎖於 留空 ＝ 讀到這一節就看得到。
-// 填了某個節 ID ＝ 要先讀過那一節，這張圖才會出現（會回溯出現在舊的節上）。
+// 填了某個節 ID ＝ 要先讀過那一節，這一整組圖才會出現（會回溯出現在舊的節上）。
+function splitImageIds(v){
+  // Drive 的 ID 不含逗號與空白，所以這幾種分隔都安全。
+  return String(v || '').split(/[\n\r,，、;；\s]+/).map(s=>s.trim()).filter(Boolean);
+}
+
 function sectionImageHtml(item, progress){
-  const imageId = String(item.imageId || '').trim();
-  if(!imageId) return '';
+  const ids = splitImageIds(item.imageId);
+  if(!ids.length) return '';
 
   const gate = String(item.imageUnlockAfter || '').trim();
   if(gate){
@@ -166,9 +174,14 @@ function sectionImageHtml(item, progress){
     if(!read.has(gate)) return '';
   }
 
-  const alt = String(item.imageAlt || '').replace(/"/g,'&quot;');
-  const url = `https://drive.google.com/thumbnail?id=${encodeURIComponent(imageId)}&sz=w1600`;
-  return `<figure class="reader-figure"><img src="${url}" alt="${alt}" loading="lazy"></figure>`;
+  // 說明是一行一張，不能用逗號切——說明本身會有逗號。
+  const alts = String(item.imageAlt || '').split(/\r?\n/);
+
+  return ids.map((imageId, i)=>{
+    const alt = String(alts[i] || '').trim().replace(/"/g,'&quot;');
+    const url = `https://drive.google.com/thumbnail?id=${encodeURIComponent(imageId)}&sz=w1600`;
+    return `<figure class="reader-figure"><img src="${url}" alt="${alt}" loading="lazy"></figure>`;
+  }).join('');
 }
 
 function renderReader(story,copy,id,progress){

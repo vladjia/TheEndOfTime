@@ -162,6 +162,10 @@ a.toc-section-item:hover{
   margin:72px auto 0;
   padding:0;
 }
+/* 同一節的第二張之後，間距收窄——它們是一組，不是各自換頁。 */
+.reader-figure + .reader-figure{
+  margin-top:22px;
+}
 .reader-figure img{
   display:block;
   width:100%;
