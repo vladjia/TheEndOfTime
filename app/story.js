@@ -151,6 +151,26 @@ function endOfStoryHtml(){
     </div>`;
 }
 
+// 節末圖。放在正文之後、「繼續前行」之前——
+// 讀者剛讀完最後一句，往下捲，畫面在那裡。那是落幕，不是插圖。
+//
+// 圖片解鎖於 留空 ＝ 讀到這一節就看得到。
+// 填了某個節 ID ＝ 要先讀過那一節，這張圖才會出現（會回溯出現在舊的節上）。
+function sectionImageHtml(item, progress){
+  const imageId = String(item.imageId || '').trim();
+  if(!imageId) return '';
+
+  const gate = String(item.imageUnlockAfter || '').trim();
+  if(gate){
+    const read = new Set(progress?.storyRead || []);
+    if(!read.has(gate)) return '';
+  }
+
+  const alt = String(item.imageAlt || '').replace(/"/g,'&quot;');
+  const url = `https://drive.google.com/thumbnail?id=${encodeURIComponent(imageId)}&sz=w1600`;
+  return `<figure class="reader-figure"><img src="${url}" alt="${alt}" loading="lazy"></figure>`;
+}
+
 function renderReader(story,copy,id,progress){
   const article = $('#readerArticle');
   if(!article) return;
@@ -203,6 +223,7 @@ function renderReader(story,copy,id,progress){
         return `<p>${p.replace(/\n/g,'<br>')}</p>`;
       }).join('')}
     </div>
+    ${sectionImageHtml(item, progress)}
     <div class="reader-complete-wrap" id="completeStoryWrap">
       ${alreadyRead && !hasMore ? endOfStoryHtml() : `
       <button class="reader-complete-btn" id="completeStoryButton" type="button">${hasMore ? '繼續前行' : '記下這一刻'}</button>

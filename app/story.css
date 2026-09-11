@@ -154,6 +154,25 @@ a.toc-section-item:hover{
   font-size:15px;
   line-height:1.9;
 }
+/* 節末圖。上面留白要夠——它是換頁，不是裝飾。
+   沒有邊框、沒有說明文字、沒有進場動畫。就是一張圖。
+   點擊放大由 image-viewer.js 自動接管（<main> 裡的 img 都會綁）。 */
+.reader-figure{
+  width:min(880px,100%);
+  margin:72px auto 0;
+  padding:0;
+}
+.reader-figure img{
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:2px;
+  cursor:zoom-in;
+}
+@media(max-width:640px){
+  .reader-figure{margin-top:44px}
+}
+
 .reader-body{
   width:min(720px,100%);
   margin:auto;
