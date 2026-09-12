@@ -1714,8 +1714,17 @@ window.EndOfTimeAdventure = (() => {
       try{
         const loaded=await load(true);
         if(!loaded?.exists){
-          await api('adventureCreate',{token:t});
-          clearProgressSession(t);
+          // 後端答了，而且說沒有這枚時印。
+          //
+          // 舊版在這裡直接 adventureCreate —— 於是本機殘留的舊時印會被重新
+          // 登記成一個全新玩家，讀者整段旅程無聲歸零，畫面上一個字都不會說。
+          // 而他手上那枚正確的時印其實還救得回來，只是沒有人告訴他。
+          //
+          // 現在一律停下來問人。在他決定之前，不動任何東西。
+          //
+          // ⚠ load() 在網路失敗時回的是 exists:true（見該函式的 catch），
+          //    所以走到這裡一定是後端真的答了「沒有」，不會被離線誤觸。
+          return {token:t,isNew:false,unknown:true};
         }
       }catch(err){
         console.warn('時印確認暫時離線',err);
@@ -2918,7 +2927,12 @@ window.EndOfTimeAdventure = (() => {
     showTimeMarkLoading('正在讀取時印……');
 
     try{
-      await ensure();
+      const state=await ensure();
+      if(state && state.unknown){
+        endCritical();
+        showUnknownTokenDialog(state.token);
+        return;
+      }
       const data=await load(false);
       const stone=data?.stone||{};
       const forged=!!stone.forged;
@@ -3263,6 +3277,69 @@ window.EndOfTimeAdventure = (() => {
     };
   }
 
+  // ══════════════════════════════════════════════════════════
+  //  時印不存在
+  //
+  //  本機留著一枚時印，但後端查不到。
+  //  這裡唯一該做的事，是停下來讓讀者自己選。
+  //
+  //  絕對不可以幫他「建一枚新的」—— 他手上那枚正確的時印通常還在，
+  //  一旦自動換新，那段旅程就再也沒有人會去找了。
+  // ══════════════════════════════════════════════════════════
+  function showUnknownTokenDialog(lost){
+    const legacy=!String(lost||'').startsWith(TM_PREFIX);
+    const o=overlay(`
+      <div class="time-mark-kicker">TIME MARK NOT FOUND</div>
+      <h2>這枚時印，時間裡找不到。</h2>
+      <p>這台裝置上留著一枚時印，但它在《時盡》的紀錄中不存在。<br>在你決定之前，什麼都不會被改動。</p>
+      <div class="time-mark-confirm-code${legacy?'':' is-jiazi'}" data-lost-code></div>
+      <p class="time-mark-note">它可能來自很早以前的版本，也可能被改動過。<br>如果你手上有正確的時印，用「取回其他時印」貼回來——那段旅程還在。</p>
+      <div class="time-mark-actions">
+        <button class="time-mark-btn primary" type="button" data-lost-restore>取回其他時印</button>
+        <button class="time-mark-btn" type="button" data-lost-new>領一枚新的時印</button>
+      </div>
+      <p class="time-mark-status" data-lost-status></p>
+    `,{lockClose:true});
+
+    o.querySelector('[data-lost-code]').textContent =
+      legacy ? String(lost||'') : formatTimeMark(lost);
+
+    o.querySelector('[data-lost-restore]').onclick=()=>{
+      closeOverlay(true);
+      openRestoreDialog();
+    };
+
+    o.querySelector('[data-lost-new]').onclick=async(e)=>{
+      const btn=e.currentTarget;
+      const status=o.querySelector('[data-lost-status]');
+      if(btn.disabled) return;
+      btn.disabled=true;
+      btn.setAttribute('aria-busy','true');
+      btn.textContent='建立中……';
+      status.textContent='';
+      try{
+        // 先讓後端收下新的時印，成功了才動本機。
+        // 反過來做的話，建立失敗就會連舊的線索一起弄丟。
+        const fresh=generateToken(new Date().getHours());
+        await api('adventureCreate',{token:fresh});
+        clearProgressSession(lost);
+        setToken(fresh);
+        clearProgressSession(fresh);
+        progressCache=null;
+        try{ sessionStorage.removeItem(SESSION_PROMPT_KEY); }catch(_){}
+        closeOverlay(true);
+        location.reload();
+      }catch(err){
+        btn.disabled=false;
+        btn.removeAttribute('aria-busy');
+        btn.textContent='領一枚新的時印';
+        status.textContent=err?.message||'建立失敗，請稍後再試。';
+      }
+    };
+
+    return o;
+  }
+
   function bindButtons(){
     document.querySelectorAll('[data-time-mark]').forEach(btn=>{
       if(btn.dataset.timeMarkBound==='1') return;
@@ -3319,7 +3396,15 @@ window.EndOfTimeAdventure = (() => {
 
   async function init(){
     bindButtons();
-    await ensure();
+    const state=await ensure();
+
+    // 時印查不到就到此為止：不啟動停留統計、不讀進度、不顯示首次導覽。
+    // 停留統計的第一次心跳會從後端那一側把玩家列建出來，等於繞過前面的防線。
+    if(state && state.unknown){
+      showUnknownTokenDialog(state.token);
+      return;
+    }
+
     void startEngagementTracking();
     await refreshTimeMarkEntryState();
     maybePromptReturning();
